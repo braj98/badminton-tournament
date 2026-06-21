@@ -915,15 +915,6 @@ function switchCategory(catId) {
     state = defaultState();
   }
   renderAll();
-  // For viewers: fetch latest from server
-  if (!_isAdmin && _supabase) {
-    fetchState(catId).then(serverState => {
-      if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
-        state = serverState;
-        renderAll();
-      }
-    });
-  }
 }
 
 function renderCategoryBar() {
