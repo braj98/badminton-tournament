@@ -985,16 +985,7 @@ function newTournament() {
 
 // ===================== RENDER =====================
 function renderAll() {
-  // Clear any forced viewer-mode disabled states from previous render
-  const app = document.getElementById('app');
-  app.querySelectorAll('input, button, select').forEach(el => {
-    if (el.closest('#loginOverlay')) return;
-    el.disabled = false;
-  });
-  app.querySelectorAll('.photo-zone').forEach(el => {
-    el.style.pointerEvents = '';
-    el.style.cursor = '';
-  });
+  clearDisabled();
 
   renderCategoryBar();
   showScreen('screen-setup', state.phase === 'setup');
@@ -1010,6 +1001,18 @@ function renderAll() {
   if (state.phase === 'champion') renderChampion();
 
   if (!_isAdmin) applyViewerMode();
+}
+
+function clearDisabled() {
+  const app = document.getElementById('app');
+  app.querySelectorAll('input, button, select').forEach(el => {
+    if (el.closest('#loginOverlay')) return;
+    el.disabled = false;
+  });
+  app.querySelectorAll('.photo-zone').forEach(el => {
+    el.style.pointerEvents = '';
+    el.style.cursor = '';
+  });
 }
 
 function applyViewerMode() {
@@ -1032,6 +1035,7 @@ function showScreen(id, show) {
 }
 
 function renderSetup() {
+  clearDisabled();
   const saved = loadState(currentCategory);
   const cat = getCategories().find(c => c.id === currentCategory);
   document.getElementById('setupTitle').textContent = 'New ' + (cat ? cat.label + ' — ' : '') + 'Tournament';
@@ -1051,6 +1055,7 @@ function renderSetup() {
 }
 
 function renderGroups() {
+  clearDisabled();
   const container = document.getElementById('groupDisplay');
   container.innerHTML = '';
   const tm = state.teamMembers || [];
@@ -1189,6 +1194,7 @@ function renamePlayer(playerIdx, newName) {
 }
 
 function renderFixtures() {
+  clearDisabled();
   const container = document.getElementById('fixtureList');
   const groups = Object.keys(state.groups);
   const fixtures = state.fixtures;
@@ -1249,6 +1255,7 @@ function renderFixtures() {
 }
 
 function renderKnockout() {
+  clearDisabled();
   const container = document.getElementById('bracket');
   const ko = state.knockout;
   if (!ko || ko.length === 0) { container.innerHTML = '<p class="text-muted">No knockout matches.</p>'; return; }
@@ -1328,6 +1335,7 @@ function renderFinalSetInputs(m) {
 let photoTarget = null;
 
 function renderChampion() {
+  clearDisabled();
   document.getElementById('championName').textContent = state.champion || '—';
   document.getElementById('runnerUpName').textContent = state.runnerUp || '—';
   showPhoto('champion', state.championPhoto);
