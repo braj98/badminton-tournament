@@ -338,7 +338,8 @@ async function checkSession() {
     _isAdmin = !!session;
   } catch(e) { _isAdmin = true; }
   updateBanners();
-  if (!_isAdmin) renderAll();
+  // Apply viewer mode for running tournaments only (not setup phase)
+  if (!_isAdmin && state && state.phase !== 'setup') applyViewerMode();
 }
 
 function updateBanners() {
