@@ -985,6 +985,17 @@ function newTournament() {
 
 // ===================== RENDER =====================
 function renderAll() {
+  // Clear any forced viewer-mode disabled states from previous render
+  const app = document.getElementById('app');
+  app.querySelectorAll('input, button, select').forEach(el => {
+    if (el.closest('#loginOverlay')) return;
+    el.disabled = false;
+  });
+  app.querySelectorAll('.photo-zone').forEach(el => {
+    el.style.pointerEvents = '';
+    el.style.cursor = '';
+  });
+
   renderCategoryBar();
   showScreen('screen-setup', state.phase === 'setup');
   showScreen('screen-groups', state.phase === 'groups');
