@@ -287,7 +287,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
   <div id="screen-results" class="screen">
     <div class="card">
       <div class="flex justify-between items-center mb-12">
-        <h2 style="margin:0;">📊 Recent Results</h2>
+        <h2 style="margin:0;">📊 Knockout Results</h2>
         <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="closeResults()">← Back</button>
       </div>
       <div id="resultsList"></div>
@@ -845,6 +845,7 @@ function enterFixtureScore(id, s1, s2) {
   f.s1 = parseInt(s1) || 0;
   f.s2 = parseInt(s2) || 0;
   f.done = f.s1 !== f.s2;
+  f.updatedAt = Date.now();
   calculateStandings();
   saveState();
   renderFixtures();
@@ -855,6 +856,7 @@ function enterKnockoutScore(id, s1, s2) {
   if (!m) return;
   m.s1 = parseInt(s1) || 0;
   m.s2 = parseInt(s2) || 0;
+  m.updatedAt = Date.now();
 
   if (m.round === 'Final') return;
 
@@ -875,6 +877,7 @@ function enterFinalSet(id, setNum, s1, s2) {
   if (!m) return;
   if (!m.sets) m.sets = [{s1:null,s2:null},{s1:null,s2:null},{s1:null,s2:null}];
   m.sets[setNum] = { s1: parseInt(s1)||0, s2: parseInt(s2)||0 };
+  m.updatedAt = Date.now();
 
   let w1 = 0, w2 = 0;
   let allDecided = true;
@@ -1374,32 +1377,50 @@ function closeResults() {
 function renderResults() {
   clearDisabled();
   const cats = getCategories();
-  const results = [];
+  const matches = [];
   for (const cat of cats) {
     const s = loadState(cat.id);
-    if (s && s.phase === 'champion' && s.champion) {
-      results.push({
+    if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
+    const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
+    for (const m of s.knockout) {
+      const p1 = m.p1 || 'TBD';
+      const p2 = m.p2 || 'TBD';
+      let score = '';
+      if (m.round === 'Final' && m.sets) {
+        const parts = [];
+        for (const set of m.sets) {
+          if (set.s1 !== null && set.s2 !== null) parts.push(set.s1 + '-' + set.s2);
+        }
+        score = parts.join(' / ');
+      } else if (m.s1 !== null && m.s2 !== null) {
+        score = m.s1 + '-' + m.s2;
+      }
+      matches.push({
         cat: cat,
-        champion: s.champion,
-        runnerUp: s.runnerUp || '—',
-        completedAt: s.completedAt || 0,
-        hasPhoto: !!s.championPhoto
+        round: roundLabel[m.round] || m.round,
+        p1: p1,
+        p2: p2,
+        score: score || '—',
+        done: m.done,
+        winner: m.winner || null,
+        updatedAt: m.updatedAt || 0
       });
     }
   }
-  results.sort((a, b) => b.completedAt - a.completedAt);
+  matches.sort((a, b) => b.updatedAt - a.updatedAt);
   const container = document.getElementById('resultsList');
-  if (results.length === 0) {
-    container.innerHTML = '<p class="text-muted text-center" style="padding:32px 0;">No completed tournaments yet.</p>';
+  if (matches.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center" style="padding:32px 0;">No knockout matches yet.</p>';
     return;
   }
-  let html = '<table class="standings-table"><thead><tr><th>Category</th><th>Champion</th><th>Runner-up</th><th>Completed</th></tr></thead><tbody>';
-  for (const r of results) {
-    const d = r.completedAt ? new Date(r.completedAt).toLocaleDateString() : '—';
-    html += '<tr><td style="font-weight:600;">' + (r.hasPhoto ? '🏆 ' : '') + r.cat.label + '</td>'
-      + '<td style="color:var(--green);font-weight:600;">' + r.champion + '</td>'
-      + '<td>' + r.runnerUp + '</td>'
-      + '<td style="color:var(--muted);font-size:.8rem;">' + d + '</td></tr>';
+  let html = '<table class="standings-table"><thead><tr><th>Category</th><th>Round</th><th>Match</th><th>Score</th><th>Status</th></tr></thead><tbody>';
+  for (const m of matches) {
+    const status = m.done ? '<span style="color:var(--green);font-weight:600;">✓ ' + m.winner + '</span>' : '<span style="color:var(--muted);">⏳ Upcoming</span>';
+    html += '<tr><td style="font-weight:600;">' + m.cat.label + '</td>'
+      + '<td>' + m.round + '</td>'
+      + '<td>' + m.p1 + ' <span class="vs">vs</span> ' + m.p2 + '</td>'
+      + '<td style="font-weight:600;">' + m.score + '</td>'
+      + '<td>' + status + '</td></tr>';
   }
   html += '</tbody></table>';
   container.innerHTML = html;
