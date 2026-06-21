@@ -259,6 +259,9 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
 
   <!-- ============ CHAMPION ============ -->
   <div id="screen-champion" class="screen">
+    <div style="padding:12px 0 0;">
+      <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="goBackFromChampion()" data-public="1">← Back to Knockout</button>
+    </div>
     <div class="card champion-card">
       <div class="trophy">🏆</div>
       <div class="crown">Champion</div>
@@ -1363,6 +1366,11 @@ function showResultsPage() {
 
 function closeResults() {
   document.getElementById('screen-results').classList.remove('active');
+  renderAll();
+}
+
+function goBackFromChampion() {
+  state.phase = 'knockout';
   renderAll();
 }
 
