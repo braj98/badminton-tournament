@@ -316,7 +316,7 @@ const MAX_ENTRIES = 20;
 let currentCategory = null;
 let state = null;
 let _editMode = false;
-let _isAdmin = false;
+let _isAdmin = true;
 let _supabase = null;
 let _realtimeChannel = null;
 
@@ -324,16 +324,21 @@ const _SUPABASE_URL = 'https://cnotgqvcippfzhsqnnzb.supabase.co';
 const _SUPABASE_ANON_KEY = 'sb_publishable_pDEbo-ttaBTBTTH8dcJbHA_RC-Q0KAy';
 
 function initSupabase() {
-  if (typeof supabase === 'undefined') return;
-  _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
-  checkSession();
+  if (typeof supabase === 'undefined') { _isAdmin = true; updateBanners(); return; }
+  try {
+    _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
+    checkSession();
+  } catch(e) { _isAdmin = true; updateBanners(); }
 }
 
 async function checkSession() {
-  if (!_supabase) return;
-  const { data: { session } } = await _supabase.auth.getSession();
-  _isAdmin = !!session;
+  if (!_supabase) { _isAdmin = true; updateBanners(); return; }
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    _isAdmin = !!session;
+  } catch(e) { _isAdmin = true; }
   updateBanners();
+  if (!_isAdmin) renderAll();
 }
 
 function updateBanners() {
@@ -1632,7 +1637,7 @@ function init() {
 async function checkAndUpdateFromServer() {
   if (!_supabase) return;
   await checkSession();
-  const serverState = await fetchState(currentCategory);
+  const serverState = await fetchState(currentCategory).catch(() => null);
   if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
     state = serverState;
     try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {}
