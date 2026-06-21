@@ -1045,8 +1045,8 @@ function applyViewerMode() {
     el.style.pointerEvents = 'none';
     el.style.cursor = 'default';
   });
-  // Allow category tab navigation
-  app.querySelectorAll('.cat-btn').forEach(el => { el.disabled = false; });
+  // Allow category tab navigation and read-only buttons
+  app.querySelectorAll('.cat-btn, [onclick*="showResultsPage"]').forEach(el => { el.disabled = false; });
 }
 
 function showScreen(id, show) {
