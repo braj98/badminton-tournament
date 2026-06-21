@@ -146,7 +146,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
   <!-- ============ MANAGE CATEGORIES ============ -->
   <div style="margin-bottom:16px;">
     <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="toggleManagePanel()">⚙️ Manage</button>
-    <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="showResultsPage()">📊 Results</button>
+    <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="showResultsPage()" data-public="1">📊 Results</button>
     <div id="managePanel" class="card hidden" style="margin-top:8px;">
       <div style="display:flex;gap:6px;margin-bottom:10px;">
         <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
@@ -1046,7 +1046,7 @@ function applyViewerMode() {
     el.style.cursor = 'default';
   });
   // Allow category tab navigation and read-only buttons
-  app.querySelectorAll('.cat-btn, [onclick*="showResultsPage"]').forEach(el => { el.disabled = false; });
+  app.querySelectorAll('.cat-btn, [data-public]').forEach(el => { el.disabled = false; });
 }
 
 function showScreen(id, show) {
