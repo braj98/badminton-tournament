@@ -427,7 +427,7 @@ function subscribeToChanges() {
       if (!key || !key.startsWith('btm_state_')) return;
       const catId = key.replace('btm_state_', '');
       const newData = payload.new ? payload.new.data : null;
-      if (newData && catId === currentCategory) { state = newData; renderAll(); }
+      if (newData && catId === currentCategory && JSON.stringify(newData) !== JSON.stringify(state)) { state = newData; renderAll(); }
     })
     .subscribe();
 }
