@@ -151,6 +151,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
       <div style="display:flex;gap:6px;margin-bottom:10px;">
         <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
         <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;" onclick="document.getElementById('importFileInput').click()">📤 Import</button>
+        <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;" onclick="pushAllToCloud()" title="Push all categories to Supabase">☁️ Push All</button>
         <div id="importConfirmBox" class="hidden" style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;">
           <div style="font-size:.75rem;color:#dc2626;margin-bottom:6px;">⚠️ This will overwrite <strong>all current data</strong> for <span id="importWarningCount">all</span> categories. Type <strong>IMPORT</strong> to confirm:</div>
           <div style="display:flex;gap:6px;align-items:center;">
@@ -1525,6 +1526,20 @@ function exportAll() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
+}
+
+async function pushAllToCloud() {
+  if (!_supabase) { alert('Supabase not connected.'); return; }
+  const cats = getCategories();
+  let pushed = 0, failed = 0;
+  for (const c of cats) {
+    const s = loadState(c.id);
+    if (!s) continue;
+    const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + c.id, data: s }, { onConflict: 'key' });
+    if (error) { failed++; console.warn('Failed to push ' + c.label + ':', error.message); }
+    else pushed++;
+  }
+  alert('Pushed ' + pushed + ' categories to cloud.' + (failed ? ' ' + failed + ' failed.' : ''));
 }
 
 function handleImportFile(event) {
