@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Badminton Tournament Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root { --green: #16a34a; --green-dark: #15803d; --bg: #f0fdf4; --card: #fff; --text: #1a1a1a; --muted: #6b7280; --border: #e5e7eb; --gold: #eab308; --silver: #9ca3af; --radius: 10px; }
@@ -122,6 +123,24 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
 <body>
 <div id="app">
   <h1>🏸 Badminton Tournament</h1>
+
+  <!-- Login / status banners -->
+  <div id="viewerBanner" class="hidden" style="background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#92400e;">👁️ View only — <a href="#" style="color:#16a34a;font-weight:600;" onclick="showLogin()">Login as admin</a> to edit</div>
+  <div id="adminBanner" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#166534;">✅ Logged in as admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></div>
+
+  <!-- Login dialog -->
+  <div id="loginOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:200;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:var(--radius);padding:24px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+      <h3 style="margin-bottom:12px;">Admin Login</h3>
+      <input type="email" id="loginEmail" placeholder="Email" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;margin-bottom:8px;">
+      <input type="password" id="loginPassword" placeholder="Password" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;margin-bottom:12px;">
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;" onclick="login()">Login</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeLogin()">Cancel</button>
+      </div>
+      <span id="loginError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:6px;"></span>
+    </div>
+  </div>
   <div id="catBar" class="cat-bar"></div>
 
   <!-- ============ MANAGE CATEGORIES ============ -->
@@ -297,6 +316,96 @@ const MAX_ENTRIES = 20;
 let currentCategory = null;
 let state = null;
 let _editMode = false;
+let _isAdmin = false;
+let _supabase = null;
+let _realtimeChannel = null;
+
+const _SUPABASE_URL = 'https://cnotgqvcippfzhsqnnzb.supabase.co';
+const _SUPABASE_ANON_KEY = 'sb_publishable_pDEbo-ttaBTBTTH8dcJbHA_RC-Q0KAy';
+
+function initSupabase() {
+  if (typeof supabase === 'undefined') return;
+  _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
+  checkSession();
+}
+
+async function checkSession() {
+  if (!_supabase) return;
+  const { data: { session } } = await _supabase.auth.getSession();
+  _isAdmin = !!session;
+  updateBanners();
+}
+
+function updateBanners() {
+  const vb = document.getElementById('viewerBanner');
+  const ab = document.getElementById('adminBanner');
+  if (!vb || !ab) return;
+  if (_isAdmin) { vb.classList.add('hidden'); ab.classList.remove('hidden'); }
+  else { vb.classList.remove('hidden'); ab.classList.add('hidden'); }
+}
+
+function showLogin() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+  setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+}
+
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+}
+
+async function login() {
+  if (!_supabase) return;
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { document.getElementById('loginError').textContent = 'Enter email and password.'; return; }
+  const { error } = await _supabase.auth.signInWithPassword({ email, password });
+  if (error) { document.getElementById('loginError').textContent = error.message; return; }
+  closeLogin();
+  _isAdmin = true;
+  // Fetch latest state from server
+  const serverState = await fetchState(currentCategory);
+  if (serverState) { state = serverState; try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {} }
+  updateBanners();
+  renderAll();
+}
+
+async function logout() {
+  if (!_supabase) return;
+  await _supabase.auth.signOut();
+  _isAdmin = false;
+  updateBanners();
+  renderAll();
+}
+
+async function upsertState(catId, data) {
+  if (!_supabase) return;
+  try { await _supabase.from('state').upsert({ key: 'btm_state_' + catId, data: data }, { onConflict: 'key' }); } catch(e) {}
+}
+
+async function fetchState(catId) {
+  if (!_supabase) return null;
+  try {
+    const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_state_' + catId).single();
+    if (error && error.code !== 'PGRST116') throw error;
+    return data ? data.data : null;
+  } catch(e) { return null; }
+}
+
+function subscribeToChanges() {
+  if (!_supabase || _realtimeChannel) return;
+  _realtimeChannel = _supabase.channel('btm-state-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'state' }, payload => {
+      const key = payload.new ? payload.new.key : null;
+      if (!key || !key.startsWith('btm_state_')) return;
+      const catId = key.replace('btm_state_', '');
+      const newData = payload.new ? payload.new.data : null;
+      if (newData && catId === currentCategory) { state = newData; renderAll(); }
+    })
+    .subscribe();
+}
 
 function storageKey() {
   return 'btm_state_' + currentCategory;
@@ -328,6 +437,7 @@ function defaultState() {
 function saveState() {
   if (!currentCategory) return;
   try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {}
+  upsertState(currentCategory, state);
 }
 
 function loadState(catId) {
@@ -783,6 +893,15 @@ function switchCategory(catId) {
     state = defaultState();
   }
   renderAll();
+  // For viewers: fetch latest from server
+  if (!_isAdmin && _supabase) {
+    fetchState(catId).then(serverState => {
+      if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
+        state = serverState;
+        renderAll();
+      }
+    });
+  }
 }
 
 function renderCategoryBar() {
@@ -873,6 +992,23 @@ function renderAll() {
   if (state.phase === 'fixtures') renderFixtures();
   if (state.phase === 'knockout') renderKnockout();
   if (state.phase === 'champion') renderChampion();
+
+  if (!_isAdmin) applyViewerMode();
+}
+
+function applyViewerMode() {
+  const app = document.getElementById('app');
+  app.querySelectorAll('input, button, select').forEach(el => {
+    if (el.closest('#loginOverlay') || el.closest('#adminBanner') || el.closest('#viewerBanner')) return;
+    el.disabled = true;
+  });
+  // Photo zones: non-clickable
+  app.querySelectorAll('.photo-zone').forEach(el => {
+    el.style.pointerEvents = 'none';
+    el.style.cursor = 'default';
+  });
+  // Allow category tab navigation
+  app.querySelectorAll('.cat-btn').forEach(el => { el.disabled = false; });
 }
 
 function showScreen(id, show) {
@@ -1488,6 +1624,23 @@ function init() {
     state = defaultState();
   }
   renderAll();
+
+  // Supabase init (async — page already shown)
+  initSupabase();
+  setTimeout(checkAndUpdateFromServer, 0);
+}
+
+async function checkAndUpdateFromServer() {
+  if (!_supabase) return;
+  await checkSession();
+  if (!_isAdmin) {
+    const serverState = await fetchState(currentCategory);
+    if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
+      state = serverState;
+      renderAll();
+    }
+  }
+  subscribeToChanges();
 }
 
 document.addEventListener('DOMContentLoaded', init);
