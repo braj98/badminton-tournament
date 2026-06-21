@@ -146,6 +146,7 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
   <!-- ============ MANAGE CATEGORIES ============ -->
   <div style="margin-bottom:16px;">
     <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="toggleManagePanel()">⚙️ Manage</button>
+    <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="showResultsPage()">📊 Results</button>
     <div id="managePanel" class="card hidden" style="margin-top:8px;">
       <div style="display:flex;gap:6px;margin-bottom:10px;">
         <button class="btn btn-secondary" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
@@ -281,6 +282,18 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
       </div>
     </div>
   </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div id="screen-results" class="screen">
+    <div class="card">
+      <div class="flex justify-between items-center mb-12">
+        <h2 style="margin:0;">📊 Recent Results</h2>
+        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="closeResults()">← Back</button>
+      </div>
+      <div id="resultsList"></div>
+    </div>
+  </div>
+
   <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="onPhotoPicked(event)">
   <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
 </div>
@@ -434,7 +447,8 @@ function defaultState() {
     runnerUp: null,
     championPhoto: null,
     runnerUpPhoto: null,
-    teamMembers: []
+    teamMembers: [],
+    completedAt: null
   };
 }
 
@@ -957,6 +971,7 @@ function showResults() {
   state.champion = final.winner;
   state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
   state.phase = 'champion';
+  state.completedAt = Date.now();
   saveState();
   renderAll();
 }
@@ -993,6 +1008,7 @@ function renderAll() {
   showScreen('screen-fixtures', state.phase === 'fixtures');
   showScreen('screen-knockout', state.phase === 'knockout');
   showScreen('screen-champion', state.phase === 'champion');
+  showScreen('screen-results', false);
 
   if (state.phase === 'setup') renderSetup();
   if (state.phase === 'groups') renderGroups();
@@ -1340,6 +1356,53 @@ function renderChampion() {
   document.getElementById('runnerUpName').textContent = state.runnerUp || '—';
   showPhoto('champion', state.championPhoto);
   showPhoto('runnerup', state.runnerUpPhoto);
+}
+
+// ===================== RESULTS PAGE =====================
+
+function showResultsPage() {
+  document.getElementById('screen-results').classList.add('active');
+  document.querySelectorAll('.screen:not(#screen-results)').forEach(s => s.classList.remove('active'));
+  renderResults();
+}
+
+function closeResults() {
+  document.getElementById('screen-results').classList.remove('active');
+  renderAll();
+}
+
+function renderResults() {
+  clearDisabled();
+  const cats = getCategories();
+  const results = [];
+  for (const cat of cats) {
+    const s = loadState(cat.id);
+    if (s && s.phase === 'champion' && s.champion) {
+      results.push({
+        cat: cat,
+        champion: s.champion,
+        runnerUp: s.runnerUp || '—',
+        completedAt: s.completedAt || 0,
+        hasPhoto: !!s.championPhoto
+      });
+    }
+  }
+  results.sort((a, b) => b.completedAt - a.completedAt);
+  const container = document.getElementById('resultsList');
+  if (results.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center" style="padding:32px 0;">No completed tournaments yet.</p>';
+    return;
+  }
+  let html = '<table class="standings-table"><thead><tr><th>Category</th><th>Champion</th><th>Runner-up</th><th>Completed</th></tr></thead><tbody>';
+  for (const r of results) {
+    const d = r.completedAt ? new Date(r.completedAt).toLocaleDateString() : '—';
+    html += '<tr><td style="font-weight:600;">' + (r.hasPhoto ? '🏆 ' : '') + r.cat.label + '</td>'
+      + '<td style="color:var(--green);font-weight:600;">' + r.champion + '</td>'
+      + '<td>' + r.runnerUp + '</td>'
+      + '<td style="color:var(--muted);font-size:.8rem;">' + d + '</td></tr>';
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 
 function showPhoto(which, dataUrl) {
