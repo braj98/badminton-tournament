@@ -382,16 +382,15 @@ async function logout() {
 
 async function upsertState(catId, data) {
   if (!_supabase) return;
-  try { await _supabase.from('state').upsert({ key: 'btm_state_' + catId, data: data }, { onConflict: 'key' }); } catch(e) {}
+  const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + catId, data: data }, { onConflict: 'key' });
+  if (error) console.warn('Supabase upsert failed:', error.message);
 }
 
 async function fetchState(catId) {
   if (!_supabase) return null;
-  try {
-    const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_state_' + catId).single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data ? data.data : null;
-  } catch(e) { return null; }
+  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_state_' + catId).single();
+  if (error && error.code !== 'PGRST116') { console.warn('Supabase fetch failed:', error.message); return null; }
+  return data ? data.data : null;
 }
 
 function subscribeToChanges() {
@@ -1633,12 +1632,11 @@ function init() {
 async function checkAndUpdateFromServer() {
   if (!_supabase) return;
   await checkSession();
-  if (!_isAdmin) {
-    const serverState = await fetchState(currentCategory);
-    if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
-      state = serverState;
-      renderAll();
-    }
+  const serverState = await fetchState(currentCategory);
+  if (serverState && JSON.stringify(serverState) !== JSON.stringify(state)) {
+    state = serverState;
+    try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {}
+    renderAll();
   }
   subscribeToChanges();
 }
