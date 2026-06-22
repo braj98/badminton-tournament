@@ -216,6 +216,17 @@ function renderResults() {
 
 // ===================== INIT =====================
 async function init() {
+  initSupabase();
+
+  // Categories from Supabase first, fallback to localStorage
+  if (_supabase) {
+    await checkSession();
+    const cloudCats = await fetchCategoriesFromCloud().catch(() => null);
+    if (cloudCats && cloudCats.length) {
+      saveCategories(cloudCats);
+    }
+  }
+
   try {
     const old = localStorage.getItem('btm_state');
     if (old && !localStorage.getItem('btm_state_senior_boys')) {
@@ -270,6 +281,18 @@ async function init() {
     }
   }
 
+  // Prep: sync category states from Supabase, then pick starting category
+  if (_supabase) {
+    for (const cat of getCategories()) {
+      const s = await fetchState(cat.id).catch(() => null);
+      if (s && s._lastSave > ((localLoad(cat.id) || {})._lastSave || 0)) {
+        localSave(cat.id, s);
+      }
+    }
+    subscribeToChanges();
+    updateBanners();
+  }
+
   let startCat = null;
   for (const cat of getCategories()) {
     const s = localLoad(cat.id);
@@ -283,25 +306,15 @@ async function init() {
     state = defaultState();
   }
   currentView = state.phase;
-  initSupabase();
 
-  // Supabase is primary source of truth — fetch before first render
+  // Supabase-first for current category state
   if (_supabase) {
-    await checkSession();
     const serverState = await fetchState(currentCategory).catch(() => null);
     if (serverState && serverState._lastSave > (state._lastSave || 0)) {
       state = serverState;
       localSave(currentCategory, state);
       currentView = state.phase;
     }
-    subscribeToChanges();
-    // Sync remaining categories in background
-    for (const cat of getCategories()) {
-      if (cat.id === currentCategory) continue;
-      const s = await fetchState(cat.id).catch(() => null);
-      if (s) localSave(cat.id, s);
-    }
-    updateBanners();
   }
 
   if (location.search.includes('admin')) {

@@ -189,6 +189,7 @@ function addCategory(label, type) {
   }
   cats.push({ id, label, type });
   saveCategories(cats);
+  if (_supabase) upsertCategories(cats);
   const panel = document.getElementById('managePanel');
   if (!panel.classList.contains('hidden')) renderManagePanel();
   switchCategory(id);
@@ -203,6 +204,10 @@ function deleteCategory(id) {
   const filtered = cats.filter(c => c.id !== id);
   saveCategories(filtered);
   localClear(id);
+  if (_supabase) {
+    _supabase.from('state').delete().eq('key', 'btm_state_' + id).then().catch(() => {});
+    upsertCategories(filtered);
+  }
   if (currentCategory === id) {
     const remaining = getCategories();
     switchCategory(remaining.length > 0 ? remaining[0].id : null);
@@ -310,8 +315,10 @@ function confirmImport() {
   const data = _pendingImportData;
   _pendingImportData = null;
   saveCategories(data.categories);
+  if (_supabase) upsertCategories(data.categories);
   for (const id of Object.keys(data.states)) {
     try { localStorage.setItem('btm_state_' + id, JSON.stringify(data.states[id])); } catch(e) {}
+    if (_supabase) upsertState(id, data.states[id]);
   }
   const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {

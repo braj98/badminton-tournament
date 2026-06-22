@@ -45,6 +45,10 @@ async function login() {
   _isAdmin = true;
   const serverState = await fetchState(currentCategory);
   if (serverState) { state = serverState; localSave(currentCategory, state); }
+  const cloudCats = await fetchCategoriesFromCloud();
+  if (cloudCats && cloudCats.length) {
+    saveCategories(cloudCats);
+  }
   updateBanners();
   renderAll();
 }
@@ -54,6 +58,13 @@ async function logout() {
   await _supabase.auth.signOut();
   _isAdmin = false;
   updateBanners();
+  const saved = localLoad(currentCategory);
+  if (saved && saved.phase !== 'setup') {
+    state = saved;
+  } else {
+    state = defaultState();
+  }
+  currentView = state.phase;
   renderAll();
 }
 
@@ -88,6 +99,23 @@ function scheduleCloudSave(catId, data) {
   _saveDebounceTimer = setTimeout(function() {
     upsertState(catId, data);
   }, 500);
+}
+
+async function upsertCategories(data) {
+  if (!_supabase) return;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await _supabase.from('state').upsert({ key: 'btm_categories', data: data }, { onConflict: 'key' });
+    if (!error) return;
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    else console.warn('Supabase categories upsert failed after 3 attempts:', error.message);
+  }
+}
+
+async function fetchCategoriesFromCloud() {
+  if (!_supabase) return null;
+  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_categories').single();
+  if (error && error.code !== 'PGRST116') { console.warn('Supabase categories fetch failed:', error.message); return null; }
+  return data ? data.data : null;
 }
 
 function subscribeToChanges() {
