@@ -19,7 +19,7 @@ function updateBanners() {
 // ===================== CATEGORY SWITCHING =====================
 async function switchCategory(catId) {
   if (catId === currentCategory) return;
-  if (currentCategory && state && state.phase !== 'setup') saveState();
+  if (currentCategory && state && state.phase !== 'setup') { saveState(); await flushCloudSave(); }
   currentCategory = catId;
   let serverState = null;
   if (_supabase) {

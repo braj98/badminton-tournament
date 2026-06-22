@@ -38,7 +38,6 @@
       <div style="display:flex;gap:6px;margin-bottom:10px;">
       <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
       <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="document.getElementById('importFileInput').click()">📤 Import</button>
-      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="pushAllToCloud()" title="Push all categories to Supabase">☁️ Push All</button>
         <div id="importConfirmBox" class="hidden admin-only" style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;">
           <div style="font-size:.75rem;color:#dc2626;margin-bottom:6px;">⚠️ This will overwrite <strong>all current data</strong> for <span id="importWarningCount">all</span> categories. Type <strong>IMPORT</strong> to confirm:</div>
           <div style="display:flex;gap:6px;align-items:center;">
@@ -204,6 +203,10 @@
 <script src="js/engine/fixtures.js"></script>
 <script src="js/engine/standings.js"></script>
 <script src="js/engine/knockout.js"></script>
+<!-- Layer 1b: Models (domain types) -->
+<script src="js/models/participant.js"></script>
+<script src="js/models/match.js"></script>
+<script src="js/models/tournament.js"></script>
 <!-- Layer 2: Storage (persistence, no DOM, no business logic) -->
 <script src="js/storage/local.js"></script>
 <script src="js/storage/supabase.js"></script>
@@ -215,6 +218,9 @@
 <script src="js/ui/groups.js"></script>
 <script src="js/ui/fixtures.js"></script>
 <script src="js/ui/knockout.js"></script>
-<script src="js/ui/champion.js"></script>
+    <script src="js/ui/champion.js"></script>
+
+    <!-- Edge case test suite (optional, call runAllEdgeCaseTests() from console) -->
+    <script src="js/test/edge_cases.js"></script>
 </body>
 </html>

@@ -13,17 +13,17 @@ function renderKnockout() {
       const isFinal = m.round === 'Final';
       html += '<div class="bracket-match">';
       if (isFinal) {
-        html += '<span class="pname">' + escapeHtml(m.p1 || 'TBD') + '</span>';
+        html += '<span class="pname">' + escapeHtml(pName(m.p1)) + '</span>';
         if (_isAdmin) {
           html += renderFinalSetInputs(m);
         } else {
           html += renderFinalSetText(m);
         }
-        html += '<span class="pname">' + escapeHtml(m.p2 || 'TBD') + '</span>'
-          + (m.done ? '<span class="winner-badge">🏆 ' + escapeHtml(m.winner) + '</span>' : '');
+        html += '<span class="pname">' + escapeHtml(pName(m.p2)) + '</span>'
+          + (m.done ? '<span class="winner-badge">🏆 ' + escapeHtml(pName(m.winner)) + '</span>' : '');
       } else {
         const canPlay = m.p1 && m.p2;
-        html += '<span class="pname">' + escapeHtml(m.p1 || 'TBD') + '</span>';
+        html += '<span class="pname">' + escapeHtml(pName(m.p1)) + '</span>';
         if (canPlay) {
           if (_isAdmin) {
             html += '<input class="score-input" type="number" min="0" max="30" value="' + (m.s1 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ks2\').value)" onfocus="this.select()">'
@@ -39,8 +39,8 @@ function renderKnockout() {
             + '<span class="vs">vs</span>'
             + '<span style="min-width:56px;text-align:center;">—</span>';
         }
-        html += '<span class="pname">' + escapeHtml(m.p2 || 'TBD') + '</span>'
-          + (m.done ? '<span class="winner-badge">→ ' + escapeHtml(m.winner) + '</span>' : '');
+        html += '<span class="pname">' + escapeHtml(pName(m.p2)) + '</span>'
+          + (m.done ? '<span class="winner-badge">→ ' + escapeHtml(pName(m.winner)) + '</span>' : '');
       }
       html += '</div>';
     }

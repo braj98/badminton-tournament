@@ -1,10 +1,11 @@
-function calculateStandings(groups, fixtures) {
+function calculateStandings(groups, fixtures, participants) {
   const standings = {};
   for (const key of Object.keys(groups)) {
     const playersInGroup = groups[key];
     const stats = {};
     for (const p of playersInGroup) {
-      stats[p] = { name: p, played: 0, won: 0, lost: 0, pf: 0, pa: 0, pd: 0 };
+      const pObj = participants ? findParticipant(participants, p) : null;
+      stats[p] = { id: p, name: pObj ? pObj.name : p, played: 0, won: 0, lost: 0, pf: 0, pa: 0, pd: 0 };
     }
     const groupMatches = fixtures.filter(f => f.group === key && f.done);
     for (const m of groupMatches) {
@@ -35,7 +36,7 @@ function calculateStandings(groups, fixtures) {
   for (const key of Object.keys(standings)) {
     const top2 = standings[key].slice(0, 2);
     for (const p of top2) {
-      qualifiers.push({ group: key, rank: p.rank, name: p.name });
+      qualifiers.push({ group: key, rank: p.rank, name: p.name, id: p.id });
     }
   }
   return { standings, qualifiers };

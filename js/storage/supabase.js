@@ -59,8 +59,21 @@ async function logout() {
 
 async function upsertState(catId, data) {
   if (!_supabase) return;
-  const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + catId, data: data }, { onConflict: 'key' });
-  if (error) console.warn('Supabase upsert failed:', error.message);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + catId, data: data }, { onConflict: 'key' });
+    if (!error) return;
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    else console.warn('Supabase upsert failed after 3 attempts:', error.message);
+  }
+}
+
+function flushCloudSave() {
+  if (_saveDebounceTimer) {
+    clearTimeout(_saveDebounceTimer);
+    _saveDebounceTimer = null;
+    return upsertState(currentCategory, state);
+  }
+  return Promise.resolve();
 }
 
 async function fetchState(catId) {
@@ -98,27 +111,4 @@ function subscribeToChanges() {
     .subscribe();
 }
 
-async function checkAndUpdateFromServer() {
-  if (!_supabase) return;
-  await checkSession();
-  updateBanners();
-  for (const cat of getCategories()) {
-    const serverState = await fetchState(cat.id).catch(() => null);
-    if (!serverState) continue;
-    const localState = localLoad(cat.id);
-    const localStr = localState ? JSON.stringify(localState) : null;
-    const serverStr = JSON.stringify(serverState);
-    if (serverStr !== localStr) {
-      localSave(cat.id, serverState);
-      if (cat.id === currentCategory) {
-        state = serverState;
-        if (_showingResults) {
-          renderResults();
-        } else {
-          renderAll();
-        }
-      }
-    }
-  }
-  subscribeToChanges();
-}
+

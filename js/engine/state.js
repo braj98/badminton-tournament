@@ -4,6 +4,8 @@ const MAX_ENTRIES = 20;
 function defaultState() {
   return {
     phase: 'setup',
+    sport: 'badminton',
+    format: 'singles',
     players: [],
     groups: {},
     fixtures: [],

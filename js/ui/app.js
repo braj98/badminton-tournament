@@ -99,7 +99,7 @@ function goToGroups() {
 
 function goToFixtures() {
   currentView = 'fixtures';
-  const result = calculateStandings(state.groups, state.fixtures);
+  const result = calculateStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   renderAll();
@@ -116,7 +116,7 @@ function goToKnockout() {
 
 function goToFixturesFromKnockout() {
   currentView = 'fixtures';
-  const result = calculateStandings(state.groups, state.fixtures);
+  const result = calculateStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   renderAll();
@@ -153,8 +153,10 @@ function renderResults() {
     if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
     const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
     for (const m of s.knockout) {
-      const p1 = m.p1 || 'TBD';
-      const p2 = m.p2 || 'TBD';
+    const p1Name = s.participants ? participantName(s.participants, m.p1) || m.p1 || 'TBD' : m.p1 || 'TBD';
+    const p2Name = s.participants ? participantName(s.participants, m.p2) || m.p2 || 'TBD' : m.p2 || 'TBD';
+    const p1 = p1Name;
+    const p2 = p2Name;
       let score = '';
       if (m.round === 'Final' && m.sets) {
         const parts = [];
@@ -176,7 +178,9 @@ function renderResults() {
       });
     }
     if (s.champion) {
-      champions.push({ cat: cat, champion: s.champion, runnerUp: s.runnerUp || '—', championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto, completedAt: s.completedAt });
+      const chName = s.participants ? participantName(s.participants, s.champion) || s.champion : s.champion;
+      const ruName = s.participants ? participantName(s.participants, s.runnerUp) || s.runnerUp || '—' : s.runnerUp || '—';
+      champions.push({ cat: cat, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto, completedAt: s.completedAt });
     }
   }
   matches.sort((a, b) => b.updatedAt - a.updatedAt);
@@ -212,7 +216,7 @@ function renderResults() {
 }
 
 // ===================== INIT =====================
-function init() {
+async function init() {
   try {
     const old = localStorage.getItem('btm_state');
     if (old && !localStorage.getItem('btm_state_senior_boys')) {
@@ -220,6 +224,52 @@ function init() {
     }
     localStorage.removeItem('btm_state');
   } catch(e) {}
+
+  // Migrate old-format state to participant IDs
+  for (const cat of getCategories()) {
+    const s = localLoad(cat.id);
+    if (s && s.players && !s.participants) {
+      const nameToId = {};
+      s.participants = s.players.map((n, i) => {
+        const p = createParticipant(n);
+        nameToId[n] = p.id;
+        return p;
+      });
+      if (s.groups) {
+        for (const key of Object.keys(s.groups)) {
+          s.groups[key] = s.groups[key].map(name => nameToId[name] || name);
+        }
+      }
+      if (s.fixtures) {
+        for (const f of s.fixtures) {
+          if (f.p1) f.p1 = nameToId[f.p1] || f.p1;
+          if (f.p2) f.p2 = nameToId[f.p2] || f.p2;
+        }
+      }
+      if (s.knockout) {
+        for (const m of s.knockout) {
+          if (m.p1) m.p1 = nameToId[m.p1] || m.p1;
+          if (m.p2) m.p2 = nameToId[m.p2] || m.p2;
+          if (m.winner) m.winner = nameToId[m.winner] || m.winner;
+        }
+      }
+      if (s.standings) {
+        for (const key of Object.keys(s.standings)) {
+          for (const r of s.standings[key]) {
+            r.id = nameToId[r.name] || r.name;
+          }
+        }
+      }
+      if (s.qualifiers) {
+        for (const q of s.qualifiers) {
+          q.id = nameToId[q.id] || q.id;
+        }
+      }
+      if (s.champion) s.champion = nameToId[s.champion] || s.champion;
+      if (s.runnerUp) s.runnerUp = nameToId[s.runnerUp] || s.runnerUp;
+      localSave(cat.id, s);
+    }
+  }
 
   let startCat = null;
   for (const cat of getCategories()) {
@@ -235,8 +285,27 @@ function init() {
   }
   currentView = state.phase;
   initSupabase();
-  setTimeout(checkAndUpdateFromServer, 0);
+
+  // Supabase is primary source of truth — fetch before first render
+  if (_supabase) {
+    await checkSession();
+    const serverState = await fetchState(currentCategory).catch(() => null);
+    if (serverState && serverState._lastSave > (state._lastSave || 0)) {
+      state = serverState;
+      localSave(currentCategory, state);
+      currentView = state.phase;
+    }
+    subscribeToChanges();
+    // Sync remaining categories in background
+    for (const cat of getCategories()) {
+      if (cat.id === currentCategory) continue;
+      const s = await fetchState(cat.id).catch(() => null);
+      if (s) localSave(cat.id, s);
+    }
+    updateBanners();
+  }
+
   showResultsPage();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', function() { init(); });

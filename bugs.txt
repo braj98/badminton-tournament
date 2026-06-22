@@ -1,116 +1,442 @@
-es, I can see why.
+Tournament Manager Platform - Product & Technical Roadmap
+Vision
 
-Your HTML correctly marks the button as:
+Build a lightweight, reusable tournament management platform for apartment communities, clubs, schools, and local events.
 
-<button class="btn btn-secondary admin-only"
-        onclick="toggleManagePanel()">
-  ⚙️ Manage
-</button>
+The platform should support multiple sports while remaining easy to deploy, inexpensive to host, and simple to operate.
 
-and your CSS says:
+The system is not intended to be a permanent historical archive.
 
-body.viewer-mode .admin-only {
-    display: none !important;
-}
+Data retention goal:
 
-So in theory the Manage button should disappear.
+Current Year
+Previous Year
 
-The problem is likely here:
+Older tournament data may be archived or deleted.
 
-function showResultsPage() {
-  ...
-  renderResults();
-  applyViewerMode();
-  document.querySelectorAll('.admin-only')
-          .forEach(el => el.style.display = 'none');
-}
+Guiding Principles
+Keep It Simple
 
-but inside renderResults() the first line is:
+Avoid enterprise-level complexity.
 
-clearDisabled();
+Preferred stack:
 
-and clearDisabled() does:
+Frontend
+Supabase
+GitHub Pages / Vercel
 
-document.body.classList.remove('viewer-mode');
+Avoid:
 
-...
-app.querySelectorAll('.admin-only')
-   .forEach(el => el.classList.remove('hidden'));
+Dedicated backend servers
+Complex DevOps
+Heavy infrastructure
+Current Status (V1)
+Completed
+Tournament Management
+Categories
+Singles
+Doubles
+Group Generation
+Fixtures
+Standings
+Knockout Brackets
+Champion Page
+Persistence
+Local Storage
+Supabase Sync
+Security
+Admin Login
+Viewer Mode
+Deployment
+GitHub
+GitHub Pages
+Phase 1 - Stabilization (Current Priority)
+Goal
 
-So your code is constantly fighting itself:
+Make badminton tournament management stable and production-ready.
 
-showResultsPage()
-    ↓
-applyViewerMode()
+No new features.
 
-renderResults()
-    ↓
-clearDisabled()
-    ↓
-remove viewer-mode
-    ↓
-show admin controls again
-Quick Test
+No new sports.
 
-Open browser DevTools and run:
+Fixes
+Viewer/Admin Separation
 
-document.body.classList.contains('viewer-mode')
+Viewer must never see:
 
-If it returns:
-
-false
-
-while viewing Results page as a viewer, that's the bug.
-
-Fix #1 (Recommended)
-
-Modify clearDisabled():
-
-Current:
-
-document.body.classList.remove('viewer-mode');
-
-Change to:
-
-if (_isAdmin) {
-    document.body.classList.remove('viewer-mode');
-}
-
-This prevents viewer mode from being removed accidentally.
-
-Fix #2 (Even Better)
-
-At the end of renderResults() add:
-
-if (!_isAdmin) {
-    applyViewerMode();
-}
-
-That guarantees admin controls stay hidden on Results screen.
-
-Another bug I noticed
-
-You currently have:
-
-toggleManagePanel() {
-   if (!_isAdmin) return;
-}
-
-which protects the action.
-
-But if a viewer can still see the Manage button, it creates confusion because clicking it does nothing.
-
-For viewer UX:
-
-Viewer should never see:
-⚙ Manage
-📥 Export
-📤 Import
-☁ Push All
+Edit
+Rename
+Reset
 Add Category
-Reset Category
 Delete Category
+Upload Photo
+Import
+Export
+Push to Cloud
+Score Entry Controls
 
-If you fix the viewer-mode issue above, all of these should disappear automatically because they're already marked admin-only.
+Viewer should only see:
 
-My suspicion is that the root cause is the first line of clearDisabled(). That's the first thing I'd change
+Groups
+Fixtures
+Standings
+Knockout
+Champion
+Results
+State Management
+
+Separate:
+
+Tournament State
+
+Example:
+
+Players
+Teams
+Groups
+Fixtures
+Scores
+Standings
+Knockout
+
+from
+
+UI State
+
+Example:
+
+Current Screen
+Selected Category
+Expanded Panels
+Filters
+
+Rule:
+
+Viewer navigation must never modify tournament state.
+
+Supabase Reliability
+
+Make Supabase the primary source of truth.
+
+Flow:
+
+Admin
+→ Supabase
+
+Viewer
+← Supabase
+
+Local Storage
+= cache only
+
+Edge Case Testing
+
+Validate:
+
+2 Players
+3 Players
+4 Players
+5 Players
+6 Players
+10 Players
+11 Players
+20 Players
+
+For:
+
+Group Generation
+Qualification
+Knockout Creation
+Champion Determination
+Deliverable
+
+Stable Badminton Tournament Application
+
+Target:
+
+90%+ bug-free operation
+
+Phase 2 - Architecture Cleanup
+Goal
+
+Prepare platform for multiple sports.
+
+Introduce Domain Model
+
+Current model:
+
+Players
+Groups
+Fixtures
+
+Move towards:
+
+Tournament
+Category
+Participant
+Match
+Bracket
+Standings
+
+Example:
+
+{
+tournamentId,
+sport,
+format,
+participants,
+matches
+}
+
+Separate Layers
+UI Layer
+
+Responsible for:
+
+Rendering
+Navigation
+Forms
+Engine Layer
+
+Responsible for:
+
+Group Generation
+Fixture Generation
+Ranking
+Qualification
+Knockout Progression
+Storage Layer
+
+Responsible for:
+
+Supabase
+Local Cache
+Folder Structure
+
+src/
+
+ui/
+
+engine/
+
+storage/
+
+models/
+
+assets/
+
+Deliverable
+
+Clean architecture ready for multiple sports.
+
+Phase 3 - React Migration
+Goal
+
+Improve maintainability.
+
+Current HTML + JavaScript solution is acceptable for badminton.
+
+However, supporting multiple sports will become difficult.
+
+Recommended stack:
+
+React
+Vite
+Supabase
+
+Not required immediately.
+
+Do only after Phase 1 and Phase 2 are complete.
+
+Benefits
+Component Reuse
+
+Examples:
+
+Standings Table
+Match Card
+Bracket
+Champion Card
+
+Reusable across all sports.
+
+Easier Maintenance
+
+Instead of:
+
+2000+ line files
+
+Use:
+
+Small components
+
+Better AI Assistance
+
+Modern AI tools generate React code more effectively than large vanilla JavaScript applications.
+
+Deliverable
+
+Tournament Manager V2 Frontend
+
+Phase 4 - Multi-Sport Support
+Goal
+
+Support additional sports using the same engine.
+
+Sports to Add
+Easy
+Table Tennis
+Tennis
+Chess
+Carrom
+
+Mostly reuse existing logic.
+
+Medium
+Volleyball
+Football
+Basketball
+
+Need team scoring models.
+
+Later
+Cricket
+
+Requires different tournament and scoring models.
+
+Sport Configuration
+
+Example:
+
+{
+sport: "badminton",
+type: "singles",
+maxSets: 3,
+rankingRules: [...]
+}
+
+No hardcoded sport logic inside UI.
+
+Deliverable
+
+Reusable Sports Platform
+
+Phase 5 - Tournament Operations
+Goal
+
+Improve tournament day experience.
+
+Features
+Match Queue
+
+Determine next match automatically.
+
+Rules:
+
+Alternate groups
+Avoid back-to-back matches for same player
+Prioritize waiting players
+Court Management
+
+Assign:
+
+Court 1
+Court 2
+Court 3
+
+Track current matches.
+
+Live Scoreboard
+
+Public display mode.
+
+Large screen TV support.
+
+Mobile-Friendly View
+
+Optimized for:
+
+Scorers
+Referees
+Organizers
+Deliverable
+
+Event-Day Operations Platform
+
+Phase 6 - Community Platform
+Goal
+
+Support repeated tournaments.
+
+Retention Policy
+
+Maintain:
+
+Current Year
+Previous Year
+
+Archive or purge older data.
+
+Optional Features
+Hall of Fame
+Previous Champions
+Tournament Calendar
+Season Statistics
+
+Not mandatory.
+
+Recommended Technology Roadmap
+Today
+
+GitHub Pages
++
+Supabase
++
+Vanilla JS
+
+After Stabilization
+
+GitHub Pages
++
+Supabase
++
+Modular JavaScript
+
+Long-Term
+
+React
++
+Vite
++
+Supabase
+
+What Not To Do
+
+Do not add:
+
+Multiple sports
+Player statistics
+Historical analytics
+Notifications
+WhatsApp integration
+Referee management
+
+until Phase 1 is complete.
+
+Every new feature before stabilization increases bug count and slows progress.
+
+Success Criteria
+
+A successful V1 platform should allow:
+
+2-20 Players/Teams
+Singles and Doubles
+Group Stage
+Standings
+Qualification
+SF / QF / Final
+Champion Declaration
+Admin Management
+Viewer Access
+
+with minimal manual intervention and reliable synchronization across devices.

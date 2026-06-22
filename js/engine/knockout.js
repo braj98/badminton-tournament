@@ -1,15 +1,15 @@
 function generateKnockout(qualifiers) {
   if (qualifiers.length === 2) {
     return [
-      { id: 'final', round: 'Final', p1: qualifiers[0].name, p2: qualifiers[1].name,
+      { id: 'final', round: 'Final', p1: qualifiers[0].id, p2: qualifiers[1].id,
         s1: null, s2: null, sets: null, done: false, winner: null }
     ];
   }
   if (qualifiers.length === 4) {
     return [
-      { id: 'sf1', round: 'SF', p1: qualifiers[0].name, p2: qualifiers[3].name,
+      { id: 'sf1', round: 'SF', p1: qualifiers[0].id, p2: qualifiers[3].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'sf2', round: 'SF', p1: qualifiers[1].name, p2: qualifiers[2].name,
+      { id: 'sf2', round: 'SF', p1: qualifiers[1].id, p2: qualifiers[2].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
       { id: 'final', round: 'Final', p1: null, p2: null,
         s1: null, s2: null, sets: null, done: false, winner: null }
@@ -17,13 +17,13 @@ function generateKnockout(qualifiers) {
   }
   if (qualifiers.length === 8) {
     return [
-      { id: 'qf1', round: 'QF', p1: qualifiers[0].name, p2: qualifiers[3].name,
+      { id: 'qf1', round: 'QF', p1: qualifiers[0].id, p2: qualifiers[3].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf2', round: 'QF', p1: qualifiers[1].name, p2: qualifiers[2].name,
+      { id: 'qf2', round: 'QF', p1: qualifiers[1].id, p2: qualifiers[2].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf3', round: 'QF', p1: qualifiers[4].name, p2: qualifiers[7].name,
+      { id: 'qf3', round: 'QF', p1: qualifiers[4].id, p2: qualifiers[7].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf4', round: 'QF', p1: qualifiers[5].name, p2: qualifiers[6].name,
+      { id: 'qf4', round: 'QF', p1: qualifiers[5].id, p2: qualifiers[6].id,
         s1: null, s2: null, sets: null, done: false, winner: null },
       { id: 'sf1', round: 'SF', p1: null, p2: null,
         s1: null, s2: null, sets: null, done: false, winner: null },

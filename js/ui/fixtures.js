@@ -11,7 +11,7 @@ function renderFixtures() {
     for (const f of gf) {
       const done = f.done;
       html += '<div class="match-row' + (done ? ' match-done' : '') + '">'
-        + '<span class="pname">' + escapeHtml(f.p1) + '</span>';
+        + '<span class="pname">' + escapeHtml(pName(f.p1)) + '</span>';
       if (_isAdmin) {
         html += '<input class="score-input" type="number" min="0" max="30" value="' + (f.s1 ?? '') + '" '
           + 'onchange="enterFixtureScore(' + f.id + ',this.value,this.parentElement.querySelector(\'.s2\').value)" '
@@ -25,7 +25,7 @@ function renderFixtures() {
           + '<span class="vs">vs</span>'
           + '<span class="score-text">' + (f.s2 ?? '') + '</span>';
       }
-      html += '<span class="pname">' + escapeHtml(f.p2) + '</span>'
+      html += '<span class="pname">' + escapeHtml(pName(f.p2)) + '</span>'
         + (done ? '<span class="done-label">✓</span>' : '')
         + '</div>';
     }
@@ -67,7 +67,7 @@ function enterFixtureScore(id, s1, s2) {
   f.s2 = parseInt(s2) || 0;
   f.done = f.s1 !== f.s2;
   f.updatedAt = Date.now();
-  const result = calculateStandings(state.groups, state.fixtures);
+  const result = calculateStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   state.knockout = generateKnockout(state.qualifiers);

@@ -59,8 +59,8 @@ function renderChampion() {
   clearDisabled();
   const cat = getCategories().find(c => c.id === currentCategory);
   document.getElementById('championCatLabel').textContent = cat ? cat.label : '';
-  document.getElementById('championName').textContent = state.champion || '—';
-  document.getElementById('runnerUpName').textContent = state.runnerUp || '—';
+  document.getElementById('championName').textContent = pName(state.champion) || '—';
+  document.getElementById('runnerUpName').textContent = pName(state.runnerUp) || '—';
   showPhoto('champion', state.championPhoto);
   showPhoto('runnerup', state.runnerUpPhoto);
 }

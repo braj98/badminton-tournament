@@ -146,9 +146,13 @@ function startTournament() {
     }
     if (names.length < MIN_ENTRIES || names.length > MAX_ENTRIES) return;
     state = defaultState();
+    state.sport = 'badminton';
+    state.format = 'doubles';
+    const pDbl = names.map((n, i) => createParticipant(n, members[i]));
+    state.participants = pDbl;
     state.players = names;
     state.teamMembers = members;
-    state.groups = allocateGroups(names, determineGroupCount(names.length));
+    state.groups = allocateGroups(pDbl, determineGroupCount(pDbl.length));
     state.fixtures = generateFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
@@ -167,8 +171,12 @@ function startTournament() {
     }
     if (names.length < MIN_ENTRIES || names.length > MAX_ENTRIES) return;
     state = defaultState();
+    state.sport = 'badminton';
+    state.format = 'singles';
+    const pSingles = names.map(n => createParticipant(n));
+    state.participants = pSingles;
     state.players = names;
-    state.groups = allocateGroups(names, determineGroupCount(names.length));
+    state.groups = allocateGroups(pSingles, determineGroupCount(pSingles.length));
     state.fixtures = generateFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
