@@ -16,5 +16,6 @@ function findParticipant(participants, id) {
 function participantName(participants, id) {
   if (!participants || !id) return id;
   const p = findParticipant(participants, id);
-  return p ? p.name : id;
+  return p ? p.name : undefined;
 }
+

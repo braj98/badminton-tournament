@@ -188,30 +188,44 @@ function toggleManagePanel() {
 
 function renderManagePanel() {
   const container = document.getElementById('manageCategoryList');
+  if (!container) return;
   const cats = getCategories();
   let html = '';
   for (const c of cats) {
     const saved = localLoad(c.id);
     const running = saved && saved.phase !== 'setup';
-    html += '<div style="display:flex;flex-direction:column;padding:6px 0;border-bottom:1px solid var(--border);">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-      + '<span><strong>' + escapeHtml(c.label) + '</strong> <span class="text-muted" style="font-size:.8rem;">(' + c.type + ')</span></span>'
-      + '<span style="display:flex;gap:6px;">'
+    const sportName = getSportLabel(c.sport);
+    const sportIcon = getSportIcon(c.sport);
+    const eventName = c.event || DEFAULT_EVENT;
+    
+    html += '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
+      + '  <div style="display:flex;flex-direction:column;gap:2px;">'
+      + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+      + '      <span style="font-size:1.1rem;">' + sportIcon + '</span>'
+      + '      <span style="font-weight:600;font-size:0.9rem;color:var(--text-main);">' + escapeHtml(c.label) + '</span>'
+      + '      <span style="font-size:0.65rem;text-transform:uppercase;background:#f1f5f9;color:var(--text-muted);padding:1px 6px;border-radius:4px;font-weight:600;">' + c.type + '</span>'
+      + '    </div>'
+      + '    <span style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(eventName) + ' • ' + sportName + '</span>'
+      + '  </div>'
+      + '  <div style="display:flex;gap:6px;align-items:center;">'
       + (running ? '<button class="btn btn-outline" style="padding:4px 8px;font-size:.75rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + c.id + '\')">Reset</button>' : '')
-      + '<button class="btn btn-secondary" style="padding:4px 12px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
-      + '</span></div>'
-      + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
-        + '<span style="font-size:.75rem;color:#dc2626;">Type RESET:</span>'
+      + '<button class="btn btn-secondary" style="padding:4px 10px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
+      + '  </div>'
+      + '</div>'
+      + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.75rem;color:#dc2626;font-weight:500;">Type RESET:</span>'
         + '<input type="text" id="manageResetInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="RESET">'
         + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeManageReset(\'' + c.id + '\')">Go</button></div>' : '')
-      + (!running ? '<div id="manageDeleteConfirm_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
-        + '<span style="font-size:.75rem;color:#dc2626;">Type DELETE:</span>'
+      + (!running ? '<div id="manageDeleteConfirm_' + c.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.75rem;color:#dc2626;font-weight:500;">Type DELETE:</span>'
         + '<input type="text" id="manageDeleteInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="DELETE">'
         + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeDeleteConfirm(\'' + c.id + '\')">Go</button></div>' : '')
       + '</div>';
   }
   container.innerHTML = html;
 }
+
 
 function toggleManageReset(catId) {
   const div = document.getElementById('manageReset_' + catId);

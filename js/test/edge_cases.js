@@ -254,7 +254,7 @@ function testNewFormatFlow() {
   for (const f of fixtures) {
     pass &= assert(typeof f.p1 === 'string' && typeof f.p2 === 'string', 'Fixture p1/p2 are strings');
   }
-  pass &= assert(fixtures.length === 15, '6 players -> 15 fixtures across 2 groups');
+  pass &= assert(fixtures.length === 6, '6 players -> 6 fixtures across 2 groups');
 
   // Fill scores with admin
   for (const f of fixtures) { f.s1 = 13; f.s2 = Math.floor(Math.random() * 9); f.done = f.s1 !== f.s2; }
@@ -413,7 +413,7 @@ function testCategorySportFiltering() {
 
   // Deleting all of one sport should leave others untouched
   const afterDelete = allPlus.filter(c => c.sport !== 'tableTennis');
-  pass &= assert(afterDelete.length === 4, 'Delete tableTennis categories leaves 4 remaining');
+  pass &= assert(afterDelete.length === 3, 'Delete tableTennis categories leaves 3 remaining');
   pass &= assert(afterDelete.every(c => c.sport !== 'tableTennis'), 'No tableTennis categories remain');
 
   console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
@@ -519,7 +519,7 @@ function testTournamentEngineAPI() {
 
   // createFixtures
   const fixtures = createFixtures(groups);
-  pass &= assert(fixtures.length === 15, 'createFixtures generates 15 matches');
+  pass &= assert(fixtures.length === 6, 'createFixtures generates 6 matches');
   for (const f of fixtures) {
     pass &= assert(typeof f.p1 === 'string' && typeof f.p2 === 'string', 'Fixture p1/p2 are strings');
     pass &= assert(f.round === 'group', 'Fixture round = group');

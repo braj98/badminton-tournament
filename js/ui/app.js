@@ -4,10 +4,29 @@
 // ===================== HEADER + ACTION BAR =====================
 function updateHeader() {
   var badge = document.getElementById('eventBadge');
-  if (badge) badge.textContent = AppState.event;
   var tag = document.getElementById('sportTag');
-  if (tag) tag.textContent = getSportLabel(AppState.sport);
+  
+  if (AppState.view === 'home' || AppState.showingResults) {
+    if (badge) badge.classList.add('hidden');
+    if (tag) tag.classList.add('hidden');
+  } else if (AppState.view === 'event') {
+    if (badge) {
+      badge.textContent = AppState.event;
+      badge.classList.remove('hidden');
+    }
+    if (tag) tag.classList.add('hidden');
+  } else {
+    if (badge) {
+      badge.textContent = AppState.event;
+      badge.classList.remove('hidden');
+    }
+    if (tag) {
+      tag.textContent = getSportLabel(AppState.sport);
+      tag.classList.remove('hidden');
+    }
+  }
 }
+
 
 function renderActionBar() {
   var bar = document.getElementById('actionBar');
@@ -55,27 +74,28 @@ function renderHomePage() {
   const cats = getCategories();
   const events = [...new Set(cats.map(c => c.event || DEFAULT_EVENT))];
   const container = document.getElementById('homeContent');
-  let html = '';
+  let html = '<h2 class="page-title">Events</h2><div class="home-events-list">';
   for (const ev of events) {
-    const sportCats = {};
-    for (const c of cats.filter(c => (c.event || DEFAULT_EVENT) === ev)) {
-      if (!sportCats[c.sport]) sportCats[c.sport] = [];
-      sportCats[c.sport].push(c);
+    const eventCats = cats.filter(c => (c.event || DEFAULT_EVENT) === ev);
+    let active = 0;
+    for (const c of eventCats) {
+      const st = localLoad(c.id);
+      if (st && st.phase !== 'setup') active++;
     }
-    html += '<div class="home-event"><h2>' + escapeHtml(ev) + '</h2><div class="home-sport-grid">';
-    for (const s of SPORT_IDS) {
-      if (!sportCats[s]) continue;
-      const active = sportCats[s].filter(c => { const st = localLoad(c.id); return st && st.phase !== 'setup'; }).length;
-      const total = sportCats[s].length;
-      html += '<div class="home-sport-card" onclick="navigateToSport(\'' + ev + '\',\'' + s + '\')">'
-        + '<div class="home-sport-icon">' + getSportIcon(s) + '</div>'
-        + '<div class="home-sport-info"><div class="name">' + getSportLabel(s) + '</div>'
-        + '<div class="count">' + active + ' active / ' + total + ' total</div></div>'
-        + '<div class="arrow">›</div></div>';
-    }
-    html += '</div></div>';
+    const total = eventCats.length;
+    html += '<div class="event-card" onclick="goToEventPage(\'' + escapeHtml(ev) + '\')">'
+      + '<div class="event-icon">🏆</div>'
+      + '<div class="event-info">'
+      + '<div class="name">' + escapeHtml(ev) + '</div>'
+      + '<div class="count">' + active + ' active / ' + total + ' total categories</div>'
+      + '</div>'
+      + '<div class="arrow">›</div>'
+      + '</div>';
   }
-  if (!html) html = '<p class="text-muted text-center" style="padding:48px 0;">No categories yet. Admins can add them via Manage.</p>';
+  html += '</div>';
+  if (events.length === 0) {
+    html = '<p class="text-muted text-center" style="padding:48px 0;">No events configured yet. Admins can add categories via Manage.</p>';
+  }
   if (container) container.innerHTML = html;
   showScreen('screen-home', true);
   showScreen('screen-setup', false);
@@ -86,6 +106,7 @@ function renderHomePage() {
   showScreen('screen-results', false);
   if (!AppState.isAdmin) applyViewerMode();
 }
+
 
 // ===================== BREADCRUMB =====================
 function renderBreadcrumb() {
@@ -173,6 +194,7 @@ function renderEventPage() {
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
   var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
+  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
   if (!AppState.isAdmin) applyViewerMode();
 }
 
@@ -213,6 +235,7 @@ function renderSportPage() {
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
   var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
+  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
   if (!AppState.isAdmin) applyViewerMode();
 }
 
