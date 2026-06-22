@@ -304,7 +304,10 @@ async function init() {
     updateBanners();
   }
 
-  if (location.search.includes('admin')) showLogin();
+  if (location.search.includes('admin')) {
+    const link = document.getElementById('adminFooterLink');
+    if (link) link.classList.remove('hidden');
+  }
 
   showResultsPage();
 }
