@@ -10,16 +10,9 @@ const FACTORY_CATEGORIES = [
 // ===================== AUTH UI =====================
 function updateBanners() {
   const ab = document.getElementById('adminBanner');
-  const fl = document.getElementById('adminFooterLink');
-  const fb = document.getElementById('adminFooterBadge');
-  if (_isAdmin) {
-    if (ab) { ab.classList.remove('hidden'); }
-    if (fl) { fl.classList.add('hidden'); }
-    if (fb) { fb.classList.remove('hidden'); }
-  } else {
-    if (ab) { ab.classList.add('hidden'); }
-    if (fl) { fl.classList.remove('hidden'); }
-    if (fb) { fb.classList.add('hidden'); }
+  if (ab) {
+    if (_isAdmin) ab.classList.remove('hidden');
+    else ab.classList.add('hidden');
   }
 }
 

@@ -304,6 +304,8 @@ async function init() {
     updateBanners();
   }
 
+  if (location.search.includes('admin')) showLogin();
+
   showResultsPage();
 }
 
