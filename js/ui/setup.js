@@ -5,7 +5,7 @@ let _pendingReduceCount = 0;
 function rebuildPlayerInputs(count) {
   const container = document.getElementById('playerInputs');
   const existingValues = [];
-  if (isDoubles()) {
+  if (isDoubles(currentCategory)) {
     const rows = container.querySelectorAll('div');
     for (const row of rows) {
       const inputs = row.querySelectorAll('input');
@@ -15,9 +15,8 @@ function rebuildPlayerInputs(count) {
     const inputs = container.querySelectorAll('input');
     for (const inp of inputs) existingValues.push(inp.value);
   }
-
   container.innerHTML = '';
-  if (isDoubles()) {
+  if (isDoubles(currentCategory)) {
     for (let i = 1; i <= count; i++) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:6px;';
@@ -72,16 +71,16 @@ function showReduceConfirm(newCount, oldCount) {
   const list = document.getElementById('reduceConfirmList');
   const container = document.getElementById('playerInputs');
   let names = '';
-  if (isDoubles()) {
+  if (isDoubles(currentCategory)) {
     const rows = container.querySelectorAll('div');
     for (let i = newCount; i < rows.length; i++) {
       const inputs = rows[i].querySelectorAll('input');
-      names += '<div style="padding:2px 0;">• ' + inputs[0].value + ' & ' + inputs[1].value + '</div>';
+      names += '<div style="padding:2px 0;">• ' + escapeHtml(inputs[0].value) + ' & ' + escapeHtml(inputs[1].value) + '</div>';
     }
   } else {
     const inputs = container.querySelectorAll('input');
     for (let i = newCount; i < inputs.length; i++) {
-      names += '<div style="padding:2px 0;">• ' + inputs[i].value + '</div>';
+      names += '<div style="padding:2px 0;">• ' + escapeHtml(inputs[i].value) + '</div>';
     }
   }
   list.innerHTML = '<div style="margin-bottom:6px;font-weight:600;">The following will be removed:</div>' + names;
@@ -129,7 +128,7 @@ function confirmStart() {
 function startTournament() {
   if (!_isAdmin) return;
   const count = parseInt(document.getElementById('playerCount').value);
-  if (isDoubles()) {
+  if (isDoubles(currentCategory)) {
     const rows = document.querySelectorAll('#playerInputs > div');
     const names = [];
     const members = [];
@@ -149,9 +148,10 @@ function startTournament() {
     state = defaultState();
     state.players = names;
     state.teamMembers = members;
-    allocateGroups(names);
-    generateFixtures();
+    state.groups = allocateGroups(names, determineGroupCount(names.length));
+    state.fixtures = generateFixtures(state.groups);
     state.phase = 'groups';
+    currentView = state.phase;
     saveState();
     renderAll();
   } else {
@@ -168,9 +168,10 @@ function startTournament() {
     if (names.length < MIN_ENTRIES || names.length > MAX_ENTRIES) return;
     state = defaultState();
     state.players = names;
-    allocateGroups(names);
-    generateFixtures();
+    state.groups = allocateGroups(names, determineGroupCount(names.length));
+    state.fixtures = generateFixtures(state.groups);
     state.phase = 'groups';
+    currentView = state.phase;
     saveState();
     renderAll();
   }
@@ -178,13 +179,15 @@ function startTournament() {
 
 function renderSetup() {
   clearDisabled();
-  const saved = loadState(currentCategory);
+  const saved = localLoad(currentCategory);
   const cat = getCategories().find(c => c.id === currentCategory);
-  document.getElementById('setupTitle').textContent = 'New ' + (cat ? cat.label + ' — ' : '') + 'Tournament';
+  document.getElementById('setupTitle').textContent = 'New ' + (cat ? escapeHtml(cat.label) + ' — ' : '') + 'Tournament';
   const pc = document.getElementById('playerCount');
   pc.min = MIN_ENTRIES;
   pc.max = MAX_ENTRIES;
-  document.getElementById('setupLabel').textContent = isDoubles() ? 'Number of teams (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')' : 'Number of players (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')';
+  document.getElementById('setupLabel').textContent = isDoubles(currentCategory)
+    ? 'Number of teams (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')'
+    : 'Number of players (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')';
   const bar = document.getElementById('resumeBar');
   bar.classList.toggle('hidden', !saved || saved.phase === 'setup');
   const resetSection = document.getElementById('resetSection');

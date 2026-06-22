@@ -1,4 +1,4 @@
-// ===================== CATEGORIES =====================
+// ===================== CATEGORY DEFINITIONS =====================
 const FACTORY_CATEGORIES = [
   { id: 'junior', label: 'Junior', type: 'singles' },
   { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles' },
@@ -7,50 +7,60 @@ const FACTORY_CATEGORIES = [
   { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles' },
 ];
 
-function getCategories() {
-  try {
-    const raw = localStorage.getItem('btm_categories');
-    if (raw) { const c = JSON.parse(raw); if (c.length) return c; }
-  } catch(e) {}
-  saveCategories(FACTORY_CATEGORIES);
-  return [...FACTORY_CATEGORIES];
+// ===================== AUTH UI =====================
+function updateBanners() {
+  const vb = document.getElementById('viewerBanner');
+  const ab = document.getElementById('adminBanner');
+  if (!vb || !ab) return;
+  if (_isAdmin) { vb.classList.add('hidden'); ab.classList.remove('hidden'); }
+  else { vb.classList.remove('hidden'); ab.classList.add('hidden'); }
 }
 
-function saveCategories(cats) {
-  try { localStorage.setItem('btm_categories', JSON.stringify(cats)); } catch(e) {}
-}
-
-function switchCategory(catId) {
+// ===================== CATEGORY SWITCHING =====================
+async function switchCategory(catId) {
   if (catId === currentCategory) return;
   if (currentCategory && state && state.phase !== 'setup') saveState();
   currentCategory = catId;
-  const saved = loadState(catId);
-  if (saved && saved.phase !== 'setup') {
-    state = saved;
-  } else {
-    state = defaultState();
+  let serverState = null;
+  if (_supabase) {
+    serverState = await fetchState(catId).catch(() => null);
   }
+  if (currentCategory !== catId) return;
+  if (serverState) {
+    state = serverState;
+    localSave(catId, state);
+  } else {
+    const saved = localLoad(catId);
+    if (saved && saved.phase !== 'setup') {
+      state = saved;
+    } else {
+      state = defaultState();
+    }
+  }
+  currentView = state.phase;
   renderAll();
 }
 
+// ===================== CATEGORY BAR =====================
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
   for (const cat of getCategories()) {
     const btn = document.createElement('button');
     btn.className = 'cat-btn' + (cat.id === currentCategory ? ' active' : '');
-    const s = loadState(cat.id);
+    const s = localLoad(cat.id);
     let dotClass = 'setup';
     if (s) {
       if (s.phase === 'champion') dotClass = 'done';
       else if (s.phase !== 'setup') dotClass = 'playing';
     }
-    btn.innerHTML = '<span class="dot ' + dotClass + '"></span>' + cat.label;
+    btn.innerHTML = '<span class="dot ' + dotClass + '"></span>' + escapeHtml(cat.label);
     btn.onclick = function() { switchCategory(cat.id); };
     bar.appendChild(btn);
   }
 }
 
+// ===================== RESET =====================
 function showResetConfirm() {
   if (!_isAdmin) return;
   const box = document.getElementById('resetConfirmBox');
@@ -72,9 +82,13 @@ function executeReset() {
 
 function resetCategory(catId) {
   if (!_isAdmin) return;
-  try { localStorage.removeItem('btm_state_' + catId); } catch(e) {}
+  localClear(catId);
+  if (_supabase) {
+    _supabase.from('state').delete().eq('key', 'btm_state_' + catId).then().catch(() => {});
+  }
   if (currentCategory === catId) {
     state = defaultState();
+    currentView = state.phase;
     renderAll();
   } else {
     renderCategoryBar();
@@ -83,6 +97,7 @@ function resetCategory(catId) {
   if (!panel.classList.contains('hidden')) renderManagePanel();
 }
 
+// ===================== MANAGE PANEL =====================
 function toggleManagePanel() {
   if (!_isAdmin) return;
   const panel = document.getElementById('managePanel');
@@ -95,26 +110,23 @@ function renderManagePanel() {
   const cats = getCategories();
   let html = '';
   for (const c of cats) {
-    const saved = loadState(c.id);
+    const saved = localLoad(c.id);
     const running = saved && saved.phase !== 'setup';
     html += '<div style="display:flex;flex-direction:column;padding:6px 0;border-bottom:1px solid var(--border);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-      + '<span><strong>' + c.label + '</strong> <span class="text-muted" style="font-size:.8rem;">(' + c.type + ')</span></span>'
+      + '<span><strong>' + escapeHtml(c.label) + '</strong> <span class="text-muted" style="font-size:.8rem;">(' + c.type + ')</span></span>'
       + '<span style="display:flex;gap:6px;">'
       + (running ? '<button class="btn btn-outline" style="padding:4px 8px;font-size:.75rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + c.id + '\')">Reset</button>' : '')
       + '<button class="btn btn-secondary" style="padding:4px 12px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
-      + '</span>'
-      + '</div>'
+      + '</span></div>'
       + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
         + '<span style="font-size:.75rem;color:#dc2626;">Type RESET:</span>'
         + '<input type="text" id="manageResetInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="RESET">'
-        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeManageReset(\'' + c.id + '\')">Go</button>'
-        + '</div>' : '')
+        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeManageReset(\'' + c.id + '\')">Go</button></div>' : '')
       + (!running ? '<div id="manageDeleteConfirm_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
         + '<span style="font-size:.75rem;color:#dc2626;">Type DELETE:</span>'
         + '<input type="text" id="manageDeleteInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="DELETE">'
-        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeDeleteConfirm(\'' + c.id + '\')">Go</button>'
-        + '</div>' : '')
+        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeDeleteConfirm(\'' + c.id + '\')">Go</button></div>' : '')
       + '</div>';
   }
   container.innerHTML = html;
@@ -186,11 +198,11 @@ function deleteCategory(id) {
   if (!_isAdmin) return;
   const cats = getCategories();
   if (cats.length <= 1) return;
-  const saved = loadState(id);
+  const saved = localLoad(id);
   if (saved && saved.phase !== 'setup') return;
   const filtered = cats.filter(c => c.id !== id);
   saveCategories(filtered);
-  try { localStorage.removeItem('btm_state_' + id); } catch(e) {}
+  localClear(id);
   if (currentCategory === id) {
     const remaining = getCategories();
     switchCategory(remaining.length > 0 ? remaining[0].id : null);
@@ -201,19 +213,22 @@ function deleteCategory(id) {
   if (!panel.classList.contains('hidden')) renderManagePanel();
 }
 
+// ===================== RESUME =====================
 function resumeTournament() {
-  const saved = loadState(currentCategory);
+  const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {
     state = saved;
+    currentView = state.phase;
     renderAll();
   }
 }
 
+// ===================== EXPORT / IMPORT =====================
 function exportAll() {
   const cats = getCategories();
   const states = {};
   for (const c of cats) {
-    const s = loadState(c.id);
+    const s = localLoad(c.id);
     if (s) states[c.id] = s;
   }
   const data = { exportedAt: new Date().toISOString(), categories: cats, states: states };
@@ -233,7 +248,7 @@ async function pushAllToCloud() {
   const cats = getCategories();
   let pushed = 0, failed = 0;
   for (const c of cats) {
-    const s = loadState(c.id);
+    const s = localLoad(c.id);
     if (!s) continue;
     const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + c.id, data: s }, { onConflict: 'key' });
     if (error) { failed++; console.warn('Failed to push ' + c.label + ':', error.message); }
@@ -290,12 +305,13 @@ function confirmImport() {
   for (const id of Object.keys(data.states)) {
     try { localStorage.setItem('btm_state_' + id, JSON.stringify(data.states[id])); } catch(e) {}
   }
-  const saved = loadState(currentCategory);
+  const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {
     state = saved;
   } else {
     state = defaultState();
   }
+  currentView = state.phase;
   renderAll();
   if (!document.getElementById('managePanel').classList.contains('hidden')) renderManagePanel();
 }

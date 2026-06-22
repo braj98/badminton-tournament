@@ -1,33 +1,25 @@
 let _supabase = null;
 let _realtimeChannel = null;
+let _isAdmin = false;
+let _saveDebounceTimer = null;
 
 const _SUPABASE_URL = 'https://cnotgqvcippfzhsqnnzb.supabase.co';
 const _SUPABASE_ANON_KEY = 'sb_publishable_pDEbo-ttaBTBTTH8dcJbHA_RC-Q0KAy';
 
 function initSupabase() {
-  if (typeof supabase === 'undefined') { _isAdmin = false; updateBanners(); return; }
+  if (typeof supabase === 'undefined') { _isAdmin = false; return; }
   try {
     _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
     checkSession();
-  } catch(e) { _isAdmin = false; updateBanners(); }
+  } catch(e) { _isAdmin = false; }
 }
 
 async function checkSession() {
-  if (!_supabase) { _isAdmin = false; updateBanners(); return; }
+  if (!_supabase) { _isAdmin = false; return; }
   try {
     const { data: { session } } = await _supabase.auth.getSession();
     _isAdmin = !!session;
   } catch(e) { _isAdmin = false; }
-  updateBanners();
-  if (!_isAdmin && state && state.phase !== 'setup') applyViewerMode();
-}
-
-function updateBanners() {
-  const vb = document.getElementById('viewerBanner');
-  const ab = document.getElementById('adminBanner');
-  if (!vb || !ab) return;
-  if (_isAdmin) { vb.classList.add('hidden'); ab.classList.remove('hidden'); }
-  else { vb.classList.remove('hidden'); ab.classList.add('hidden'); }
 }
 
 function showLogin() {
@@ -52,7 +44,7 @@ async function login() {
   closeLogin();
   _isAdmin = true;
   const serverState = await fetchState(currentCategory);
-  if (serverState) { state = serverState; try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {} }
+  if (serverState) { state = serverState; localSave(currentCategory, state); }
   updateBanners();
   renderAll();
 }
@@ -78,6 +70,13 @@ async function fetchState(catId) {
   return data ? data.data : null;
 }
 
+function scheduleCloudSave(catId, data) {
+  clearTimeout(_saveDebounceTimer);
+  _saveDebounceTimer = setTimeout(function() {
+    upsertState(catId, data);
+  }, 500);
+}
+
 function subscribeToChanges() {
   if (!_supabase || _realtimeChannel) return;
   _realtimeChannel = _supabase.channel('btm-state-changes')
@@ -86,7 +85,9 @@ function subscribeToChanges() {
       if (!key || !key.startsWith('btm_state_')) return;
       const catId = key.replace('btm_state_', '');
       const newData = payload.new ? payload.new.data : null;
-      if (newData && catId === currentCategory && JSON.stringify(newData) !== JSON.stringify(state)) { state = newData; renderAll(); }
+      if (newData && catId === currentCategory && newData._lastSave > state._lastSave && !_showingResults) {
+        state = newData; renderAll();
+      }
     })
     .subscribe();
 }
@@ -94,15 +95,16 @@ function subscribeToChanges() {
 async function checkAndUpdateFromServer() {
   if (!_supabase) return;
   await checkSession();
+  updateBanners();
   for (const cat of getCategories()) {
     const serverState = await fetchState(cat.id).catch(() => null);
     if (!serverState) continue;
-    const localState = loadState(cat.id);
+    const localState = localLoad(cat.id);
     const localStr = localState ? JSON.stringify(localState) : null;
     const serverStr = JSON.stringify(serverState);
     if (serverStr !== localStr) {
-      try { localStorage.setItem('btm_state_' + cat.id, serverStr); } catch(e) {}
-      if (cat.id === currentCategory) {
+      localSave(cat.id, serverState);
+      if (cat.id === currentCategory && !_showingResults) {
         state = serverState;
         renderAll();
       }

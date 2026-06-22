@@ -1,40 +1,96 @@
-Add:
+I found the bug.
 
-if (!_isAdmin) return;
+The issue is that you're using:
 
-to every function that changes state.
+state.phase
 
-Priority 2
+for two different purposes:
 
-Change:
+Tournament progress
+Current screen being viewed
 
-_isAdmin = true;
+In renderAll():
 
-fallbacks to:
+showScreen('screen-groups', state.phase === 'groups');
+showScreen('screen-fixtures', state.phase === 'fixtures');
+showScreen('screen-knockout', state.phase === 'knockout');
+showScreen('screen-champion', state.phase === 'champion');
 
-_isAdmin = false;
-Priority 3
+So if the tournament is currently at:
 
-Make category switch fetch from Supabase.
+state.phase = 'fixtures'
 
-Priority 4
+then only Fixtures screen is visible.
 
-Make saveState() async and await cloud writes.
+When a viewer clicks:
 
-One thing worries me
+View Fixtures →
 
-You mentioned:
+it calls:
 
-switching between view by non admin wipes data
+goToFixtures()
 
-That symptom strongly suggests:
+which changes:
 
-switchCategory()
-↓
-defaultState()
-↓
-saveState()
-↓
-upsertState()
+state.phase = 'fixtures';
 
-is overwriting a valid tournament with an empty one.
+and rerenders.
+
+But there is no equivalent public navigation that lets a viewer go:
+
+Groups ← Fixtures ← Knockout ← Champion
+
+without changing tournament state.
+
+Why you're stuck
+
+Let's say:
+
+Sr Doubles
+All group matches complete
+Tournament phase = fixtures
+
+As a viewer:
+
+You can see Fixtures
+You cannot see Groups
+You cannot see Knockout
+You cannot see Champion
+
+because those screens only appear when:
+
+state.phase === 'groups'
+state.phase === 'knockout'
+state.phase === 'champion'
+
+respectively.
+
+The correct fix
+
+Create:
+
+let currentView = null;
+
+Example:
+
+currentView = 'groups';
+currentView = 'fixtures';
+currentView = 'knockout';
+currentView = 'champion';
+
+Then:
+
+showScreen('screen-groups', currentView === 'groups');
+showScreen('screen-fixtures', currentView === 'fixtures');
+showScreen('screen-knockout', currentView === 'knockout');
+showScreen('screen-champion', currentView === 'champion');
+
+while:
+
+state.phase
+
+continues to mean:
+
+Tournament progression
+
+Only.

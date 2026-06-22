@@ -1,6 +1,18 @@
 // ===================== CHAMPION =====================
 let photoTarget = null;
 
+function viewChampion() {
+  if (!state.champion) {
+    const final = state.knockout.find(m => m.id === 'final');
+    if (final && final.done && final.winner) {
+      state.champion = final.winner;
+      state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
+    }
+  }
+  currentView = 'champion';
+  renderAll();
+}
+
 function showResults() {
   if (!_isAdmin) return;
   const final = state.knockout.find(m => m.id === 'final');
@@ -34,8 +46,12 @@ function confirmNewTournament() {
 
 function newTournament() {
   if (!_isAdmin) return;
-  clearSavedState();
+  localClear(currentCategory);
+  if (_supabase) {
+    _supabase.from('state').delete().eq('key', 'btm_state_' + currentCategory).then().catch(() => {});
+  }
   state = defaultState();
+  currentView = state.phase;
   renderAll();
 }
 

@@ -115,7 +115,7 @@
         <button id="editToggleBtn" class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="toggleEditMode()">✏️ Edit</button>
       </div>
       <div id="groupDisplay" class="group-grid"></div>
-      <button class="btn btn-block mt-16" onclick="goToFixtures()">View Fixtures →</button>
+      <button class="btn btn-block mt-16" data-public="1" onclick="goToFixtures()">View Fixtures →</button>
     </div>
   </div>
 
@@ -124,11 +124,12 @@
     <div class="card">
       <div class="flex justify-between items-center mb-12">
         <h2 style="margin:0;">Group Stage Matches</h2>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="goToGroups()">← Groups</button>
+        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToGroups()">← Groups</button>
       </div>
       <div id="fixtureList"></div>
       <div id="groupStandings"></div>
       <button id="btnProceedKnockout" class="btn btn-block mt-16 hidden admin-only" onclick="goToKnockout()">Proceed to Knockout →</button>
+      <button id="btnViewKnockout" class="btn btn-block mt-16 hidden btn-secondary" data-public="1" onclick="viewKnockout()">View Knockout →</button>
     </div>
   </div>
 
@@ -137,10 +138,14 @@
     <div class="card">
       <div class="flex justify-between items-center mb-12">
         <h2 style="margin:0;">Knockout Stage</h2>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="goToFixturesFromKnockout()">← Fixtures</button>
+        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToFixturesFromKnockout()">← Fixtures</button>
       </div>
       <div id="bracket"></div>
-      <button id="btnShowResults" class="btn btn-block mt-16 hidden" data-public="1" onclick="showResults()">🏆 Show Results</button>
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" style="flex:1;padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToGroups()">← Groups</button>
+        <button id="btnShowResults" class="btn hidden admin-only" style="flex:1;padding:6px 14px;font-size:.8rem;" onclick="showResults()">🏆 Show Results</button>
+        <button id="btnViewChampion" class="btn hidden" style="flex:1;padding:6px 14px;font-size:.8rem;" data-public="1" onclick="viewChampion()">🏆 View Champion</button>
+      </div>
     </div>
   </div>
 
@@ -193,15 +198,23 @@
   <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
 </div>
 
-<script src="js/state.js"></script>
-<script src="js/supabase.js"></script>
-<script src="js/categories.js"></script>
-<script src="js/setup.js"></script>
-<script src="js/groups.js"></script>
-<script src="js/fixtures.js"></script>
-<script src="js/standings.js"></script>
-<script src="js/knockout.js"></script>
-<script src="js/champion.js"></script>
-<script src="js/app.js"></script>
+<!-- Layer 1: Engine (pure logic, no DOM, no storage) -->
+<script src="js/engine/state.js"></script>
+<script src="js/engine/groups.js"></script>
+<script src="js/engine/fixtures.js"></script>
+<script src="js/engine/standings.js"></script>
+<script src="js/engine/knockout.js"></script>
+<!-- Layer 2: Storage (persistence, no DOM, no business logic) -->
+<script src="js/storage/local.js"></script>
+<script src="js/storage/supabase.js"></script>
+<!-- Layer 3: UI (orchestrates engine + storage, DOM rendering) -->
+<script src="js/ui/utils.js"></script>
+<script src="js/ui/app.js"></script>
+<script src="js/ui/categories.js"></script>
+<script src="js/ui/setup.js"></script>
+<script src="js/ui/groups.js"></script>
+<script src="js/ui/fixtures.js"></script>
+<script src="js/ui/knockout.js"></script>
+<script src="js/ui/champion.js"></script>
 </body>
 </html>

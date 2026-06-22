@@ -1,0 +1,26 @@
+function generateFixtures(groups) {
+  const groupKeys = Object.keys(groups);
+  const byGroup = {};
+  for (const key of groupKeys) {
+    const members = groups[key];
+    const matches = [];
+    for (let i = 0; i < members.length; i++) {
+      for (let j = i + 1; j < members.length; j++) {
+        matches.push({ group: key, p1: members[i], p2: members[j], s1: null, s2: null, done: false });
+      }
+    }
+    byGroup[key] = matches;
+  }
+  const scheduled = [];
+  let maxLen = 0;
+  for (const key of groupKeys) maxLen = Math.max(maxLen, byGroup[key].length);
+  for (let i = 0; i < maxLen; i++) {
+    for (const key of groupKeys) {
+      if (byGroup[key][i]) {
+        byGroup[key][i].id = scheduled.length;
+        scheduled.push(byGroup[key][i]);
+      }
+    }
+  }
+  return scheduled;
+}

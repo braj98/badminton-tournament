@@ -1,28 +1,69 @@
-// ===================== RENDER =====================
+// ===================== APP STATE =====================
+let currentCategory = null;
+let state = null;
+let currentView = null;
+let _showingResults = false;
+
+// ===================== SAVE (orchestrates storage) =====================
+function saveState() {
+  if (!currentCategory) return;
+  state._lastSave = Date.now();
+  localSave(currentCategory, state);
+  if (_isAdmin && state.phase !== 'setup') {
+    scheduleCloudSave(currentCategory, state);
+  }
+}
+
+// ===================== RENDER CYCLE =====================
 function renderAll() {
+  _showingResults = false;
   clearDisabled();
+
+  if (!_isAdmin && state.phase === 'setup') {
+    const cats = getCategories();
+    let foundCat = null;
+    for (const cat of cats) {
+      if (cat.id === currentCategory) continue;
+      const s = localLoad(cat.id);
+      if (s && s.phase !== 'setup') { foundCat = cat.id; break; }
+    }
+    if (foundCat) {
+      currentCategory = foundCat;
+      state = localLoad(foundCat) || defaultState();
+      currentView = state.phase;
+      renderAll();
+      return;
+    }
+    renderCategoryBar();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-results').classList.add('active');
+    document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
+    if (!_isAdmin) applyViewerMode();
+    return;
+  }
 
   renderCategoryBar();
   showScreen('screen-setup', state.phase === 'setup');
-  showScreen('screen-groups', state.phase === 'groups');
-  showScreen('screen-fixtures', state.phase === 'fixtures');
-  showScreen('screen-knockout', state.phase === 'knockout');
-  showScreen('screen-champion', state.phase === 'champion');
+  showScreen('screen-groups', currentView === 'groups');
+  showScreen('screen-fixtures', currentView === 'fixtures');
+  showScreen('screen-knockout', currentView === 'knockout');
+  showScreen('screen-champion', currentView === 'champion');
   showScreen('screen-results', false);
-
-  if (state.phase === 'setup') renderSetup();
-  if (state.phase === 'groups') renderGroups();
-  if (state.phase === 'fixtures') renderFixtures();
-  if (state.phase === 'knockout') renderKnockout();
-  if (state.phase === 'champion') renderChampion();
-
+  if (currentView === 'setup') renderSetup();
+  if (currentView === 'groups') renderGroups();
+  if (currentView === 'fixtures') renderFixtures();
+  if (currentView === 'knockout') renderKnockout();
+  if (currentView === 'champion') renderChampion();
+  document.getElementById('btnViewKnockout').classList.toggle('hidden', !(state.phase === 'knockout' || state.phase === 'champion'));
   if (!_isAdmin) applyViewerMode();
 }
 
 function clearDisabled() {
+  document.body.classList.remove('viewer-mode');
   const app = document.getElementById('app');
   app.querySelectorAll('input, button, select').forEach(el => {
     if (el.closest('#loginOverlay')) return;
+    el.style.display = '';
     el.disabled = false;
   });
   app.querySelectorAll('.photo-zone').forEach(el => {
@@ -33,17 +74,11 @@ function clearDisabled() {
 }
 
 function applyViewerMode() {
-  const app = document.getElementById('app');
-  app.querySelectorAll('input, button, select').forEach(el => {
-    if (el.closest('#loginOverlay') || el.closest('#adminBanner') || el.closest('#viewerBanner')) return;
-    el.disabled = true;
-  });
-  app.querySelectorAll('.photo-zone').forEach(el => {
+  document.body.classList.add('viewer-mode');
+  document.querySelectorAll('.photo-zone').forEach(el => {
     el.style.pointerEvents = 'none';
     el.style.cursor = 'default';
   });
-  app.querySelectorAll('.cat-btn, [data-public]').forEach(el => { el.disabled = false; });
-  app.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
 }
 
 function showScreen(id, show) {
@@ -51,42 +86,58 @@ function showScreen(id, show) {
 }
 
 // ===================== NAVIGATION =====================
+function viewKnockout() {
+  currentView = 'knockout';
+  renderAll();
+}
+
 function goToGroups() {
-  state.phase = 'groups';
-  saveState();
+  currentView = 'groups';
   renderAll();
 }
+
 function goToFixtures() {
-  state.phase = 'fixtures';
-  calculateStandings();
-  saveState();
+  currentView = 'fixtures';
+  const result = calculateStandings(state.groups, state.fixtures);
+  state.standings = result.standings;
+  state.qualifiers = result.qualifiers;
   renderAll();
 }
+
 function goToKnockout() {
+  if (!_isAdmin) return;
   state.phase = 'knockout';
-  advanceKnockout();
+  currentView = 'knockout';
+  state.knockout = advanceKnockout(state.knockout);
   saveState();
   renderAll();
 }
+
 function goToFixturesFromKnockout() {
-  state.phase = 'fixtures';
-  calculateStandings();
-  saveState();
+  currentView = 'fixtures';
+  const result = calculateStandings(state.groups, state.fixtures);
+  state.standings = result.standings;
+  state.qualifiers = result.qualifiers;
   renderAll();
 }
+
 function goBackFromChampion() {
-  state.phase = 'knockout';
+  currentView = 'knockout';
   renderAll();
 }
 
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
+  _showingResults = true;
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => s.classList.remove('active'));
   renderResults();
+  applyViewerMode();
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
 }
 
 function closeResults() {
+  _showingResults = false;
   document.getElementById('screen-results').classList.remove('active');
   renderAll();
 }
@@ -97,7 +148,7 @@ function renderResults() {
   const matches = [];
   const champions = [];
   for (const cat of cats) {
-    const s = loadState(cat.id);
+    const s = localLoad(cat.id);
     if (!s || (s.phase !== 'knockout' && s.phase !== 'champion' && s.phase !== 'fixtures') || !s.knockout) continue;
     const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
     for (const m of s.knockout) {
@@ -116,8 +167,7 @@ function renderResults() {
       matches.push({
         cat: cat,
         round: roundLabel[m.round] || m.round,
-        p1: p1,
-        p2: p2,
+        p1: p1, p2: p2,
         score: score || '—',
         done: m.done,
         winner: m.winner || null,
@@ -135,10 +185,10 @@ function renderResults() {
     html += '<h2 style="margin-bottom:8px;">🏆 Champions</h2>';
     for (const c of champions) {
       html += '<div class="champion-card" style="margin-bottom:12px;padding:16px;">'
-        + '<div class="crown">' + c.cat.label + '</div>'
-        + '<div class="name" style="font-size:1.2rem;">' + c.champion + '</div>'
+        + '<div class="crown">' + escapeHtml(c.cat.label) + '</div>'
+        + '<div class="name" style="font-size:1.2rem;">' + escapeHtml(c.champion) + '</div>'
         + (c.championPhoto ? '<img src="' + c.championPhoto + '" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);margin:6px auto;display:block;">' : '')
-        + '<div class="runner-up" style="border:none;padding-top:8px;font-size:.8rem;">Runner-up: <strong>' + c.runnerUp + '</strong></div>'
+        + '<div class="runner-up" style="border:none;padding-top:8px;font-size:.8rem;">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
         + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius);margin:4px auto;display:block;">' : '')
         + '</div>';
     }
@@ -148,11 +198,11 @@ function renderResults() {
   } else {
     html += '<h2 class="mt-20">Knockout Matches</h2><table class="standings-table"><thead><tr><th>Category</th><th>Round</th><th>Match</th><th>Score</th><th>Status</th></tr></thead><tbody>';
     for (const m of matches) {
-      const status = m.done ? '<span style="color:var(--green);font-weight:600;">✓ ' + m.winner + '</span>' : '<span style="color:var(--muted);">⏳ Upcoming</span>';
-      html += '<tr><td style="font-weight:600;">' + m.cat.label + '</td>'
+      const status = m.done ? '<span style="color:var(--green);font-weight:600;">✓ ' + escapeHtml(m.winner) + '</span>' : '<span style="color:var(--muted);">⏳ Upcoming</span>';
+      html += '<tr><td style="font-weight:600;">' + escapeHtml(m.cat.label) + '</td>'
         + '<td>' + m.round + '</td>'
-        + '<td>' + m.p1 + ' <span class="vs">vs</span> ' + m.p2 + '</td>'
-        + '<td style="font-weight:600;">' + m.score + '</td>'
+        + '<td>' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</td>'
+        + '<td style="font-weight:600;">' + escapeHtml(m.score) + '</td>'
         + '<td>' + status + '</td></tr>';
     }
     html += '</tbody></table>';
@@ -172,20 +222,20 @@ function init() {
 
   let startCat = null;
   for (const cat of getCategories()) {
-    const s = loadState(cat.id);
+    const s = localLoad(cat.id);
     if (s && s.phase !== 'setup') { startCat = cat.id; break; }
   }
   currentCategory = startCat || getCategories()[0].id;
-  const saved = loadState(currentCategory);
+  const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {
     state = saved;
   } else {
     state = defaultState();
   }
-  renderAll();
-
+  currentView = state.phase;
   initSupabase();
   setTimeout(checkAndUpdateFromServer, 0);
+  showResultsPage();
 }
 
 document.addEventListener('DOMContentLoaded', init);
