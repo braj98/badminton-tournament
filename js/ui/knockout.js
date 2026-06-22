@@ -2,7 +2,7 @@ function renderKnockout() {
   clearDisabled();
   var _koCfg = getCurrentConfig();
   const container = document.getElementById('bracket');
-  const ko = state.knockout;
+  const ko = AppState.tournament.knockout;
   if (!ko || ko.length === 0) { container.innerHTML = '<p class="text-muted">No knockout matches.</p>'; return; }
   const rounds = ['QF', 'SF', 'Final'];
   const roundLabels = { QF: 'Quarter Final', SF: 'Semi Final', Final: 'Final' };
@@ -25,7 +25,7 @@ function renderKnockout() {
         + '<div class="vs-circle">VS</div>'
         + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p2)) + '</div><div class="team-names">' + escapeHtml(pName(m.p2)) + '</div></div>'
         + '</div>';
-      if (canPlay && _isAdmin) {
+      if (canPlay && AppState.isAdmin) {
         html += '<div class="match-score-area">';
         if (isFinal) {
           html += renderFinalSetInputs(m);
@@ -35,7 +35,7 @@ function renderKnockout() {
             + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
         }
         html += '</div>';
-      } else if (canPlay && !_isAdmin) {
+      } else if (canPlay && !AppState.isAdmin) {
         if (isFinal) {
           html += '<div class="match-score-area">' + renderFinalSetText(m) + '</div>';
         } else if (m.s1 !== null && m.s2 !== null) {
@@ -49,11 +49,11 @@ function renderKnockout() {
   container.innerHTML = html;
   const finalMatch = ko.find(function(mm) { return mm.id === 'final'; });
   const finalDone = finalMatch && finalMatch.done;
-  document.getElementById('btnShowResults').classList.toggle('hidden', !(finalDone && _isAdmin));
+  document.getElementById('btnShowResults').classList.toggle('hidden', !(finalDone && AppState.isAdmin));
   document.getElementById('btnViewChampion').classList.toggle('hidden', !finalDone);
   var _ab1 = document.getElementById('actionBarShowResults');
   var _ab2 = document.getElementById('actionBarViewChampion');
-  if (_ab1) _ab1.classList.toggle('hidden', !(finalDone && _isAdmin));
+  if (_ab1) _ab1.classList.toggle('hidden', !(finalDone && AppState.isAdmin));
   if (_ab2) _ab2.classList.toggle('hidden', !finalDone);
 }
 
@@ -101,8 +101,8 @@ function renderFinalSetInputs(m) {
 }
 
 function enterKnockoutScore(id, s1, s2) {
-  if (!_isAdmin) return;
-  const m = state.knockout.find(function(mm) { return mm.id === id; });
+  if (!AppState.isAdmin) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   m.s1 = parseInt(s1) || 0;
   m.s2 = parseInt(s2) || 0;
@@ -115,12 +115,12 @@ function enterKnockoutScore(id, s1, s2) {
     m.done = false;
     m.winner = null;
   }
-  state.knockout = advanceWinner(state.knockout);
-  if (state.phase === 'champion') {
-    var _fm = state.knockout.find(function(mm) { return mm.id === 'final'; });
+  AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
+  if (AppState.tournament.phase === 'champion') {
+    var _fm = AppState.tournament.knockout.find(function(mm) { return mm.id === 'final'; });
     if (_fm && _fm.done && _fm.winner) {
-      state.champion = _fm.winner;
-      state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
+      AppState.tournament.champion = _fm.winner;
+      AppState.tournament.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
     }
   }
   saveState();
@@ -128,8 +128,8 @@ function enterKnockoutScore(id, s1, s2) {
 }
 
 function enterFinalSet(id, setNum, s1, s2) {
-  if (!_isAdmin) return;
-  const m = state.knockout.find(function(mm) { return mm.id === id; });
+  if (!AppState.isAdmin) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   var _cfg = getCurrentConfig();
   if (!m.sets) {
@@ -159,12 +159,12 @@ function enterFinalSet(id, setNum, s1, s2) {
     m.s1 = null;
     m.s2 = null;
   }
-  state.knockout = advanceWinner(state.knockout);
-  if (state.phase === 'champion') {
-    var _fm = state.knockout.find(function(mm) { return mm.id === 'final'; });
+  AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
+  if (AppState.tournament.phase === 'champion') {
+    var _fm = AppState.tournament.knockout.find(function(mm) { return mm.id === 'final'; });
     if (_fm && _fm.done && _fm.winner) {
-      state.champion = _fm.winner;
-      state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
+      AppState.tournament.champion = _fm.winner;
+      AppState.tournament.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
     }
   }
   saveState();

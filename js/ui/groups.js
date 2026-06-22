@@ -5,16 +5,16 @@ function renderGroups() {
   clearDisabled();
   const container = document.getElementById('groupDisplay');
   container.innerHTML = '';
-  const tm = state.teamMembers || [];
-  const groupKeys = Object.keys(state.groups);
-  if (!_isAdmin) _editMode = false;
+  const tm = AppState.tournament.teamMembers || [];
+  const groupKeys = Object.keys(AppState.tournament.groups);
+  if (!AppState.isAdmin) _editMode = false;
   for (const key of groupKeys) {
     const card = document.createElement('div');
     card.className = 'group-card';
     let items = '';
     const otherGroups = groupKeys.filter(g => g !== key);
-    for (const p of state.groups[key]) {
-      const idx = state.participants ? state.participants.findIndex(pt => pt.id === p) : state.players.indexOf(p);
+    for (const p of AppState.tournament.groups[key]) {
+      const idx = AppState.tournament.participants ? AppState.tournament.participants.findIndex(pt => pt.id === p) : AppState.tournament.players.indexOf(p);
       const m = tm[idx];
       const pid = 'gm_' + String(p).replace(/[^a-zA-Z0-9]/g, '_');
       let moveBtns = '';
@@ -37,33 +37,33 @@ function renderGroups() {
 }
 
 function movePlayerToGroup(playerIdx, targetGroup) {
-  if (!_isAdmin) return;
-  const playerId = state.participants ? state.participants[playerIdx].id : state.players[playerIdx];
+  if (!AppState.isAdmin) return;
+  const playerId = AppState.tournament.participants ? AppState.tournament.participants[playerIdx].id : AppState.tournament.players[playerIdx];
   if (!playerId) return;
   let currentGroup = null;
-  for (const key of Object.keys(state.groups)) {
-    if (state.groups[key].includes(playerId)) {
+  for (const key of Object.keys(AppState.tournament.groups)) {
+    if (AppState.tournament.groups[key].includes(playerId)) {
       currentGroup = key;
       break;
     }
   }
   if (!currentGroup || currentGroup === targetGroup) return;
-  const hasScores = state.fixtures.some(f => f.done);
+  const hasScores = AppState.tournament.fixtures.some(f => f.done);
   if (hasScores) {
     if (!confirm('Scores have been entered. Moving this player will reset all group stage scores. Continue?')) return;
-    for (const f of state.fixtures) {
+    for (const f of AppState.tournament.fixtures) {
       f.s1 = null; f.s2 = null; f.done = false;
     }
   }
-  state.groups[currentGroup] = state.groups[currentGroup].filter(p => p !== playerId);
-  state.groups[targetGroup].push(playerId);
-  state.fixtures = createFixtures(state.groups);
-  const result = computeStandings(state.groups, state.fixtures, state.participants);
-  state.standings = result.standings;
-  state.qualifiers = result.qualifiers;
-  if (state.knockout.length > 0) {
-    state.knockout = [];
-    state.qualifiers = [];
+  AppState.tournament.groups[currentGroup] = AppState.tournament.groups[currentGroup].filter(p => p !== playerId);
+  AppState.tournament.groups[targetGroup].push(playerId);
+  AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  if (AppState.tournament.knockout.length > 0) {
+    AppState.tournament.knockout = [];
+    AppState.tournament.qualifiers = [];
   }
   saveState();
   renderGroups();
@@ -71,7 +71,7 @@ function movePlayerToGroup(playerIdx, targetGroup) {
 }
 
 function toggleEditMode() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   _editMode = !_editMode;
   const btn = document.getElementById('editToggleBtn');
   if (_editMode) {
@@ -87,12 +87,12 @@ function toggleEditMode() {
 }
 
 function promptRename(playerIdx) {
-  if (!_isAdmin) return;
-  const oldName = state.participants ? state.participants[playerIdx].name : state.players[playerIdx];
+  if (!AppState.isAdmin) return;
+  const oldName = AppState.tournament.participants ? AppState.tournament.participants[playerIdx].name : AppState.tournament.players[playerIdx];
   const newName = prompt('Rename "' + oldName + '":', oldName);
   if (newName && newName.trim() && newName.trim() !== oldName) {
     const trimmed = newName.trim();
-    const allNames = state.participants ? state.participants.map(p => p.name) : state.players;
+    const allNames = AppState.tournament.participants ? AppState.tournament.participants.map(p => p.name) : AppState.tournament.players;
     if (allNames.some((n, i) => i !== playerIdx && n === trimmed)) {
       alert('Another player already has this name.');
       return;
@@ -102,45 +102,45 @@ function promptRename(playerIdx) {
 }
 
 function renamePlayer(playerIdx, newName) {
-  if (!_isAdmin) return;
-  if (state.participants) {
-    state.participants[playerIdx].name = newName;
-    state.players[playerIdx] = newName;
-    const pid = state.participants[playerIdx].id;
-    for (const key of Object.keys(state.standings)) {
-      for (const r of state.standings[key]) {
+  if (!AppState.isAdmin) return;
+  if (AppState.tournament.participants) {
+    AppState.tournament.participants[playerIdx].name = newName;
+    AppState.tournament.players[playerIdx] = newName;
+    const pid = AppState.tournament.participants[playerIdx].id;
+    for (const key of Object.keys(AppState.tournament.standings)) {
+      for (const r of AppState.tournament.standings[key]) {
         if (r.id === pid) r.name = newName;
       }
     }
-    for (const q of state.qualifiers) {
+    for (const q of AppState.tournament.qualifiers) {
       if (q.id === pid) q.name = newName;
     }
   } else {
-    const oldName = state.players[playerIdx];
+    const oldName = AppState.tournament.players[playerIdx];
     if (!oldName) return;
-    state.players[playerIdx] = newName;
-    for (const key of Object.keys(state.groups)) {
-      state.groups[key] = state.groups[key].map(p => p === oldName ? newName : p);
+    AppState.tournament.players[playerIdx] = newName;
+    for (const key of Object.keys(AppState.tournament.groups)) {
+      AppState.tournament.groups[key] = AppState.tournament.groups[key].map(p => p === oldName ? newName : p);
     }
-    for (const f of state.fixtures) {
+    for (const f of AppState.tournament.fixtures) {
       if (f.p1 === oldName) f.p1 = newName;
       if (f.p2 === oldName) f.p2 = newName;
     }
-    for (const key of Object.keys(state.standings)) {
-      for (const r of state.standings[key]) {
+    for (const key of Object.keys(AppState.tournament.standings)) {
+      for (const r of AppState.tournament.standings[key]) {
         if (r.name === oldName) r.name = newName;
       }
     }
-    for (const q of state.qualifiers) {
+    for (const q of AppState.tournament.qualifiers) {
       if (q.name === oldName) q.name = newName;
     }
-    for (const m of state.knockout) {
+    for (const m of AppState.tournament.knockout) {
       if (m.p1 === oldName) m.p1 = newName;
       if (m.p2 === oldName) m.p2 = newName;
       if (m.winner === oldName) m.winner = newName;
     }
-    if (state.champion === oldName) state.champion = newName;
-    if (state.runnerUp === oldName) state.runnerUp = newName;
+    if (AppState.tournament.champion === oldName) AppState.tournament.champion = newName;
+    if (AppState.tournament.runnerUp === oldName) AppState.tournament.runnerUp = newName;
   }
   saveState();
   renderGroups();

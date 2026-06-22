@@ -2,29 +2,29 @@
 let photoTarget = null;
 
 function viewChampion() {
-  const final = state.knockout.find(m => m.id === 'final');
+  const final = AppState.tournament.knockout.find(m => m.id === 'final');
   if (final && final.done && final.winner) {
-    state.champion = final.winner;
-    state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
+    AppState.tournament.champion = final.winner;
+    AppState.tournament.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
   }
-  currentView = 'champion';
+  AppState.view = 'champion';
   renderAll();
 }
 
 function showResults() {
-  if (!_isAdmin) return;
-  const final = state.knockout.find(m => m.id === 'final');
+  if (!AppState.isAdmin) return;
+  const final = AppState.tournament.knockout.find(m => m.id === 'final');
   if (!final || !final.done) return;
-  state.champion = final.winner;
-  state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
-  state.phase = 'champion';
-  state.completedAt = Date.now();
+  AppState.tournament.champion = final.winner;
+  AppState.tournament.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
+  AppState.tournament.phase = 'champion';
+  AppState.tournament.completedAt = Date.now();
   saveState();
   renderAll();
 }
 
 function showNewTournamentConfirm() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const box = document.getElementById('newTournamentConfirmBox');
   box.classList.toggle('hidden');
   document.getElementById('newTournamentConfirmInput').value = '';
@@ -32,7 +32,7 @@ function showNewTournamentConfirm() {
 }
 
 function confirmNewTournament() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('newTournamentConfirmInput');
   if (input.value !== 'RESET') {
     document.getElementById('newTournamentConfirmError').textContent = 'Please type RESET to confirm.';
@@ -43,24 +43,24 @@ function confirmNewTournament() {
 }
 
 function newTournament() {
-  if (!_isAdmin) return;
-  localClear(currentCategory);
+  if (!AppState.isAdmin) return;
+  localClear(AppState.category);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', 'btm_state_' + currentCategory).then().catch(() => {});
+    _supabase.from('state').delete().eq('key', 'btm_state_' + AppState.category).then().catch(() => {});
   }
-  state = defaultState();
-  currentView = state.phase;
+  AppState.tournament = defaultState();
+  AppState.view = AppState.tournament.phase;
   renderAll();
 }
 
 function renderChampion() {
   clearDisabled();
-  const cat = getCategories().find(c => c.id === currentCategory);
+  const cat = getCategories().find(c => c.id === AppState.category);
   document.getElementById('championCatLabel').textContent = cat ? cat.label : '';
-  document.getElementById('championName').textContent = pName(state.champion) || '—';
-  document.getElementById('runnerUpName').textContent = pName(state.runnerUp) || '—';
-  showPhoto('champion', state.championPhoto);
-  showPhoto('runnerup', state.runnerUpPhoto);
+  document.getElementById('championName').textContent = pName(AppState.tournament.champion) || '—';
+  document.getElementById('runnerUpName').textContent = pName(AppState.tournament.runnerUp) || '—';
+  showPhoto('champion', AppState.tournament.championPhoto);
+  showPhoto('runnerup', AppState.tournament.runnerUpPhoto);
 }
 
 function showPhoto(which, dataUrl) {
@@ -80,13 +80,13 @@ function showPhoto(which, dataUrl) {
 }
 
 function pickPhoto(which) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   photoTarget = which;
   document.getElementById('photoInput').click();
 }
 
 function onPhotoPicked(event) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -106,8 +106,8 @@ function onPhotoPicked(event) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-      if (photoTarget === 'champion') state.championPhoto = dataUrl;
-      else state.runnerUpPhoto = dataUrl;
+      if (photoTarget === 'champion') AppState.tournament.championPhoto = dataUrl;
+      else AppState.tournament.runnerUpPhoto = dataUrl;
       saveState();
       renderChampion();
     };

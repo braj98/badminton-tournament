@@ -3,7 +3,7 @@ let _lastGoodCount = 4;
 let _pendingReduceCount = 0;
 
 function _setupConfig() {
-  const cat = getCategories().find(c => c.id === currentCategory);
+  const cat = getCategories().find(c => c.id === AppState.category);
   const sport = cat ? cat.sport : 'badminton';
   return getSportConfig(sport, cat && cat.type === 'doubles' ? 'doubles' : 'singles');
 }
@@ -11,7 +11,7 @@ function _setupConfig() {
 function rebuildPlayerInputs(count) {
   const container = document.getElementById('playerInputs');
   const existingValues = [];
-  if (isDoubles(currentCategory)) {
+  if (isDoubles(AppState.category)) {
     const rows = container.querySelectorAll('div');
     for (const row of rows) {
       const inputs = row.querySelectorAll('input');
@@ -22,7 +22,7 @@ function rebuildPlayerInputs(count) {
     for (const inp of inputs) existingValues.push(inp.value);
   }
   container.innerHTML = '';
-  if (isDoubles(currentCategory)) {
+  if (isDoubles(AppState.category)) {
     for (let i = 1; i <= count; i++) {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:6px;';
@@ -59,7 +59,7 @@ function rebuildPlayerInputs(count) {
 }
 
 function onPlayerCountChange() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const cfg = _setupConfig();
   const newCount = parseInt(document.getElementById('playerCount').value) || cfg.minPlayers;
   const clamped = Math.max(cfg.minPlayers, Math.min(cfg.maxPlayers, newCount));
@@ -78,7 +78,7 @@ function showReduceConfirm(newCount, oldCount) {
   const list = document.getElementById('reduceConfirmList');
   const container = document.getElementById('playerInputs');
   let names = '';
-  if (isDoubles(currentCategory)) {
+  if (isDoubles(AppState.category)) {
     const rows = container.querySelectorAll('div');
     for (let i = newCount; i < rows.length; i++) {
       const inputs = rows[i].querySelectorAll('input');
@@ -98,7 +98,7 @@ function showReduceConfirm(newCount, oldCount) {
 }
 
 function confirmReduce() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('reduceConfirmInput');
   if (input.value !== 'REMOVE') {
     document.getElementById('reduceConfirmError').textContent = 'Please type REMOVE to confirm.';
@@ -122,7 +122,7 @@ function showStartConfirm() {
 }
 
 function confirmStart() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('startConfirmInput');
   if (input.value !== 'START') {
     document.getElementById('startConfirmError').textContent = 'Please type START to confirm.';
@@ -133,9 +133,9 @@ function confirmStart() {
 }
 
 function startTournament() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const count = parseInt(document.getElementById('playerCount').value);
-  if (isDoubles(currentCategory)) {
+  if (isDoubles(AppState.category)) {
     const rows = document.querySelectorAll('#playerInputs > div');
     const names = [];
     const members = [];
@@ -152,19 +152,19 @@ function startTournament() {
       members.push({ a: a, b: b });
     }
     if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
-    state = defaultState();
-    const cat = getCategories().find(c => c.id === currentCategory);
-    state.sport = cat ? cat.sport : 'badminton';
-    state.format = 'doubles';
+    AppState.tournament = defaultState();
+    const cat = getCategories().find(c => c.id === AppState.category);
+    AppState.tournament.sport = cat ? cat.sport : 'badminton';
+    AppState.tournament.format = 'doubles';
     const pDbl = names.map((n, i) => createParticipant(n, members[i]));
-    state.participants = pDbl;
-    state.players = names;
-    state.teamMembers = members;
+    AppState.tournament.participants = pDbl;
+    AppState.tournament.players = names;
+    AppState.tournament.teamMembers = members;
     const cfg = _setupConfig();
-    state.groups = createGroups(pDbl, determineGroupCount(pDbl.length, cfg.groupThresholds, cfg.groupCounts));
-    state.fixtures = createFixtures(state.groups);
-    state.phase = 'groups';
-    currentView = state.phase;
+    AppState.tournament.groups = createGroups(pDbl, determineGroupCount(pDbl.length, cfg.groupThresholds, cfg.groupCounts));
+    AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
+    AppState.tournament.phase = 'groups';
+    AppState.view = AppState.tournament.phase;
     saveState();
     renderAll();
   } else {
@@ -179,18 +179,18 @@ function startTournament() {
       names.push(n);
     }
     if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
-    state = defaultState();
-    const cat = getCategories().find(c => c.id === currentCategory);
-    state.sport = cat ? cat.sport : 'badminton';
-    state.format = 'singles';
+    AppState.tournament = defaultState();
+    const cat = getCategories().find(c => c.id === AppState.category);
+    AppState.tournament.sport = cat ? cat.sport : 'badminton';
+    AppState.tournament.format = 'singles';
     const pSingles = names.map(n => createParticipant(n));
-    state.participants = pSingles;
-    state.players = names;
+    AppState.tournament.participants = pSingles;
+    AppState.tournament.players = names;
     const cfg = _setupConfig();
-    state.groups = createGroups(pSingles, determineGroupCount(pSingles.length, cfg.groupThresholds, cfg.groupCounts));
-    state.fixtures = createFixtures(state.groups);
-    state.phase = 'groups';
-    currentView = state.phase;
+    AppState.tournament.groups = createGroups(pSingles, determineGroupCount(pSingles.length, cfg.groupThresholds, cfg.groupCounts));
+    AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
+    AppState.tournament.phase = 'groups';
+    AppState.view = AppState.tournament.phase;
     saveState();
     renderAll();
   }
@@ -198,14 +198,14 @@ function startTournament() {
 
 function renderSetup() {
   clearDisabled();
-  const saved = localLoad(currentCategory);
-  const cat = getCategories().find(c => c.id === currentCategory);
+  const saved = localLoad(AppState.category);
+  const cat = getCategories().find(c => c.id === AppState.category);
   document.getElementById('setupTitle').textContent = 'New ' + (cat ? escapeHtml(cat.label) + ' — ' : '') + 'Tournament';
   const pc = document.getElementById('playerCount');
   const cfg = _setupConfig();
   pc.min = cfg.minPlayers;
   pc.max = cfg.maxPlayers;
-  document.getElementById('setupLabel').textContent = isDoubles(currentCategory)
+  document.getElementById('setupLabel').textContent = isDoubles(AppState.category)
     ? 'Number of teams (' + cfg.minPlayers + '-' + cfg.maxPlayers + ')'
     : 'Number of players (' + cfg.minPlayers + '-' + cfg.maxPlayers + ')';
   const bar = document.getElementById('resumeBar');

@@ -1,25 +1,25 @@
 let _supabase = null;
 let _realtimeChannel = null;
-let _isAdmin = false;
+AppState.isAdmin = false;
 let _saveDebounceTimer = null;
 
 const _SUPABASE_URL = 'https://cnotgqvcippfzhsqnnzb.supabase.co';
 const _SUPABASE_ANON_KEY = 'sb_publishable_pDEbo-ttaBTBTTH8dcJbHA_RC-Q0KAy';
 
 function initSupabase() {
-  if (typeof supabase === 'undefined') { _isAdmin = false; return; }
+  if (typeof supabase === 'undefined') { AppState.isAdmin = false; return; }
   try {
     _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
     checkSession();
-  } catch(e) { _isAdmin = false; }
+  } catch(e) { AppState.isAdmin = false; }
 }
 
 async function checkSession() {
-  if (!_supabase) { _isAdmin = false; return; }
+  if (!_supabase) { AppState.isAdmin = false; return; }
   try {
     const { data: { session } } = await _supabase.auth.getSession();
-    _isAdmin = !!session;
-  } catch(e) { _isAdmin = false; }
+    AppState.isAdmin = !!session;
+  } catch(e) { AppState.isAdmin = false; }
 }
 
 function showLogin() {
@@ -42,9 +42,9 @@ async function login() {
   const { error } = await _supabase.auth.signInWithPassword({ email, password });
   if (error) { document.getElementById('loginError').textContent = error.message; return; }
   closeLogin();
-  _isAdmin = true;
-  const serverState = await fetchState(currentCategory);
-  if (serverState) { state = serverState; localSave(currentCategory, state); }
+  AppState.isAdmin = true;
+  const serverState = await fetchState(AppState.category);
+  if (serverState) { AppState.tournament = serverState; localSave(AppState.category, AppState.tournament); }
   const cloudCats = await fetchCategoriesFromCloud();
   if (cloudCats && cloudCats.length) {
     saveCategories(cloudCats);
@@ -57,15 +57,15 @@ async function login() {
 async function logout() {
   if (!_supabase) return;
   await _supabase.auth.signOut();
-  _isAdmin = false;
+  AppState.isAdmin = false;
   updateBanners();
-  const saved = localLoad(currentCategory);
+  const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
-    state = saved;
+    AppState.tournament = saved;
   } else {
-    state = defaultState();
+    AppState.tournament = defaultState();
   }
-  currentView = state.phase;
+  AppState.view = AppState.tournament.phase;
   renderAll();
 }
 
@@ -83,7 +83,7 @@ function flushCloudSave() {
   if (_saveDebounceTimer) {
     clearTimeout(_saveDebounceTimer);
     _saveDebounceTimer = null;
-    return upsertState(currentCategory, state);
+    return upsertState(AppState.category, AppState.tournament);
   }
   return Promise.resolve();
 }
@@ -127,10 +127,10 @@ function subscribeToChanges() {
       if (!key || !key.startsWith('btm_state_')) return;
       const catId = key.replace('btm_state_', '');
       const newData = payload.new ? payload.new.data : null;
-      if (newData && catId === currentCategory && newData._lastSave > state._lastSave) {
-        state = newData;
-        localSave(catId, state);
-        if (_showingResults) {
+      if (newData && catId === AppState.category && newData._lastSave > AppState.tournament._lastSave) {
+        AppState.tournament = newData;
+        localSave(catId, AppState.tournament);
+        if (AppState.showingResults) {
           renderResults();
         } else {
           renderAll();

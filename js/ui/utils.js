@@ -12,8 +12,8 @@ function isDoubles(catId) {
 
 function pName(id) {
   if (!id && id !== 0) return 'TBD';
-  if (state && state.participants) {
-    const p = findParticipant(state.participants, id);
+  if (AppState.tournament && AppState.tournament.participants) {
+    const p = findParticipant(AppState.tournament.participants, id);
     if (p) return p.name;
   }
   return id;

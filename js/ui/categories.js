@@ -21,7 +21,7 @@ function migrateCategorySports() {
 function updateBanners() {
   const ab = document.getElementById('adminBanner');
   if (ab) {
-    if (_isAdmin) ab.classList.remove('hidden');
+    if (AppState.isAdmin) ab.classList.remove('hidden');
     else ab.classList.add('hidden');
   }
 }
@@ -31,13 +31,13 @@ function renderSportBar() {
   const bar = document.getElementById('sportBar');
   if (!bar) return;
   const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
+  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
   const sportSet = new Set(cats.map(c => c.sport));
   bar.innerHTML = '';
   for (const s of ['badminton', 'tableTennis', 'chess']) {
     if (!sportSet.has(s)) continue;
     const btn = document.createElement('button');
-    btn.className = 'sport-btn' + (s === currentSport ? ' active' : '');
+    btn.className = 'sport-btn' + (s === AppState.sport ? ' active' : '');
     btn.textContent = labels[s] || s;
     btn.onclick = function() { switchSport(s); };
     bar.appendChild(btn);
@@ -45,17 +45,17 @@ function renderSportBar() {
 }
 
 function switchSport(sport) {
-  if (sport === currentSport) return;
-  currentSport = sport;
+  if (sport === AppState.sport) return;
+  AppState.sport = sport;
   renderSportBar();
-  const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
+  const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
   if (cats.length > 0) {
     switchCategory(cats[0].id);
     return;
   } else {
-    currentCategory = null;
-    state = defaultState();
-    currentView = 'setup';
+    AppState.category = null;
+    AppState.tournament = defaultState();
+    AppState.view = 'setup';
     renderAll();
   }
 }
@@ -68,7 +68,7 @@ function renderEventBar() {
   bar.innerHTML = '';
   for (const ev of events) {
     const btn = document.createElement('button');
-    btn.className = 'event-btn' + (ev === currentEvent ? ' active' : '');
+    btn.className = 'event-btn' + (ev === AppState.event ? ' active' : '');
     btn.textContent = ev;
     btn.onclick = function() { switchEvent(ev); };
     bar.appendChild(btn);
@@ -76,49 +76,49 @@ function renderEventBar() {
 }
 
 function switchEvent(ev) {
-  if (ev === currentEvent) return;
-  currentEvent = ev;
+  if (ev === AppState.event) return;
+  AppState.event = ev;
   renderEventBar();
-  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
+  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
   if (cats.length > 0) {
-    const sportCats = cats.filter(c => c.sport === currentSport);
+    const sportCats = cats.filter(c => c.sport === AppState.sport);
     if (sportCats.length > 0) {
       switchCategory(sportCats[0].id);
     } else {
-      currentSport = cats[0].sport;
+      AppState.sport = cats[0].sport;
       renderSportBar();
       switchCategory(cats[0].id);
     }
     return;
   }
-  currentCategory = null;
-  state = defaultState();
-  currentView = 'setup';
+  AppState.category = null;
+  AppState.tournament = defaultState();
+  AppState.view = 'setup';
   renderAll();
 }
 
 // ===================== CATEGORY SWITCHING =====================
 async function switchCategory(catId) {
-  if (catId === currentCategory) return;
-  if (currentCategory && state && state.phase !== 'setup') { saveState(); await flushCloudSave(); }
-  currentCategory = catId;
+  if (catId === AppState.category) return;
+  if (AppState.category && AppState.tournament && AppState.tournament.phase !== 'setup') { saveState(); await flushCloudSave(); }
+  AppState.category = catId;
   let serverState = null;
   if (_supabase) {
     serverState = await fetchState(catId).catch(() => null);
   }
-  if (currentCategory !== catId) return;
+  if (AppState.category !== catId) return;
   if (serverState) {
-    state = serverState;
-    localSave(catId, state);
+    AppState.tournament = serverState;
+    localSave(catId, AppState.tournament);
   } else {
     const saved = localLoad(catId);
     if (saved && saved.phase !== 'setup') {
-      state = saved;
+      AppState.tournament = saved;
     } else {
-      state = defaultState();
+      AppState.tournament = defaultState();
     }
   }
-  currentView = state.phase;
+  AppState.view = AppState.tournament.phase;
   renderAll();
 }
 
@@ -126,9 +126,9 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  for (const cat of getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent)) {
+  for (const cat of getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event)) {
     const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat.id === currentCategory ? ' active' : '');
+    btn.className = 'cat-btn' + (cat.id === AppState.category ? ' active' : '');
     const s = localLoad(cat.id);
     let dotClass = 'setup';
     if (s) {
@@ -143,7 +143,7 @@ function renderCategoryBar() {
 
 // ===================== RESET =====================
 function showResetConfirm() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const box = document.getElementById('resetConfirmBox');
   box.classList.toggle('hidden');
   document.getElementById('resetConfirmInput').value = '';
@@ -151,25 +151,25 @@ function showResetConfirm() {
 }
 
 function executeReset() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('resetConfirmInput');
   if (input.value !== 'RESET') {
     document.getElementById('resetError').textContent = 'Please type RESET to confirm.';
     return;
   }
-  resetCategory(currentCategory);
+  resetCategory(AppState.category);
   document.getElementById('resetConfirmBox').classList.add('hidden');
 }
 
 function resetCategory(catId) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   localClear(catId);
   if (_supabase) {
     _supabase.from('state').delete().eq('key', 'btm_state_' + catId).then().catch(() => {});
   }
-  if (currentCategory === catId) {
-    state = defaultState();
-    currentView = state.phase;
+  if (AppState.category === catId) {
+    AppState.tournament = defaultState();
+    AppState.view = AppState.tournament.phase;
     renderAll();
   } else {
     renderCategoryBar();
@@ -180,7 +180,7 @@ function resetCategory(catId) {
 
 // ===================== MANAGE PANEL =====================
 function toggleManagePanel() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const panel = document.getElementById('managePanel');
   panel.classList.toggle('hidden');
   if (!panel.classList.contains('hidden')) renderManagePanel();
@@ -221,7 +221,7 @@ function toggleManageReset(catId) {
 }
 
 function executeManageReset(catId) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('manageResetInput_' + catId);
   if (!input || input.value !== 'RESET') return;
   resetCategory(catId);
@@ -236,14 +236,14 @@ function toggleDeleteConfirm(catId) {
 }
 
 function executeDeleteConfirm(catId) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('manageDeleteInput_' + catId);
   if (!input || input.value !== 'DELETE') return;
   deleteCategory(catId);
 }
 
 function addCategoryFromUI() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const nameInput = document.getElementById('newCatName');
   const typeSelect = document.getElementById('newCatType');
   const sportSelect = document.getElementById('newCatSport');
@@ -257,14 +257,14 @@ function addCategoryFromUI() {
     return;
   }
   errSpan.textContent = '';
-  const ev = (eventInput ? eventInput.value.trim() : '') || currentEvent;
+  const ev = (eventInput ? eventInput.value.trim() : '') || AppState.event;
   addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton', ev);
   nameInput.value = '';
   if (eventInput) eventInput.value = '';
 }
 
 function addCategory(label, type, sport, eventName) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const cats = getCategories();
   const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
   let id = baseId;
@@ -278,15 +278,15 @@ function addCategory(label, type, sport, eventName) {
   if (_supabase) upsertCategories(cats);
   const panel = document.getElementById('managePanel');
   if (!panel.classList.contains('hidden')) renderManagePanel();
-  if (ev !== currentEvent) {
-    currentEvent = ev;
+  if (ev !== AppState.event) {
+    AppState.event = ev;
     renderEventBar();
   }
   switchCategory(id);
 }
 
 function deleteCategory(id) {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const cats = getCategories();
   if (cats.length <= 1) return;
   const saved = localLoad(id);
@@ -298,13 +298,13 @@ function deleteCategory(id) {
     _supabase.from('state').delete().eq('key', 'btm_state_' + id).then().catch(() => {});
     upsertCategories(filtered);
   }
-  if (currentCategory === id) {
-    const remaining = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
+  if (AppState.category === id) {
+    const remaining = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
     if (remaining.length > 0) { switchCategory(remaining[0].id); return; }
-    const eventCats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
-    if (eventCats.length > 0) { currentSport = eventCats[0].sport; renderSportBar(); switchCategory(eventCats[0].id); return; }
+    const eventCats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
+    if (eventCats.length > 0) { AppState.sport = eventCats[0].sport; renderSportBar(); switchCategory(eventCats[0].id); return; }
     const all = getCategories();
-    if (all.length > 0) { currentEvent = all[0].event || DEFAULT_EVENT; currentSport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
+    if (all.length > 0) { AppState.event = all[0].event || DEFAULT_EVENT; AppState.sport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
   } else {
     renderCategoryBar();
   }
@@ -314,10 +314,10 @@ function deleteCategory(id) {
 
 // ===================== RESUME =====================
 function resumeTournament() {
-  const saved = localLoad(currentCategory);
+  const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
-    state = saved;
-    currentView = state.phase;
+    AppState.tournament = saved;
+    AppState.view = AppState.tournament.phase;
     renderAll();
   }
 }
@@ -342,7 +342,7 @@ function exportAll() {
 }
 
 async function pushAllToCloud() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   if (!_supabase) { alert('Supabase not connected.'); return; }
   const cats = getCategories();
   let pushed = 0, failed = 0;
@@ -399,7 +399,7 @@ function cancelImport() {
 }
 
 function confirmImport() {
-  if (!_isAdmin) return;
+  if (!AppState.isAdmin) return;
   const input = document.getElementById('importConfirmInput');
   const errEl = document.getElementById('importConfirmError');
   if (input.value !== 'IMPORT') { errEl.textContent = 'Please type IMPORT to confirm.'; return; }
@@ -414,13 +414,13 @@ function confirmImport() {
     try { localStorage.setItem('btm_state_' + id, JSON.stringify(data.states[id])); } catch(e) {}
     if (_supabase) upsertState(id, data.states[id]);
   }
-  const saved = localLoad(currentCategory);
+  const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
-    state = saved;
+    AppState.tournament = saved;
   } else {
-    state = defaultState();
+    AppState.tournament = defaultState();
   }
-  currentView = state.phase;
+  AppState.view = AppState.tournament.phase;
   renderAll();
   if (!document.getElementById('managePanel').classList.contains('hidden')) renderManagePanel();
 }

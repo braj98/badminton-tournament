@@ -49,7 +49,7 @@ const DEFAULT_EVENT = 'BREN AVALON SPORTS MEET 2026';
 
 function getCurrentConfig() {
   return getSportConfig(
-    (state && state.sport) || 'badminton',
-    (state && state.format) || 'singles'
+    (AppState.tournament && AppState.tournament.sport) || 'badminton',
+    (AppState.tournament && AppState.tournament.format) || 'singles'
   );
 }

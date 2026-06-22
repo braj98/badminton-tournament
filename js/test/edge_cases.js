@@ -332,11 +332,11 @@ function testSportConfig() {
 
   // getCurrentConfig with simulated state
   var s = { sport: 'badminton', format: 'singles' };
-  var savedState = state;
-  state = s;
+  var savedState = AppState.tournament;
+  AppState.tournament = s;
   var cur = getCurrentConfig();
   pass &= assert(cur.minPlayers === 2, 'getCurrentConfig reads state');
-  state = savedState;
+  AppState.tournament = savedState;
 
   // backward compat for determineGroupCount (no config)
   pass &= assert(determineGroupCount(4) === 1, 'determineGroupCount(4) backward compat = 1');
@@ -602,5 +602,622 @@ function runAllEdgeCaseTests() {
   console.log('   Category Sport Filtering tests: ' + (sportFilterPass ? 'PASS' : 'FAIL'));
   console.log('   Sport Config From Category tests: ' + (sportFromCatPass ? 'PASS' : 'FAIL'));
   console.log('   Category Event Linking tests: ' + (eventLinkingPass ? 'PASS' : 'FAIL'));
+  console.log('========================================');
+}
+
+// ===================== NAVIGATION / UI TESTS =====================
+
+function testNavigationFlow() {
+  console.log('\n=== Navigation Flow (globals) ===');
+  let pass = true;
+
+  const _origView = AppState.view;
+  const _origEvent = AppState.event;
+  const _origSport = AppState.sport;
+  const _origCat = AppState.category;
+
+  // 1. goHome
+  goHome();
+  pass &= assert(AppState.view === 'home', 'goHome() → AppState.view=home');
+
+  // 2. goToEventPage
+  goToEventPage('Test Event');
+  pass &= assert(AppState.view === 'event', 'goToEventPage() → AppState.view=event');
+  pass &= assert(AppState.event === 'Test Event', 'goToEventPage() → AppState.event="Test Event"');
+
+  // 3. goToSportPage
+  goToSportPage('Test Event', 'badminton');
+  pass &= assert(AppState.view === 'sport', 'goToSportPage() → AppState.view=sport');
+  pass &= assert(AppState.event === 'Test Event', 'goToSportPage() keeps event');
+  pass &= assert(AppState.sport === 'badminton', 'goToSportPage() → AppState.sport=badminton');
+
+  // 4. navigateToSport
+  navigateToSport('Event B', 'chess');
+  pass &= assert(AppState.view === 'sport', 'navigateToSport() → AppState.view=sport');
+  pass &= assert(AppState.event === 'Event B', 'navigateToSport() → AppState.event="Event B"');
+  pass &= assert(AppState.sport === 'chess', 'navigateToSport() → AppState.sport=chess');
+
+  // 5. switchTab dispatches correctly
+  switchTab('groups');
+  pass &= assert(AppState.view === 'groups', 'switchTab("groups") → AppState.view=groups');
+  switchTab('fixtures');
+  pass &= assert(AppState.view === 'fixtures', 'switchTab("fixtures") → AppState.view=fixtures');
+  switchTab('knockout');
+  pass &= assert(AppState.view === 'knockout', 'switchTab("knockout") → AppState.view=knockout');
+
+  // 6. goBackFromChampion (if we were on champion)
+  var _svView = AppState.view;
+  AppState.view = 'champion';
+  goBackFromChampion();
+  pass &= assert(AppState.view === 'knockout', 'goBackFromChampion() → AppState.view=knockout');
+  AppState.view = _svView;
+
+  // 7. closeResults
+  AppState.showingResults = true;
+  closeResults();
+  pass &= assert(!AppState.showingResults, 'closeResults() → AppState.showingResults=false');
+
+  // 8. goToFixturesFromKnockout
+  AppState.view = 'knockout';
+  goToFixturesFromKnockout();
+  pass &= assert(AppState.view === 'fixtures', 'goToFixturesFromKnockout() → AppState.view=fixtures');
+
+  // 9. goToGroups
+  goToGroups();
+  pass &= assert(AppState.view === 'groups', 'goToGroups() → AppState.view=groups');
+
+  // Restore
+  AppState.view = _origView;
+  AppState.event = _origEvent;
+  AppState.sport = _origSport;
+  AppState.category = _origCat;
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testBreadcrumb() {
+  console.log('\n=== Breadcrumb Rendering ===');
+  let pass = true;
+
+  var bc = document.getElementById('breadcrumb');
+  pass &= assert(!!bc, 'breadcrumb element exists in DOM');
+  if (!bc) return false;
+
+  const _origView = AppState.view;
+  const _origEvent = AppState.event;
+  const _origSport = AppState.sport;
+
+  // Home — breadcrumb hidden
+  goHome();
+  pass &= assert(bc.classList.contains('hidden'), 'Home: breadcrumb hidden');
+
+  // Event page — shows "Home › Event"
+  goToEventPage('Test Event');
+  pass &= assert(!bc.classList.contains('hidden'), 'Event page: breadcrumb visible');
+  if (!bc.classList.contains('hidden')) {
+    var html = bc.innerHTML;
+    pass &= assert(html.indexOf('Home') >= 0, 'Event breadcrumb contains Home');
+    pass &= assert(html.indexOf('Test Event') >= 0, 'Event breadcrumb contains event name');
+    pass &= assert(html.indexOf('bc-item bc-current') >= 0, 'Event breadcrumb has bc-current');
+    var seps = (html.match(/›/g) || []).length;
+    pass &= assert(seps === 1, 'Event breadcrumb has 1 separator (got ' + seps + ')');
+  }
+
+  // Sport page — shows "Home › Event › Sport"
+  goToSportPage('Test Event', 'badminton');
+  pass &= assert(!bc.classList.contains('hidden'), 'Sport page: breadcrumb visible');
+  if (!bc.classList.contains('hidden')) {
+    var html = bc.innerHTML;
+    pass &= assert(html.indexOf('Home') >= 0, 'Sport breadcrumb contains Home');
+    pass &= assert(html.indexOf('Test Event') >= 0, 'Sport breadcrumb contains event');
+    pass &= assert(html.indexOf('Badminton') >= 0, 'Sport breadcrumb contains sport label');
+    pass &= assert(html.indexOf('bc-current') >= 0, 'Sport breadcrumb has bc-current');
+    var seps = (html.match(/›/g) || []).length;
+    pass &= assert(seps === 2, 'Sport breadcrumb has 2 separators (got ' + seps + ')');
+  }
+
+  // Tournament view — shows "Home › Event › Sport › Category"
+  var cats = getCategories().filter(function(c) { return c.sport === 'badminton'; });
+  if (cats.length > 0) {
+    AppState.category = cats[0].id;
+    AppState.view = 'setup';
+    renderAll();
+    pass &= assert(!bc.classList.contains('hidden'), 'Tournament view: breadcrumb visible');
+    if (!bc.classList.contains('hidden')) {
+      var html = bc.innerHTML;
+      pass &= assert(html.indexOf('Home') >= 0, 'Tournament breadcrumb contains Home');
+      pass &= assert(html.indexOf(cats[0].label) >= 0, 'Tournament breadcrumb contains category label');
+      var seps = (html.match(/›/g) || []).length;
+      pass &= assert(seps === 3, 'Tournament breadcrumb has 3 separators (got ' + seps + ')');
+    }
+  } else {
+    console.log('  SKIP: no categories available for tournament breadcrumb test');
+  }
+
+  // Restore
+  AppState.view = _origView;
+  AppState.event = _origEvent;
+  AppState.sport = _origSport;
+  renderAll();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testTabVisibility() {
+  console.log('\n=== Tournament Tab Visibility ===');
+  let pass = true;
+
+  var _tb = document.getElementById('tournamentTabs');
+  var _btns = _tb ? _tb.querySelectorAll('.tab-btn') : [];
+  pass &= assert(!!_tb, 'tournamentTabs element exists');
+  pass &= assert(_btns.length >= 4, 'at least 4 tab buttons found (got ' + _btns.length + ')');
+  if (!_tb || _btns.length < 4) return false;
+
+  const _origView = AppState.view;
+  const _origCat = AppState.category;
+
+  // Scenario: setup phase — tabs hidden
+  var cats = getCategories();
+  if (cats.length > 0) {
+    AppState.category = cats[0].id;
+    AppState.tournament = defaultState();
+    AppState.tournament.phase = 'setup';
+    AppState.view = 'setup';
+    renderAll();
+    pass &= assert(_tb.classList.contains('hidden'), 'Setup phase: tabs container hidden');
+  }
+
+  // Scenario: groups phase — Groups/Fixtures visible, Knockout/Champion hidden
+  if (cats.length > 0) {
+    AppState.tournament.phase = 'groups';
+    AppState.view = 'groups';
+    renderAll();
+    pass &= assert(!_tb.classList.contains('hidden'), 'Groups phase: tabs container visible');
+    for (var i = 0; i < _btns.length; i++) {
+      var tab = _btns[i].dataset.tab;
+      var _hidden = _btns[i].classList.contains('hidden');
+      if (tab === 'groups' || tab === 'fixtures') {
+        pass &= assert(!_hidden, 'Groups phase: tab "' + tab + '" is visible');
+      } else {
+        pass &= assert(_hidden, 'Groups phase: tab "' + tab + '" is hidden');
+      }
+    }
+  }
+
+  // Scenario: knockout phase — all tabs visible
+  if (cats.length > 0) {
+    AppState.tournament.phase = 'knockout';
+    AppState.view = 'knockout';
+    renderAll();
+    pass &= assert(!_tb.classList.contains('hidden'), 'Knockout phase: tabs container visible');
+    for (var i = 0; i < _btns.length; i++) {
+      pass &= assert(!_btns[i].classList.contains('hidden'), 'Knockout phase: tab "' + _btns[i].dataset.tab + '" is visible');
+    }
+  }
+
+  // Scenario: champion phase — all tabs visible
+  if (cats.length > 0) {
+    AppState.tournament.phase = 'champion';
+    AppState.view = 'champion';
+    renderAll();
+    pass &= assert(!_tb.classList.contains('hidden'), 'Champion phase: tabs container visible');
+    for (var i = 0; i < _btns.length; i++) {
+      pass &= assert(!_btns[i].classList.contains('hidden'), 'Champion phase: tab "' + _btns[i].dataset.tab + '" is visible');
+    }
+  }
+
+  // Restore
+  AppState.view = _origView;
+  AppState.category = _origCat;
+  renderAll();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testScreenVisibility() {
+  console.log('\n=== Screen Visibility ===');
+  let pass = true;
+
+  const screens = ['screen-home', 'screen-event', 'screen-sport', 'screen-setup', 'screen-groups', 'screen-fixtures', 'screen-knockout', 'screen-champion', 'screen-results'];
+  var screenEls = {};
+  var allExist = true;
+  for (var i = 0; i < screens.length; i++) {
+    var el = document.getElementById(screens[i]);
+    screenEls[screens[i]] = el;
+    if (!el) { allExist = false; console.log('  MISSING: ' + screens[i]); }
+  }
+  pass &= assert(allExist, 'All 9 screen elements exist in DOM');
+  if (!allExist) return false;
+
+  const _origView = AppState.view;
+
+  function countActive() {
+    var n = 0;
+    for (var i = 0; i < screens.length; i++) {
+      if (screenEls[screens[i]].classList.contains('active')) n++;
+    }
+    return n;
+  }
+
+  function getActive() {
+    for (var i = 0; i < screens.length; i++) {
+      if (screenEls[screens[i]].classList.contains('active')) return screens[i];
+    }
+    return null;
+  }
+
+  // Test each view shows exactly one screen
+  // Home
+  goHome();
+  pass &= assert(countActive() === 1, 'Home: exactly 1 active screen (got ' + countActive() + ')');
+  pass &= assert(getActive() === 'screen-home', 'Home: screen-home is active');
+
+  // Event
+  goToEventPage('Test Event');
+  pass &= assert(countActive() === 1, 'Event: exactly 1 active screen (got ' + countActive() + ')');
+  pass &= assert(getActive() === 'screen-event', 'Event: screen-event is active');
+
+  // Sport
+  goToSportPage('Test Event', 'badminton');
+  pass &= assert(countActive() === 1, 'Sport: exactly 1 active screen (got ' + countActive() + ')');
+  pass &= assert(getActive() === 'screen-sport', 'Sport: screen-sport is active');
+
+  // Tournament views
+  var cats = getCategories();
+  if (cats.length > 0) {
+    AppState.category = cats[0].id;
+    AppState.tournament = defaultState();
+
+    // Setup
+    AppState.tournament.phase = 'setup';
+    AppState.view = 'setup';
+    renderAll();
+    pass &= assert(getActive() === 'screen-setup', 'Setup: screen-setup is active');
+
+    // Groups
+    AppState.tournament.phase = 'groups';
+    AppState.view = 'groups';
+    renderAll();
+    pass &= assert(getActive() === 'screen-groups', 'Groups: screen-groups is active');
+
+    // Fixtures
+    AppState.tournament.phase = 'fixtures';
+    AppState.view = 'fixtures';
+    renderAll();
+    pass &= assert(getActive() === 'screen-fixtures', 'Fixtures: screen-fixtures is active');
+
+    // Knockout
+    AppState.tournament.phase = 'knockout';
+    AppState.view = 'knockout';
+    renderAll();
+    pass &= assert(getActive() === 'screen-knockout', 'Knockout: screen-knockout is active');
+
+    // Champion
+    AppState.tournament.phase = 'champion';
+    AppState.view = 'champion';
+    renderAll();
+    pass &= assert(getActive() === 'screen-champion', 'Champion: screen-champion is active');
+  } else {
+    console.log('  SKIP: tournament view tests (no categories)');
+  }
+
+  // Restore
+  AppState.view = _origView;
+  renderAll();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testTabActiveState() {
+  console.log('\n=== Tab Active State ===');
+  let pass = true;
+
+  var _tb = document.getElementById('tournamentTabs');
+  if (!_tb) return false;
+  var _btns = _tb.querySelectorAll('.tab-btn');
+  if (_btns.length < 4) return false;
+
+  const _origView = AppState.view;
+  const _origCat = AppState.category;
+
+  var cats = getCategories();
+  if (cats.length > 0) {
+    AppState.category = cats[0].id;
+    AppState.tournament = defaultState();
+    AppState.tournament.phase = 'groups';
+
+    AppState.view = 'groups';
+    renderAll();
+    for (var i = 0; i < _btns.length; i++) {
+      var expected = _btns[i].dataset.tab === 'groups';
+      var actual = _btns[i].classList.contains('active');
+      pass &= assert(actual === expected, 'Groups view: tab "' + _btns[i].dataset.tab + '" active=' + actual + ' (expected ' + expected + ')');
+    }
+
+    AppState.view = 'fixtures';
+    renderAll();
+    for (var i = 0; i < _btns.length; i++) {
+      var expected = _btns[i].dataset.tab === 'fixtures';
+      var actual = _btns[i].classList.contains('active');
+      pass &= assert(actual === expected, 'Fixtures view: tab "' + _btns[i].dataset.tab + '" active=' + actual + ' (expected ' + expected + ')');
+    }
+
+    AppState.tournament.phase = 'knockout';
+    AppState.view = 'knockout';
+    renderAll();
+    for (var i = 0; i < _btns.length; i++) {
+      var expected = _btns[i].dataset.tab === 'knockout';
+      var actual = _btns[i].classList.contains('active');
+      pass &= assert(actual === expected, 'Knockout view: tab "' + _btns[i].dataset.tab + '" active=' + actual + ' (expected ' + expected + ')');
+    }
+
+    AppState.view = 'champion';
+    renderAll();
+    for (var i = 0; i < _btns.length; i++) {
+      var expected = _btns[i].dataset.tab === 'champion';
+      var actual = _btns[i].classList.contains('active');
+      pass &= assert(actual === expected, 'Champion view: tab "' + _btns[i].dataset.tab + '" active=' + actual + ' (expected ' + expected + ')');
+    }
+  } else {
+    console.log('  SKIP: no categories');
+  }
+
+  AppState.view = _origView;
+  AppState.category = _origCat;
+  renderAll();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testCategoryBarFiltering() {
+  console.log('\n=== Category Bar Filtering ===');
+  let pass = true;
+
+  var bar = document.getElementById('catBar');
+  pass &= assert(!!bar, 'catBar element exists');
+  if (!bar) return false;
+
+  const _origEvent = AppState.event;
+  const _origSport = AppState.sport;
+  const _origCat = AppState.category;
+
+  // Category bar should only show categories matching AppState.event + AppState.sport
+  // Navigate to a specific event+sport and check
+  var cats = getCategories();
+  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
+  var testEvent = events[0] || DEFAULT_EVENT;
+  var testSport = 'badminton';
+  var expectedCount = cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent && c.sport === testSport; }).length;
+
+  AppState.event = testEvent;
+  AppState.sport = testSport;
+  renderCategoryBar();
+  var renderedBtns = bar.querySelectorAll('.cat-btn');
+  pass &= assert(renderedBtns.length === expectedCount,
+    'catBar shows ' + renderedBtns.length + ' categories for ' + testEvent + '/' + testSport + ' (expected ' + expectedCount + ')');
+
+  // Check each button has a dot indicator
+  for (var i = 0; i < renderedBtns.length; i++) {
+    var dot = renderedBtns[i].querySelector('.dot');
+    pass &= assert(!!dot, 'Category button ' + i + ' has .dot indicator');
+  }
+
+  // Switch sport, verify count changes
+  var ttCats = cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent && c.sport === 'tableTennis'; });
+  if (ttCats.length > 0) {
+    AppState.sport = 'tableTennis';
+    renderCategoryBar();
+    var ttBtns = bar.querySelectorAll('.cat-btn');
+    pass &= assert(ttBtns.length === ttCats.length,
+      'Switching sport: catBar shows ' + ttBtns.length + ' (expected ' + ttCats.length + ')');
+  } else {
+    AppState.sport = 'tableTennis';
+    renderCategoryBar();
+    var ttBtns = bar.querySelectorAll('.cat-btn');
+    pass &= assert(ttBtns.length === 0, 'tableTennis with no cats: catBar empty');
+  }
+
+  // Restore
+  AppState.event = _origEvent;
+  AppState.sport = _origSport;
+  AppState.category = _origCat;
+  renderAll();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testSportBarRendering() {
+  console.log('\n=== Sport Bar Rendering ===');
+  let pass = true;
+
+  var bar = document.getElementById('sportBar');
+  pass &= assert(!!bar, 'sportBar element exists');
+  if (!bar) return false;
+
+  const _origEvent = AppState.event;
+  const _origSport = AppState.sport;
+
+  // Sport bar should only show sports that have categories in the current event
+  var cats = getCategories();
+  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
+
+  if (events.length > 0) {
+    var testEvent = events[0];
+    var eventSports = new Set(cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent; }).map(function(c) { return c.sport; }));
+    AppState.event = testEvent;
+    renderSportBar();
+    var btns = bar.querySelectorAll('.sport-btn');
+    pass &= assert(btns.length === eventSports.size,
+      'Sport bar shows ' + btns.length + ' sports for ' + testEvent + ' (expected ' + eventSports.size + ')');
+    for (var i = 0; i < btns.length; i++) {
+      var s = btns[i].textContent;
+      if (s === 'Badminton') pass &= assert(eventSports.has('badminton'), 'Badminton in sport bar');
+      else if (s === 'Table Tennis') pass &= assert(eventSports.has('tableTennis'), 'Table Tennis in sport bar');
+      else if (s === 'Chess') pass &= assert(eventSports.has('chess'), 'Chess in sport bar');
+    }
+  }
+
+  // Current sport button should have .active class
+  AppState.event = _origEvent || DEFAULT_EVENT;
+  AppState.sport = 'badminton';
+  renderSportBar();
+  var activeBtns = bar.querySelectorAll('.sport-btn.active');
+  pass &= assert(activeBtns.length === 1, 'Exactly 1 active sport button');
+  if (activeBtns.length === 1) {
+    pass &= assert(activeBtns[0].textContent === 'Badminton', 'Active sport button is Badminton');
+  }
+
+  AppState.event = _origEvent;
+  AppState.sport = _origSport;
+  renderSportBar();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testEventBarRendering() {
+  console.log('\n=== Event Bar Rendering ===');
+  let pass = true;
+
+  var bar = document.getElementById('eventBar');
+  pass &= assert(!!bar, 'eventBar element exists');
+  if (!bar) return false;
+
+  const _origEvent = AppState.event;
+
+  var cats = getCategories();
+  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
+
+  renderEventBar();
+  var btns = bar.querySelectorAll('.event-btn');
+  pass &= assert(btns.length === events.length,
+    'Event bar shows ' + btns.length + ' events (expected ' + events.length + ')');
+
+  // Current event should have .active
+  AppState.event = events[0] || DEFAULT_EVENT;
+  renderEventBar();
+  var activeBtns = bar.querySelectorAll('.event-btn.active');
+  pass &= assert(activeBtns.length === 1, 'Exactly 1 active event button');
+  if (activeBtns.length === 1) {
+    pass &= assert(activeBtns[0].textContent === AppState.event, 'Active event button matches AppState.event');
+  }
+
+  AppState.event = _origEvent;
+  renderEventBar();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testHeaderContent() {
+  console.log('\n=== Header Content ===');
+  let pass = true;
+
+  var badge = document.getElementById('eventBadge');
+  var tag = document.getElementById('sportTag');
+  pass &= assert(!!badge, 'eventBadge exists');
+  pass &= assert(!!tag, 'sportTag exists');
+
+  if (badge && tag) {
+    const _origEvent = AppState.event;
+    const _origSport = AppState.sport;
+
+    AppState.event = 'Test Event XYZ';
+    AppState.sport = 'chess';
+    updateHeader();
+    pass &= assert(badge.textContent === 'Test Event XYZ', 'Header badge = "Test Event XYZ" (got "' + badge.textContent + '")');
+    pass &= assert(tag.textContent === 'Chess', 'Header tag = "Chess" (got "' + tag.textContent + '")');
+
+    AppState.event = _origEvent;
+    AppState.sport = _origSport;
+    updateHeader();
+  }
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testActionBarKnockoutButtons() {
+  console.log('\n=== Action Bar (Knockout Results Buttons) ===');
+  let pass = true;
+
+  var bar = document.getElementById('actionBar');
+  pass &= assert(!!bar, 'actionBar element exists');
+  if (!bar) return false;
+
+  const _origView = AppState.view;
+
+  // Action bar hidden on event/sport/home
+  AppState.view = 'home';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on home');
+
+  AppState.view = 'event';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on event');
+
+  AppState.view = 'sport';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on sport');
+
+  // ActionBar visible on tournament views
+  AppState.view = 'setup';
+  renderActionBar();
+  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on setup');
+
+  AppState.view = 'groups';
+  renderActionBar();
+  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on groups');
+
+  // Knockout: should have Results buttons in right area
+  AppState.view = 'knockout';
+  renderActionBar();
+  var right = document.getElementById('actionBarRight');
+  if (right) {
+    var btns = right.querySelectorAll('button');
+    pass &= assert(btns.length >= 2, 'Knockout actionBar has 2+ buttons (got ' + btns.length + ')');
+  }
+
+  AppState.view = _origView;
+  renderActionBar();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function runAllNavigationTests() {
+  console.log('\n========================================');
+  console.log('   NAVIGATION / UI TEST SUITE');
+  console.log('========================================');
+
+  var flowPass = testNavigationFlow();
+  var breadcrumbPass = testBreadcrumb();
+  var tabVisPass = testTabVisibility();
+  var screenVisPass = testScreenVisibility();
+  var tabActivePass = testTabActiveState();
+  var catBarPass = testCategoryBarFiltering();
+  var sportBarPass = testSportBarRendering();
+  var eventBarPass = testEventBarRendering();
+  var headerPass = testHeaderContent();
+  var actionBarPass = testActionBarKnockoutButtons();
+
+  console.log('\n========================================');
+  console.log('   NAVIGATION/UI RESULTS');
+  console.log('   Navigation flow:     ' + (flowPass ? 'PASS' : 'FAIL'));
+  console.log('   Breadcrumb:          ' + (breadcrumbPass ? 'PASS' : 'FAIL'));
+  console.log('   Tab visibility:      ' + (tabVisPass ? 'PASS' : 'FAIL'));
+  console.log('   Screen visibility:   ' + (screenVisPass ? 'PASS' : 'FAIL'));
+  console.log('   Tab active state:    ' + (tabActivePass ? 'PASS' : 'FAIL'));
+  console.log('   Category bar:        ' + (catBarPass ? 'PASS' : 'FAIL'));
+  console.log('   Sport bar:           ' + (sportBarPass ? 'PASS' : 'FAIL'));
+  console.log('   Event bar:           ' + (eventBarPass ? 'PASS' : 'FAIL'));
+  console.log('   Header content:      ' + (headerPass ? 'PASS' : 'FAIL'));
+  console.log('   Action bar:          ' + (actionBarPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }

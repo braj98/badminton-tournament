@@ -1,20 +1,12 @@
 // ===================== APP STATE =====================
-let currentCategory = null;
-let currentSport = 'badminton';
-let currentEvent = DEFAULT_EVENT;
-let state = null;
-let currentView = null;
-let _showingResults = false;
+// AppState is defined in js/models/appState.js and loaded before this script.
 
 // ===================== HEADER + ACTION BAR =====================
 function updateHeader() {
   var badge = document.getElementById('eventBadge');
-  if (badge) badge.textContent = currentEvent;
+  if (badge) badge.textContent = AppState.event;
   var tag = document.getElementById('sportTag');
-  if (tag) {
-    var labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-    tag.textContent = labels[currentSport] || currentSport;
-  }
+  if (tag) tag.textContent = getSportLabel(AppState.sport);
 }
 
 function renderActionBar() {
@@ -23,39 +15,37 @@ function renderActionBar() {
   var title = document.getElementById('stageTitle');
   var right = document.getElementById('actionBarRight');
   if (!title || !right) return;
-  if (currentView === 'home' || currentView === 'event' || currentView === 'sport' || currentView === 'results' || _showingResults) {
+  if (AppState.view === 'home' || AppState.view === 'event' || AppState.view === 'sport' || AppState.view === 'results' || AppState.showingResults) {
     bar.style.display = 'none';
     return;
   }
   bar.style.display = '';
   var titles = { setup: 'Setup', groups: 'Group Allocation', fixtures: 'Group Stage Matches', knockout: 'Knockout Stage', champion: '🏆 Champion' };
-  title.textContent = titles[currentView] || 'Tournament';
+  title.textContent = titles[AppState.view] || 'Tournament';
   right.innerHTML = '';
-  if (currentView === 'knockout') {
+  if (AppState.view === 'knockout') {
     right.innerHTML = '<button id="actionBarShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()" style="margin-left:4px;">📊 Results</button>'
       + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">📊 Results</button>';
   }
 }
 // ===================== SAVE (orchestrates storage) =====================
 function saveState() {
-  if (!currentCategory) return;
-  state._lastSave = Date.now();
-  localSave(currentCategory, state);
-  if (_isAdmin && state.phase !== 'setup') {
-    scheduleCloudSave(currentCategory, state);
+  if (!AppState.category) return;
+  AppState.tournament._lastSave = Date.now();
+  localSave(AppState.category, AppState.tournament);
+  if (AppState.isAdmin && AppState.tournament.phase !== 'setup') {
+    scheduleCloudSave(AppState.category, AppState.tournament);
   }
 }
 
 // ===================== RENDER CYCLE =====================
 // ===================== HOME PAGE =====================
 function goHome() {
-  currentView = 'home';
+  AppState.view = 'home';
   renderAll();
 }
 
-const SPORT_ICONS = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
-const SPORT_LABELS = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-function sportLabel(s) { return SPORT_LABELS[s] || s; }
+function sportLabel(s) { return getSportLabel(s); }
 
 function renderHomePage() {
   clearDisabled();
@@ -73,13 +63,13 @@ function renderHomePage() {
       sportCats[c.sport].push(c);
     }
     html += '<div class="home-event"><h2>' + escapeHtml(ev) + '</h2><div class="home-sport-grid">';
-    for (const s of ['badminton', 'tableTennis', 'chess']) {
+    for (const s of SPORT_IDS) {
       if (!sportCats[s]) continue;
       const active = sportCats[s].filter(c => { const st = localLoad(c.id); return st && st.phase !== 'setup'; }).length;
       const total = sportCats[s].length;
       html += '<div class="home-sport-card" onclick="navigateToSport(\'' + ev + '\',\'' + s + '\')">'
-        + '<div class="home-sport-icon">' + (SPORT_ICONS[s] || '🎯') + '</div>'
-        + '<div class="home-sport-info"><div class="name">' + (s.charAt(0).toUpperCase() + s.slice(1)) + '</div>'
+        + '<div class="home-sport-icon">' + getSportIcon(s) + '</div>'
+        + '<div class="home-sport-info"><div class="name">' + getSportLabel(s) + '</div>'
         + '<div class="count">' + active + ' active / ' + total + ' total</div></div>'
         + '<div class="arrow">›</div></div>';
     }
@@ -94,29 +84,29 @@ function renderHomePage() {
   showScreen('screen-knockout', false);
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
-  if (!_isAdmin) applyViewerMode();
+  if (!AppState.isAdmin) applyViewerMode();
 }
 
 // ===================== BREADCRUMB =====================
 function renderBreadcrumb() {
   var bc = document.getElementById('breadcrumb');
   if (!bc) return;
-  if (currentView === 'home' || _showingResults) { bc.classList.add('hidden'); return; }
+  if (AppState.view === 'home' || AppState.showingResults) { bc.classList.add('hidden'); return; }
   bc.classList.remove('hidden');
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
-  if (currentView === 'event') {
+  if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">' + escapeHtml(currentEvent) + '</span>');
-  } else if (currentView === 'sport') {
+    parts.push('<span class="bc-item bc-current">' + escapeHtml(AppState.event) + '</span>');
+  } else if (AppState.view === 'sport') {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(currentEvent) + '</span>');
+    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">' + sportLabel(currentSport) + '</span>');
+    parts.push('<span class="bc-item bc-current">' + sportLabel(AppState.sport) + '</span>');
   } else {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(currentEvent) + '</span>');
+    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToSportPage()">' + sportLabel(currentSport) + '</span>');
+    parts.push('<span class="bc-item" onclick="goToSportPage()">' + sportLabel(AppState.sport) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current">' + escapeHtml(getCategoryLabel()) + '</span>');
   }
@@ -125,21 +115,21 @@ function renderBreadcrumb() {
 
 function getCategoryLabel() {
   var cats = getCategories();
-  for (var i = 0; i < cats.length; i++) { if (cats[i].id === currentCategory) return cats[i].label; }
-  return currentCategory || 'Tournament';
+  for (var i = 0; i < cats.length; i++) { if (cats[i].id === AppState.category) return cats[i].label; }
+  return AppState.category || 'Tournament';
 }
 
 // ===================== EVENT / SPORT PAGES =====================
 function goToEventPage(ev) {
-  if (ev) currentEvent = ev;
-  currentView = 'event';
+  if (ev) AppState.event = ev;
+  AppState.view = 'event';
   renderAll();
 }
 
 function goToSportPage(ev, sport) {
-  if (ev) currentEvent = ev;
-  if (sport) currentSport = sport;
-  currentView = 'sport';
+  if (ev) AppState.event = ev;
+  if (sport) AppState.sport = sport;
+  AppState.view = 'sport';
   renderAll();
 }
 
@@ -147,15 +137,15 @@ function renderEventPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('eventContent');
-  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === currentEvent; });
+  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === AppState.event; });
   var sportCats = {};
   for (var i = 0; i < cats.length; i++) {
     var c = cats[i];
     if (!sportCats[c.sport]) sportCats[c.sport] = [];
     sportCats[c.sport].push(c);
   }
-  var html = '<h2 class="page-title">' + escapeHtml(currentEvent) + '</h2><div class="home-sport-grid">';
-  var sports = ['badminton', 'tableTennis', 'chess'];
+  var html = '<h2 class="page-title">' + escapeHtml(AppState.event) + '</h2><div class="home-sport-grid">';
+  var sports = SPORT_IDS;
   for (var si = 0; si < sports.length; si++) {
     var s = sports[si];
     if (!sportCats[s]) continue;
@@ -164,9 +154,9 @@ function renderEventPage() {
       var st = localLoad(sportCats[s][j].id);
       if (st && st.phase !== 'setup') active++;
     }
-    html += '<div class="home-sport-card" onclick="goToSportPage(\'' + currentEvent + '\',\'' + s + '\')">'
-      + '<div class="home-sport-icon">' + (SPORT_ICONS[s] || '🎯') + '</div>'
-      + '<div class="home-sport-info"><div class="name">' + sportLabel(s) + '</div>'
+    html += '<div class="home-sport-card" onclick="goToSportPage(\'' + AppState.event + '\',\'' + s + '\')">'
+      + '<div class="home-sport-icon">' + getSportIcon(s) + '</div>'
+      + '<div class="home-sport-info"><div class="name">' + getSportLabel(s) + '</div>'
       + '<div class="count">' + active + ' active / ' + sportCats[s].length + ' total</div></div>'
       + '<div class="arrow">›</div></div>';
   }
@@ -183,15 +173,15 @@ function renderEventPage() {
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
   var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
-  if (!_isAdmin) applyViewerMode();
+  if (!AppState.isAdmin) applyViewerMode();
 }
 
 function renderSportPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('sportContent');
-  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === currentEvent && c.sport === currentSport; });
-  var html = '<h2 class="page-title">' + sportLabel(currentSport) + '</h2>';
+  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === AppState.event && c.sport === AppState.sport; });
+  var html = '<h2 class="page-title">' + sportLabel(AppState.sport) + '</h2>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No categories in this sport.</p>';
   } else {
@@ -223,7 +213,7 @@ function renderSportPage() {
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
   var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
-  if (!_isAdmin) applyViewerMode();
+  if (!AppState.isAdmin) applyViewerMode();
 }
 
 // ===================== TOURNAMENT TABS =====================
@@ -235,26 +225,26 @@ function switchTab(tab) {
 }
 
 function navigateToSport(ev, sport) {
-  currentEvent = ev;
-  currentSport = sport;
+  AppState.event = ev;
+  AppState.sport = sport;
   goToSportPage(ev, sport);
 }
 
 // ===================== RENDER CYCLE =====================
 function renderAll() {
-  _showingResults = false;
+  AppState.showingResults = false;
   clearDisabled();
 
   renderBreadcrumb();
 
-  if (currentView === 'home') {
+  if (AppState.view === 'home') {
     renderHomePage();
     return;
   }
 
   // Event / Sport pages
-  if (currentView === 'event') { renderEventPage(); return; }
-  if (currentView === 'sport') { renderSportPage(); return; }
+  if (AppState.view === 'event') { renderEventPage(); return; }
+  if (AppState.view === 'sport') { renderSportPage(); return; }
 
   // Tournament view
   var _cb = document.getElementById('catBar'); if (_cb) _cb.style.display = '';
@@ -262,34 +252,34 @@ function renderAll() {
   // Tournament tabs
   var _tb = document.getElementById('tournamentTabs');
   if (_tb) {
-    if (currentView === 'setup' || !state) {
+    if (AppState.view === 'setup' || !AppState.tournament) {
       _tb.classList.add('hidden');
     } else {
       _tb.classList.remove('hidden');
       document.querySelectorAll('.tab-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.tab === currentView);
+        b.classList.toggle('active', b.dataset.tab === AppState.view);
         var tab = b.dataset.tab;
         if (tab === 'groups' || tab === 'fixtures') {
-          b.classList.toggle('hidden', !state || state.phase === 'setup');
+          b.classList.toggle('hidden', !AppState.tournament || AppState.tournament.phase === 'setup');
         } else {
-          b.classList.toggle('hidden', !state || (state.phase !== 'knockout' && state.phase !== 'champion'));
+          b.classList.toggle('hidden', !AppState.tournament || (AppState.tournament.phase !== 'knockout' && AppState.tournament.phase !== 'champion'));
         }
       });
     }
   }
 
-  if (!_isAdmin && state && state.phase === 'setup') {
-    const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
+  if (!AppState.isAdmin && AppState.tournament && AppState.tournament.phase === 'setup') {
+    const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
     let foundCat = null;
     for (const cat of cats) {
-      if (cat.id === currentCategory) continue;
+      if (cat.id === AppState.category) continue;
       const s = localLoad(cat.id);
       if (s && s.phase !== 'setup') { foundCat = cat.id; break; }
     }
     if (foundCat) {
-      currentCategory = foundCat;
-      state = localLoad(foundCat) || defaultState();
-      currentView = state.phase;
+      AppState.category = foundCat;
+      AppState.tournament = localLoad(foundCat) || defaultState();
+      AppState.view = AppState.tournament.phase;
       renderAll();
       return;
     }
@@ -299,42 +289,42 @@ function renderAll() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-results').classList.add('active');
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
-    if (!_isAdmin) applyViewerMode();
+    if (!AppState.isAdmin) applyViewerMode();
     return;
   }
 
-  if (!state) { state = defaultState(); }
+  if (!AppState.tournament) { AppState.tournament = defaultState(); }
   renderCategoryBar();
   updateHeader();
   renderActionBar();
   // Sync knockout buttons in action bar
-  if (currentView === 'knockout' && state.knockout) {
-    var _finalMatch = state.knockout.find(function(mm) { return mm.id === 'final'; });
+  if (AppState.view === 'knockout' && AppState.tournament.knockout) {
+    var _finalMatch = AppState.tournament.knockout.find(function(mm) { return mm.id === 'final'; });
     var _finalDone = _finalMatch && _finalMatch.done;
     var _ab1 = document.getElementById('actionBarShowResults');
     var _ab2 = document.getElementById('actionBarViewChampion');
-    if (_ab1) _ab1.classList.toggle('hidden', !(_finalDone && _isAdmin));
+    if (_ab1) _ab1.classList.toggle('hidden', !(_finalDone && AppState.isAdmin));
     if (_ab2) _ab2.classList.toggle('hidden', !_finalDone);
   }
-  showScreen('screen-setup', currentView === 'setup');
-  showScreen('screen-groups', currentView === 'groups');
-  showScreen('screen-fixtures', currentView === 'fixtures');
-  showScreen('screen-knockout', currentView === 'knockout');
-  showScreen('screen-champion', currentView === 'champion');
+  showScreen('screen-setup', AppState.view === 'setup');
+  showScreen('screen-groups', AppState.view === 'groups');
+  showScreen('screen-fixtures', AppState.view === 'fixtures');
+  showScreen('screen-knockout', AppState.view === 'knockout');
+  showScreen('screen-champion', AppState.view === 'champion');
   showScreen('screen-event', false);
   showScreen('screen-sport', false);
   showScreen('screen-home', false);
   showScreen('screen-results', false);
-  if (currentView === 'setup') renderSetup();
-  if (currentView === 'groups') renderGroups();
-  if (currentView === 'fixtures') renderFixtures();
-  if (currentView === 'knockout') renderKnockout();
-  if (currentView === 'champion') renderChampion();
-  if (!_isAdmin) applyViewerMode();
+  if (AppState.view === 'setup') renderSetup();
+  if (AppState.view === 'groups') renderGroups();
+  if (AppState.view === 'fixtures') renderFixtures();
+  if (AppState.view === 'knockout') renderKnockout();
+  if (AppState.view === 'champion') renderChampion();
+  if (!AppState.isAdmin) applyViewerMode();
 }
 
 function clearDisabled() {
-  if (_isAdmin) document.body.classList.remove('viewer-mode');
+  if (AppState.isAdmin) document.body.classList.remove('viewer-mode');
   const app = document.getElementById('app');
   app.querySelectorAll('input, button, select').forEach(el => {
     if (el.type === 'file') { el.disabled = false; return; }
@@ -363,48 +353,48 @@ function showScreen(id, show) {
 
 // ===================== NAVIGATION =====================
 function viewKnockout() {
-  currentView = 'knockout';
+  AppState.view = 'knockout';
   renderAll();
 }
 
 function goToGroups() {
-  currentView = 'groups';
+  AppState.view = 'groups';
   renderAll();
 }
 
 function goToFixtures() {
-  currentView = 'fixtures';
-  const result = computeStandings(state.groups, state.fixtures, state.participants);
-  state.standings = result.standings;
-  state.qualifiers = result.qualifiers;
+  AppState.view = 'fixtures';
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
   renderAll();
 }
 
 function goToKnockout() {
-  if (!_isAdmin) return;
-  state.phase = 'knockout';
-  currentView = 'knockout';
-  state.knockout = advanceWinner(state.knockout);
+  if (!AppState.isAdmin) return;
+  AppState.tournament.phase = 'knockout';
+  AppState.view = 'knockout';
+  AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
   saveState();
   renderAll();
 }
 
 function goToFixturesFromKnockout() {
-  currentView = 'fixtures';
-  const result = computeStandings(state.groups, state.fixtures, state.participants);
-  state.standings = result.standings;
-  state.qualifiers = result.qualifiers;
+  AppState.view = 'fixtures';
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
   renderAll();
 }
 
 function goBackFromChampion() {
-  currentView = 'knockout';
+  AppState.view = 'knockout';
   renderAll();
 }
 
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
-  _showingResults = true;
+  AppState.showingResults = true;
   renderBreadcrumb();
   var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
   var _cb = document.getElementById('catBar'); if (_cb) _cb.style.display = '';
@@ -420,7 +410,7 @@ function showResultsPage() {
 }
 
 function closeResults() {
-  _showingResults = false;
+  AppState.showingResults = false;
   document.getElementById('screen-results').classList.remove('active');
   renderAll();
 }
@@ -595,25 +585,25 @@ async function init() {
   }
   const firstCat = getCategories()[0];
   if (firstCat) {
-    if (firstCat.sport) currentSport = firstCat.sport;
-    if (firstCat.event) currentEvent = firstCat.event;
+    if (firstCat.sport) AppState.sport = firstCat.sport;
+    if (firstCat.event) AppState.event = firstCat.event;
   }
-  currentCategory = startCat || (firstCat ? firstCat.id : null);
-  const saved = localLoad(currentCategory);
+  AppState.category = startCat || (firstCat ? firstCat.id : null);
+  const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
-    state = saved;
+    AppState.tournament = saved;
   } else {
-    state = defaultState();
+    AppState.tournament = defaultState();
   }
-  currentView = state.phase;
+  AppState.view = AppState.tournament.phase;
 
   // Supabase-first for current category state
   if (_supabase) {
-    const serverState = await fetchState(currentCategory).catch(() => null);
-    if (serverState && serverState._lastSave > (state._lastSave || 0)) {
-      state = serverState;
-      localSave(currentCategory, state);
-      currentView = state.phase;
+    const serverState = await fetchState(AppState.category).catch(() => null);
+    if (serverState && serverState._lastSave > (AppState.tournament._lastSave || 0)) {
+      AppState.tournament = serverState;
+      localSave(AppState.category, AppState.tournament);
+      AppState.view = AppState.tournament.phase;
     }
   }
 
