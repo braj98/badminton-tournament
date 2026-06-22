@@ -150,7 +150,7 @@ function renderResults() {
   const champions = [];
   for (const cat of cats) {
     const s = localLoad(cat.id);
-    if (!s || (s.phase !== 'knockout' && s.phase !== 'champion' && s.phase !== 'fixtures') || !s.knockout) continue;
+    if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
     const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
     for (const m of s.knockout) {
       const p1 = m.p1 || 'TBD';
