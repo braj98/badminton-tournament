@@ -45,6 +45,8 @@ function getSportConfig(sport, format) {
   return format === 'doubles' ? { ...base, isTeamSport: true } : { ...base, isTeamSport: false };
 }
 
+const DEFAULT_EVENT = 'Apartment Sports Meet 2026';
+
 function getCurrentConfig() {
   return getSportConfig(
     (state && state.sport) || 'badminton',

@@ -1,6 +1,4 @@
 // ===================== CATEGORY DEFINITIONS =====================
-const DEFAULT_EVENT = 'Apartment Sports Meet 2026';
-
 const FACTORY_CATEGORIES = [
   { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
   { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: DEFAULT_EVENT },
