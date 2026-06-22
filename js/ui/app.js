@@ -1,5 +1,6 @@
 // ===================== APP STATE =====================
 let currentCategory = null;
+let currentSport = 'badminton';
 let state = null;
 let currentView = null;
 let _showingResults = false;
@@ -20,7 +21,7 @@ function renderAll() {
   clearDisabled();
 
   if (!_isAdmin && state.phase === 'setup') {
-    const cats = getCategories();
+    const cats = getCategories().filter(c => c.sport === currentSport);
     let foundCat = null;
     for (const cat of cats) {
       if (cat.id === currentCategory) continue;
@@ -34,6 +35,7 @@ function renderAll() {
       renderAll();
       return;
     }
+    renderSportBar();
     renderCategoryBar();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-results').classList.add('active');
@@ -42,6 +44,7 @@ function renderAll() {
     return;
   }
 
+  renderSportBar();
   renderCategoryBar();
   showScreen('screen-setup', state.phase === 'setup');
   showScreen('screen-groups', currentView === 'groups');
@@ -129,6 +132,8 @@ function goBackFromChampion() {
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
   _showingResults = true;
+  renderSportBar();
+  renderCategoryBar();
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => s.classList.remove('active'));
   renderResults();
@@ -152,10 +157,11 @@ function renderResults() {
     if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
     const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
     for (const m of s.knockout) {
-    const p1Name = s.participants ? participantName(s.participants, m.p1) || m.p1 || 'TBD' : m.p1 || 'TBD';
-    const p2Name = s.participants ? participantName(s.participants, m.p2) || m.p2 || 'TBD' : m.p2 || 'TBD';
-    const p1 = p1Name;
-    const p2 = p2Name;
+    const _participants = s.participants;
+    const resolve = function(id) { return _participants ? participantName(_participants, id) || id || 'TBD' : id || 'TBD'; };
+    const p1 = resolve(m.p1);
+    const p2 = resolve(m.p2);
+    const winnerName = resolve(m.winner);
       let score = '';
       if (m.round === 'Final' && m.sets) {
         const parts = [];
@@ -172,7 +178,7 @@ function renderResults() {
         p1: p1, p2: p2,
         score: score || '—',
         done: m.done,
-        winner: m.winner || null,
+        winner: winnerName,
         updatedAt: m.updatedAt || 0
       });
     }
@@ -229,6 +235,8 @@ async function init() {
       saveCategories(cloudCats);
     }
   }
+
+  migrateCategorySports();
 
   try {
     const old = localStorage.getItem('btm_state');
@@ -301,7 +309,9 @@ async function init() {
     const s = localLoad(cat.id);
     if (s && s.phase !== 'setup') { startCat = cat.id; break; }
   }
-  currentCategory = startCat || getCategories()[0].id;
+  const firstCat = getCategories()[0];
+  if (firstCat && firstCat.sport) currentSport = firstCat.sport;
+  currentCategory = startCat || (firstCat ? firstCat.id : null);
   const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {
     state = saved;

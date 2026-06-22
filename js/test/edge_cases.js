@@ -346,6 +346,112 @@ function testSportConfig() {
   return pass;
 }
 
+function testCategorySportMigration() {
+  console.log('\n=== Category Sport Migration ===');
+  let pass = true;
+
+  // Factory defaults should all have sport: 'badminton'
+  for (const cat of FACTORY_CATEGORIES) {
+    pass &= assert(cat.sport === 'badminton', 'Factory cat "' + cat.label + '" has sport=badminton');
+  }
+
+  // Simulate legacy categories without sport field
+  const legacyCats = [
+    { id: 'legacy_1', label: 'Legacy 1', type: 'singles' },
+    { id: 'legacy_2', label: 'Legacy 2', type: 'doubles' },
+  ];
+  const origGet = window.getCategories;
+  const origSave = window.saveCategories;
+  window.getCategories = function() { return legacyCats; };
+  let savedCats = null;
+  window.saveCategories = function(cats) { savedCats = cats; };
+  migrateCategorySports();
+  pass &= assert(savedCats !== null, 'migrateCategorySports called saveCategories');
+  for (const c of savedCats) {
+    pass &= assert(c.sport === 'badminton', 'Legacy cat "' + c.label + '" gained sport=badminton');
+  }
+  // Should not re-migrate
+  savedCats = null;
+  migrateCategorySports();
+  pass &= assert(savedCats === null, 'migrateCategorySports idempotent (no save on second call)');
+
+  window.getCategories = origGet;
+  window.saveCategories = origSave;
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testCategorySportFiltering() {
+  console.log('\n=== Category Sport Filtering ===');
+  let pass = true;
+
+  const cats = [
+    { id: 'cat_a', label: 'Cat A', type: 'singles', sport: 'badminton' },
+    { id: 'cat_b', label: 'Cat B', type: 'singles', sport: 'badminton' },
+    { id: 'cat_c', label: 'Cat C', type: 'singles', sport: 'tableTennis' },
+    { id: 'cat_d', label: 'Cat D', type: 'singles', sport: 'chess' },
+  ];
+  const badmintonCats = cats.filter(c => c.sport === 'badminton');
+  pass &= assert(badmintonCats.length === 2, 'Filter badminton -> 2 categories');
+  pass &= assert(badmintonCats[0].id === 'cat_a' && badmintonCats[1].id === 'cat_b', 'Filtered to correct badminton cats');
+
+  const ttCats = cats.filter(c => c.sport === 'tableTennis');
+  pass &= assert(ttCats.length === 1 && ttCats[0].id === 'cat_c', 'Filter tableTennis -> 1 category');
+
+  const chessCats = cats.filter(c => c.sport === 'chess');
+  pass &= assert(chessCats.length === 1 && chessCats[0].id === 'cat_d', 'Filter chess -> 1 category');
+
+  const noSportCats = cats.filter(c => c.sport === 'tableTennis');
+  pass &= assert(noSportCats.every(c => c.sport === 'tableTennis'), 'No cross-sport contamination');
+
+  // Adding a new category should preserve sport
+  const addCat = { id: 'new_tt', label: 'New TT', type: 'singles', sport: 'tableTennis' };
+  const allPlus = [...cats, addCat];
+  const filtered = allPlus.filter(c => c.sport === 'tableTennis');
+  pass &= assert(filtered.length === 2, 'Added tableTennis category appears in correct filter');
+
+  // Deleting all of one sport should leave others untouched
+  const afterDelete = allPlus.filter(c => c.sport !== 'tableTennis');
+  pass &= assert(afterDelete.length === 4, 'Delete tableTennis categories leaves 4 remaining');
+  pass &= assert(afterDelete.every(c => c.sport !== 'tableTennis'), 'No tableTennis categories remain');
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testSportConfigFromCategory() {
+  console.log('\n=== Sport Config From Category ===');
+  let pass = true;
+
+  // Simulate _setupConfig logic: read sport from category, resolve config
+  const testCases = [
+    { cat: { sport: 'badminton', type: 'singles' }, expectMin: 2, expectMax: 20, expectFinalSets: 3 },
+    { cat: { sport: 'badminton', type: 'doubles' }, expectMin: 2, expectMax: 20, expectFinalSets: 3, expectTeam: true },
+    { cat: { sport: 'tableTennis', type: 'singles' }, expectMin: 2, expectMax: 32, expectFinalSets: 5 },
+    { cat: { sport: 'chess', type: 'singles' }, expectMin: 2, expectMax: 50, expectFinalSets: 1 },
+  ];
+
+  for (const tc of testCases) {
+    const cfg = getSportConfig(tc.cat.sport, tc.cat.type === 'doubles' ? 'doubles' : 'singles');
+    pass &= assert(cfg.minPlayers === tc.expectMin, tc.cat.sport + ' minPlayers = ' + cfg.minPlayers + ' (expected ' + tc.expectMin + ')');
+    pass &= assert(cfg.maxPlayers === tc.expectMax, tc.cat.sport + ' maxPlayers = ' + cfg.maxPlayers + ' (expected ' + tc.expectMax + ')');
+    pass &= assert(cfg.finalSets === tc.expectFinalSets, tc.cat.sport + ' finalSets = ' + cfg.finalSets + ' (expected ' + tc.expectFinalSets + ')');
+    if (tc.expectTeam) {
+      pass &= assert(cfg.isTeamSport === true, tc.cat.sport + ' doubles isTeamSport = true');
+    }
+  }
+
+  // Legacy category without sport should default to badminton
+  const legacyCat = { id: 'old', label: 'Old', type: 'singles' };
+  const sport = legacyCat.sport || 'badminton';
+  const cfg = getSportConfig(sport, 'singles');
+  pass &= assert(cfg.minPlayers === 2, 'Legacy category (no sport) defaults to badminton config');
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function testTournamentEngineAPI() {
   console.log('\n=== Tournament Engine API ===');
   let pass = true;
@@ -419,6 +525,9 @@ function runAllEdgeCaseTests() {
   let modelPass = testParticipantModel();
   let newFormatPass = testNewFormatFlow();
   let configPass = testSportConfig();
+  let sportMigratePass = testCategorySportMigration();
+  let sportFilterPass = testCategorySportFiltering();
+  let sportFromCatPass = testSportConfigFromCategory();
 
   const counts = [2, 3, 4, 5, 6, 10, 11, 20];
   let totalPass = 0;
@@ -438,5 +547,8 @@ function runAllEdgeCaseTests() {
   console.log('   New format flow tests: ' + (newFormatPass ? 'PASS' : 'FAIL'));
   console.log('   Tournament Engine API tests: ' + (apiPass ? 'PASS' : 'FAIL'));
   console.log('   Sport Config tests: ' + (configPass ? 'PASS' : 'FAIL'));
+  console.log('   Category Sport Migration tests: ' + (sportMigratePass ? 'PASS' : 'FAIL'));
+  console.log('   Category Sport Filtering tests: ' + (sportFilterPass ? 'PASS' : 'FAIL'));
+  console.log('   Sport Config From Category tests: ' + (sportFromCatPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }

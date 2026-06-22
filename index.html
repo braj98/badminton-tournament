@@ -26,6 +26,8 @@
       <span id="loginError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:6px;"></span>
     </div>
   </div>
+  <!-- ============ SPORT BAR ============ -->
+  <div id="sportBar" class="sport-bar"></div>
   <div id="catBar" class="cat-bar"></div>
 
   <!-- ============ MANAGE CATEGORIES ============ -->
@@ -56,6 +58,11 @@
             <option value="singles">Singles</option>
             <option value="doubles">Doubles</option>
           </select>
+          <select id="newCatSport" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
+            <option value="badminton">Badminton</option>
+            <option value="tableTennis">Table Tennis</option>
+            <option value="chess">Chess</option>
+          </select>
           <button class="btn admin-only" style="padding:8px 16px;" onclick="addCategoryFromUI()">Add</button>
         </div>
         <span id="manageError" class="text-muted" style="font-size:.8rem;display:block;margin-top:6px;"></span>
@@ -67,12 +74,6 @@
   <div id="screen-setup" class="screen">
     <div class="card">
       <h2 id="setupTitle">New Tournament</h2>
-      <label for="sportSelect" class="text-muted" style="display:block;margin-bottom:4px;">Sport</label>
-      <select id="sportSelect" class="admin-only" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;margin-bottom:10px;">
-        <option value="badminton">Badminton</option>
-        <option value="tableTennis">Table Tennis</option>
-        <option value="chess">Chess</option>
-      </select>
       <label id="setupLabel" class="text-muted" style="display:block;margin-bottom:6px;">Number of players</label>
       <input type="number" id="playerCount" value="4" onchange="onPlayerCountChange()">
       <div id="playerInputs" class="player-inputs"></div>

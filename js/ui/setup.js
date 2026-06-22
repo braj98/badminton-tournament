@@ -2,14 +2,10 @@
 let _lastGoodCount = 4;
 let _pendingReduceCount = 0;
 
-function _setupSport() {
-  const el = document.getElementById('sportSelect');
-  return el ? el.value : 'badminton';
-}
-
 function _setupConfig() {
   const cat = getCategories().find(c => c.id === currentCategory);
-  return getSportConfig(_setupSport(), cat && cat.type === 'doubles' ? 'doubles' : 'singles');
+  const sport = cat ? cat.sport : 'badminton';
+  return getSportConfig(sport, cat && cat.type === 'doubles' ? 'doubles' : 'singles');
 }
 
 function rebuildPlayerInputs(count) {
@@ -157,7 +153,8 @@ function startTournament() {
     }
     if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
     state = defaultState();
-    state.sport = _setupSport();
+    const cat = getCategories().find(c => c.id === currentCategory);
+    state.sport = cat ? cat.sport : 'badminton';
     state.format = 'doubles';
     const pDbl = names.map((n, i) => createParticipant(n, members[i]));
     state.participants = pDbl;
@@ -183,7 +180,8 @@ function startTournament() {
     }
     if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
     state = defaultState();
-    state.sport = _setupSport();
+    const cat = getCategories().find(c => c.id === currentCategory);
+    state.sport = cat ? cat.sport : 'badminton';
     state.format = 'singles';
     const pSingles = names.map(n => createParticipant(n));
     state.participants = pSingles;
@@ -203,8 +201,6 @@ function renderSetup() {
   const saved = localLoad(currentCategory);
   const cat = getCategories().find(c => c.id === currentCategory);
   document.getElementById('setupTitle').textContent = 'New ' + (cat ? escapeHtml(cat.label) + ' — ' : '') + 'Tournament';
-  const sel = document.getElementById('sportSelect');
-  if (sel) sel.value = (saved && saved.sport) || 'badminton';
   const pc = document.getElementById('playerCount');
   const cfg = _setupConfig();
   pc.min = cfg.minPlayers;

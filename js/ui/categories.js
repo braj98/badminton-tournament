@@ -1,11 +1,20 @@
 // ===================== CATEGORY DEFINITIONS =====================
 const FACTORY_CATEGORIES = [
-  { id: 'junior', label: 'Junior', type: 'singles' },
-  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles' },
-  { id: 'senior_boys', label: 'Sr Boys', type: 'singles' },
-  { id: 'senior_girls', label: 'Sr Girls', type: 'singles' },
-  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles' },
+  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton' },
+  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton' },
+  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton' },
+  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton' },
+  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton' },
 ];
+
+function migrateCategorySports() {
+  const cats = getCategories();
+  let changed = false;
+  for (const c of cats) {
+    if (!c.sport) { c.sport = 'badminton'; changed = true; }
+  }
+  if (changed) saveCategories(cats);
+}
 
 // ===================== AUTH UI =====================
 function updateBanners() {
@@ -13,6 +22,38 @@ function updateBanners() {
   if (ab) {
     if (_isAdmin) ab.classList.remove('hidden');
     else ab.classList.add('hidden');
+  }
+}
+
+// ===================== SPORT BAR =====================
+function renderSportBar() {
+  const bar = document.getElementById('sportBar');
+  if (!bar) return;
+  const sports = ['badminton', 'tableTennis', 'chess'];
+  const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
+  bar.innerHTML = '';
+  for (const s of sports) {
+    const btn = document.createElement('button');
+    btn.className = 'sport-btn' + (s === currentSport ? ' active' : '');
+    btn.textContent = labels[s] || s;
+    btn.onclick = function() { switchSport(s); };
+    bar.appendChild(btn);
+  }
+}
+
+function switchSport(sport) {
+  if (sport === currentSport) return;
+  currentSport = sport;
+  renderSportBar();
+  const cats = getCategories().filter(c => c.sport === currentSport);
+  if (cats.length > 0) {
+    switchCategory(cats[0].id);
+    return;
+  } else {
+    currentCategory = null;
+    state = defaultState();
+    currentView = 'setup';
+    renderAll();
   }
 }
 
@@ -45,7 +86,7 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  for (const cat of getCategories()) {
+  for (const cat of getCategories().filter(c => c.sport === currentSport)) {
     const btn = document.createElement('button');
     btn.className = 'cat-btn' + (cat.id === currentCategory ? ' active' : '');
     const s = localLoad(cat.id);
@@ -165,6 +206,7 @@ function addCategoryFromUI() {
   if (!_isAdmin) return;
   const nameInput = document.getElementById('newCatName');
   const typeSelect = document.getElementById('newCatType');
+  const sportSelect = document.getElementById('newCatSport');
   const errSpan = document.getElementById('manageError');
   const label = nameInput.value.trim();
   if (!label) { errSpan.textContent = 'Name is required.'; return; }
@@ -174,11 +216,11 @@ function addCategoryFromUI() {
     return;
   }
   errSpan.textContent = '';
-  addCategory(label, typeSelect.value);
+  addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton');
   nameInput.value = '';
 }
 
-function addCategory(label, type) {
+function addCategory(label, type, sport) {
   if (!_isAdmin) return;
   const cats = getCategories();
   const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
@@ -187,7 +229,7 @@ function addCategory(label, type) {
   while (cats.find(c => c.id === id)) {
     id = baseId + '_' + counter++;
   }
-  cats.push({ id, label, type });
+  cats.push({ id, label, type, sport: sport || 'badminton' });
   saveCategories(cats);
   if (_supabase) upsertCategories(cats);
   const panel = document.getElementById('managePanel');
@@ -209,8 +251,10 @@ function deleteCategory(id) {
     upsertCategories(filtered);
   }
   if (currentCategory === id) {
-    const remaining = getCategories();
-    switchCategory(remaining.length > 0 ? remaining[0].id : null);
+    const remaining = getCategories().filter(c => c.sport === currentSport);
+    if (remaining.length > 0) { switchCategory(remaining[0].id); return; }
+    const all = getCategories();
+    if (all.length > 0) { currentSport = all[0].sport; switchCategory(all[0].id); return; }
   } else {
     renderCategoryBar();
   }

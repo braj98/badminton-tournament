@@ -110,5 +110,11 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
 .cat-btn .dot.playing { background: var(--green); }
 .cat-btn .dot.done { background: var(--gold); }
 
+/* Sport bar */
+.sport-bar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.sport-btn { padding:6px 16px; border:2px solid var(--border); border-radius:20px; background:var(--card); cursor:pointer; font-size:.82rem; font-weight:600; transition:all .15s; }
+.sport-btn:hover { border-color:var(--green); }
+.sport-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
+
 /* Utility */
 .hidden { display: none !important; }
