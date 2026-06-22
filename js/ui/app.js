@@ -176,10 +176,13 @@ function renderResults() {
         updatedAt: m.updatedAt || 0
       });
     }
-    if (s.champion) {
-      const chName = s.participants ? participantName(s.participants, s.champion) || s.champion : s.champion;
-      const ruName = s.participants ? participantName(s.participants, s.runnerUp) || s.runnerUp || '—' : s.runnerUp || '—';
-      champions.push({ cat: cat, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto, completedAt: s.completedAt });
+    const _final = s.knockout.find(m => m.id === 'final');
+    if (_final && _final.done && _final.winner) {
+      const chId = _final.winner;
+      const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
+      const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
+      const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
+      champions.push({ cat: cat, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto, completedAt: s.completedAt || _final.updatedAt });
     }
   }
   matches.sort((a, b) => b.updatedAt - a.updatedAt);

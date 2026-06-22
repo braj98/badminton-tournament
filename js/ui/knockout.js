@@ -113,6 +113,13 @@ function enterKnockoutScore(id, s1, s2) {
     m.winner = null;
   }
   state.knockout = advanceWinner(state.knockout);
+  if (state.phase === 'champion') {
+    const _fm = state.knockout.find(mm => mm.id === 'final');
+    if (_fm && _fm.done && _fm.winner) {
+      state.champion = _fm.winner;
+      state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
+    }
+  }
   saveState();
   renderKnockout();
 }
@@ -150,6 +157,13 @@ function enterFinalSet(id, setNum, s1, s2) {
     m.s2 = null;
   }
   state.knockout = advanceWinner(state.knockout);
+  if (state.phase === 'champion') {
+    const _fm = state.knockout.find(mm => mm.id === 'final');
+    if (_fm && _fm.done && _fm.winner) {
+      state.champion = _fm.winner;
+      state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
+    }
+  }
   saveState();
   renderKnockout();
 }
