@@ -211,9 +211,9 @@ function showResultsPage() {
   renderEventBar();
   renderSportBar();
   renderCategoryBar();
-  document.getElementById('screen-home').classList.remove('active');
+  var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
-  document.querySelectorAll('.screen:not(#screen-results):not(#screen-home)').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
   renderResults();
   applyViewerMode();
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
@@ -416,7 +416,7 @@ async function init() {
     if (link) link.classList.remove('hidden');
   }
 
-  goHome();
+  showResultsPage();
 }
 
 document.addEventListener('DOMContentLoaded', function() { init(); });
