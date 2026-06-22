@@ -27,9 +27,9 @@ const SPORT_ICONS = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
 
 function renderHomePage() {
   clearDisabled();
-  document.getElementById('eventBar').style.display = 'none';
-  document.getElementById('sportBar').style.display = 'none';
-  document.getElementById('catBar').style.display = 'none';
+  var eb = document.getElementById('eventBar'); if (eb) eb.style.display = 'none';
+  var sb = document.getElementById('sportBar'); if (sb) sb.style.display = 'none';
+  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
   const cats = getCategories();
   const events = [...new Set(cats.map(c => c.event || DEFAULT_EVENT))];
   const container = document.getElementById('homeContent');
@@ -54,7 +54,7 @@ function renderHomePage() {
     html += '</div></div>';
   }
   if (!html) html = '<p class="text-muted text-center" style="padding:48px 0;">No categories yet. Admins can add them via Manage.</p>';
-  container.innerHTML = html;
+  if (container) container.innerHTML = html;
   showScreen('screen-home', true);
   showScreen('screen-setup', false);
   showScreen('screen-groups', false);
@@ -89,9 +89,9 @@ function renderAll() {
     return;
   }
 
-  document.getElementById('eventBar').style.display = '';
-  document.getElementById('sportBar').style.display = '';
-  document.getElementById('catBar').style.display = '';
+  var _eb = document.getElementById('eventBar'); if (_eb) _eb.style.display = '';
+  var _sb = document.getElementById('sportBar'); if (_sb) _sb.style.display = '';
+  var _cb = document.getElementById('catBar'); if (_cb) _cb.style.display = '';
 
   if (!_isAdmin && state.phase === 'setup') {
     const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
@@ -160,7 +160,8 @@ function applyViewerMode() {
 }
 
 function showScreen(id, show) {
-  document.getElementById(id).classList.toggle('active', show);
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('active', show);
 }
 
 // ===================== NAVIGATION =====================
