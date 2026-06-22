@@ -9,11 +9,18 @@ const FACTORY_CATEGORIES = [
 
 // ===================== AUTH UI =====================
 function updateBanners() {
-  const vb = document.getElementById('viewerBanner');
   const ab = document.getElementById('adminBanner');
-  if (!vb || !ab) return;
-  if (_isAdmin) { vb.classList.add('hidden'); ab.classList.remove('hidden'); }
-  else { vb.classList.remove('hidden'); ab.classList.add('hidden'); }
+  const fl = document.getElementById('adminFooterLink');
+  const fb = document.getElementById('adminFooterBadge');
+  if (_isAdmin) {
+    if (ab) { ab.classList.remove('hidden'); }
+    if (fl) { fl.classList.add('hidden'); }
+    if (fb) { fb.classList.remove('hidden'); }
+  } else {
+    if (ab) { ab.classList.add('hidden'); }
+    if (fl) { fl.classList.remove('hidden'); }
+    if (fb) { fb.classList.add('hidden'); }
+  }
 }
 
 // ===================== CATEGORY SWITCHING =====================

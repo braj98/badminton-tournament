@@ -11,9 +11,7 @@
 <div id="app">
   <h1>🏸 Badminton Tournament</h1>
 
-  <!-- Login / status banners -->
-  <div id="viewerBanner" class="hidden" style="background:#fef3c7;border:1px solid #fde68a;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#92400e;">👁️ View only — <a href="#" style="color:#16a34a;font-weight:600;" onclick="showLogin()">Login as admin</a> to edit</div>
-  <div id="adminBanner" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#166534;">✅ Logged in as admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></div>
+  <div id="adminBanner" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#166534;">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></div>
 
   <!-- Login dialog -->
   <div id="loginOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:200;display:flex;align-items:center;justify-content:center;">
@@ -220,7 +218,13 @@
 <script src="js/ui/knockout.js"></script>
     <script src="js/ui/champion.js"></script>
 
-    <!-- Edge case test suite (optional, call runAllEdgeCaseTests() from console) -->
+    <!-- Footer -->
+  <div style="margin-top:40px;padding:12px 0;border-top:1px solid var(--border);text-align:center;font-size:.75rem;color:var(--muted);">
+    <span id="adminFooterLink"><a href="#" style="color:var(--muted);text-decoration:none;" onclick="showLogin();return false;">Admin</a></span>
+    <span id="adminFooterBadge" class="hidden">Admin</span>
+  </div>
+
+  <!-- Edge case test suite (optional, call runAllEdgeCaseTests() from console) -->
     <script src="js/test/edge_cases.js"></script>
 </body>
 </html>
