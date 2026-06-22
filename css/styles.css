@@ -122,5 +122,19 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
 .event-btn:hover { border-color:#7c3aed; }
 .event-btn.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
 
+/* Home page */
+.home-event { margin-bottom:24px; }
+.home-event h2 { font-size:1rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid var(--border); }
+.home-sport-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:500px) { .home-sport-grid { grid-template-columns:1fr; } }
+.home-sport-card { display:flex; align-items:center; gap:12px; padding:16px; background:var(--card); border-radius:var(--radius); border:2px solid var(--border); cursor:pointer; transition:all .15s; }
+.home-sport-card:hover { border-color:var(--green); box-shadow:0 2px 12px rgba(22,163,74,.1); transform:translateY(-1px); }
+.home-sport-icon { font-size:2rem; width:48px; text-align:center; }
+.home-sport-info { flex:1; }
+.home-sport-info .name { font-weight:700; font-size:.95rem; }
+.home-sport-info .count { font-size:.78rem; color:var(--muted); margin-top:2px; }
+.home-sport-card .arrow { color:var(--border); font-size:1.2rem; transition:color .15s; }
+.home-sport-card:hover .arrow { color:var(--green); }
+
 /* Utility */
 .hidden { display: none !important; }

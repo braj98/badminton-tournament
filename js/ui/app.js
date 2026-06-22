@@ -17,9 +17,81 @@ function saveState() {
 }
 
 // ===================== RENDER CYCLE =====================
+// ===================== HOME PAGE =====================
+function goHome() {
+  currentView = 'home';
+  renderAll();
+}
+
+const SPORT_ICONS = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
+
+function renderHomePage() {
+  clearDisabled();
+  document.getElementById('eventBar').style.display = 'none';
+  document.getElementById('sportBar').style.display = 'none';
+  document.getElementById('catBar').style.display = 'none';
+  const cats = getCategories();
+  const events = [...new Set(cats.map(c => c.event || DEFAULT_EVENT))];
+  const container = document.getElementById('homeContent');
+  let html = '';
+  for (const ev of events) {
+    const sportCats = {};
+    for (const c of cats.filter(c => (c.event || DEFAULT_EVENT) === ev)) {
+      if (!sportCats[c.sport]) sportCats[c.sport] = [];
+      sportCats[c.sport].push(c);
+    }
+    html += '<div class="home-event"><h2>' + escapeHtml(ev) + '</h2><div class="home-sport-grid">';
+    for (const s of ['badminton', 'tableTennis', 'chess']) {
+      if (!sportCats[s]) continue;
+      const active = sportCats[s].filter(c => { const st = localLoad(c.id); return st && st.phase !== 'setup'; }).length;
+      const total = sportCats[s].length;
+      html += '<div class="home-sport-card" onclick="navigateToSport(\'' + ev + '\',\'' + s + '\')">'
+        + '<div class="home-sport-icon">' + (SPORT_ICONS[s] || '🎯') + '</div>'
+        + '<div class="home-sport-info"><div class="name">' + (s.charAt(0).toUpperCase() + s.slice(1)) + '</div>'
+        + '<div class="count">' + active + ' active / ' + total + ' total</div></div>'
+        + '<div class="arrow">›</div></div>';
+    }
+    html += '</div></div>';
+  }
+  if (!html) html = '<p class="text-muted text-center" style="padding:48px 0;">No categories yet. Admins can add them via Manage.</p>';
+  container.innerHTML = html;
+  showScreen('screen-home', true);
+  showScreen('screen-setup', false);
+  showScreen('screen-groups', false);
+  showScreen('screen-fixtures', false);
+  showScreen('screen-knockout', false);
+  showScreen('screen-champion', false);
+  showScreen('screen-results', false);
+  if (!_isAdmin) applyViewerMode();
+}
+
+function navigateToSport(ev, sport) {
+  currentEvent = ev;
+  currentSport = sport;
+  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent && c.sport === currentSport);
+  if (cats.length > 0) {
+    switchCategory(cats[0].id);
+  } else {
+    currentCategory = null;
+    state = defaultState();
+    currentView = 'setup';
+    renderAll();
+  }
+}
+
+// ===================== RENDER CYCLE =====================
 function renderAll() {
   _showingResults = false;
   clearDisabled();
+
+  if (currentView === 'home') {
+    renderHomePage();
+    return;
+  }
+
+  document.getElementById('eventBar').style.display = '';
+  document.getElementById('sportBar').style.display = '';
+  document.getElementById('catBar').style.display = '';
 
   if (!_isAdmin && state.phase === 'setup') {
     const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
@@ -138,8 +210,9 @@ function showResultsPage() {
   renderEventBar();
   renderSportBar();
   renderCategoryBar();
+  document.getElementById('screen-home').classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
-  document.querySelectorAll('.screen:not(#screen-results)').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen:not(#screen-results):not(#screen-home)').forEach(s => s.classList.remove('active'));
   renderResults();
   applyViewerMode();
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
@@ -342,7 +415,7 @@ async function init() {
     if (link) link.classList.remove('hidden');
   }
 
-  showResultsPage();
+  goHome();
 }
 
 document.addEventListener('DOMContentLoaded', function() { init(); });

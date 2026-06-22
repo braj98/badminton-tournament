@@ -9,7 +9,7 @@
 </head>
 <body>
 <div id="app">
-  <h1>🏸 Badminton Tournament</h1>
+  <h1 style="cursor:pointer;" onclick="goHome()">🏆 Tournament Manager</h1>
 
   <div id="adminBanner" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#166534;">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></div>
 
@@ -71,6 +71,11 @@
         <span id="manageError" class="text-muted" style="font-size:.8rem;display:block;margin-top:6px;"></span>
       </div>
     </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div id="screen-home" class="screen">
+    <div id="homeContent"></div>
   </div>
 
   <!-- ============ SETUP ============ -->
