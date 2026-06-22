@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Manager</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #16a34a;
+            --success-light: #f0fdf4;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .title-group h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tournament-badge {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+
+        .sport-tag {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        /* Navigation Tabs */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            background: none;
+            border: 1px solid transparent;
+            padding: 0.6rem 1.2rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .tab.active {
+            background-color: var(--text-main);
+            color: white;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+        }
+
+        .tab.active .status-dot {
+            background-color: #38bdf8;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stage-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Match Card */
+        .match-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .match-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #dc2626;
+            background-color: #fef2f2;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .live-status {
+            font-size: 0.875rem;
+            color: var(--success);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .match-body {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            border: 2px solid var(--border);
+        }
+
+        .team-names {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .vs-circle {
+            background-color: var(--bg-page);
+            border: 1px solid var(--border);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* Footer Navigation Links */
+        .footer-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="title-group">
+                <h1>🏆 Tournament Manager</h1>
+                <span class="tournament-badge">Bren Avalon Sports Meet 2026</span>
+            </div>
+            <div class="sport-tag">Badminton</div>
+        </header>
+
+        <!-- Category Navigation -->
+        <nav class="tabs-container">
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Junior</button>
+            <button class="tab active" onclick="switchTab(this)"><span class="status-dot"></span>Jr Dbls</button>
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Sr Boys</button>
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Sr Girls</button>
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Sr Dbls</button>
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Adult Dbls</button>
+            <button class="tab" onclick="switchTab(this)"><span class="status-dot"></span>Adults Single</button>
+        </nav>
+
+        <!-- Context Action Bar -->
+        <div class="action-bar">
+            <h2 class="stage-title">Knockout Stage</h2>
+            <button class="btn-secondary" onclick="alert('View Fixtures')">📋 View Fixtures</button>
+        </div>
+
+        <!-- Match Fixture Card -->
+        <div class="match-card">
+            <div class="match-header">
+                <span class="match-label">Final Match</span>
+                <span class="live-status">● Ready to Play</span>
+            </div>
+            <div class="match-body">
+                <!-- Team 1 -->
+                <div class="team">
+                    <div class="avatar">AV</div>
+                    <div class="team-names">Aarav P & Vihaan</div>
+                </div>
+                
+                <!-- Versus Divider -->
+                <div class="vs-circle">VS</div>
+                
+                <!-- Team 2 -->
+                <div class="team">
+                    <div class="avatar">JA</div>
+                    <div class="team-names">Jonathan & Aarav J</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Navigation Links -->
+        <div class="footer-nav">
+            <button class="btn-secondary" onclick="alert('Back to Groups')">← Back to Groups</button>
+            <button class="btn-secondary" onclick="alert('View Results')">📊 Results Table</button>
+        </div>
+    </div>
+
+    <!-- Vanilla JS for Interactivity -->
+    <script>
+        function switchTab(selectedTab) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Add active class to clicked tab
+            selectedTab.classList.add('active');
+        }
+    </script>
+</body>
+</html>

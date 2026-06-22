@@ -30,10 +30,11 @@ js/
 - `models/match.js` — `createMatch(p1, p2, round, group, id?)`
 - `models/tournament.js` — `createTournament(sport, format)` (single source of truth for state shape), `isTeamSport(format)`
 - `models/sportConfig.js` — `SPORT_CONFIG` object with badminton/tableTennis/chess, `getSportConfig(sport, format)`, `getCurrentConfig()`
+- `models/appState.js` — `AppState` single state container: `{category, sport, event, view, tournament, showingResults, isAdmin}`
 - `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()`
 - `storage/supabase.js` — `initSupabase()`, auth, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`
 - `ui/utils.js` — `escapeHtml()`, `isDoubles()`, `pName(id)` (resolves participant ID to display name)
-- `ui/app.js` — globals (`state`, `currentCategory`, `currentView`), `saveState()`, `renderAll()`, navigation, async `init()` (Supabase-first)
+- `ui/app.js` — `saveState()`, `renderAll()`, navigation, async `init()` (Supabase-first). Uses `AppState.*` for all state.
 - `ui/categories.js` — `switchCategory()`, category bar, manage panel, export/import
 - `ui/setup.js` — player input, `_setupConfig()` helper, `startTournament()`, `renderSetup()`
 - `ui/groups.js` — `renderGroups()`, `movePlayerToGroup()`, rename
@@ -41,7 +42,7 @@ js/
 - `ui/knockout.js` — `renderKnockout()`, `enterKnockoutScore()`, `enterFinalSet()`
 - `ui/champion.js` — `renderChampion()`, `viewChampion()`, `showResults()`, photos
 
-Script load order: Engine (5) → Models (4) → tournamentEngine → Storage (2) → UI (8) → Test (1) = 20 scripts total.
+Script load order: Engine (5) → Models (4) → appState.js → tournamentEngine → Storage (2) → UI (8) → Test (1) = 21 scripts total.
 
 ## Source of truth
 

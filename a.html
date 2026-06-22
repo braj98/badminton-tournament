@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Manager System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            padding-bottom: 5rem;
+        }
+
+        /* Top Bar styling */
+        .top-admin-utility-strip {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-utility {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Main Workspace Content Area */
+        .workspace-main-view {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .header-row-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .badge-sport-indicator {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-live-summary {
+            background-color: #475569;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Category navigation slider tracking track maps */
+        .category-tab-slider {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pill-tab-item {
+            background: none;
+            border: 1px solid transparent;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #64748b;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .pill-tab-item.active-item {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Simplified Layout Framework System block structure mapping */
+        .layout-row-group {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .content-panel-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-headline-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .panel-headline-strip h2 {
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Match lists structure maps */
+        .fixtures-listing-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .match-row-strip-item {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-block-unit {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .team-block-unit.align-right-text {
+            text-align: right;
+        }
+
+        .team-block-unit.winner-highlight {
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .score-display-box {
+            background-color: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            margin: 0 10px;
+            display: inline-block;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .winner-highlight .score-display-box {
+            background-color: #f0fdf4;
+        }
+
+        .vs-text-center {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Standings table data layout configuration sets */
+        .data-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-grid-table th {
+            text-align: left;
+            padding: 10px;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .data-grid-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rank-circle-badge {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* Primary action button layout anchors */
+        .action-footer-center {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-primary-action-cta {
+            background-color: #2563eb;
+            color: #ffffff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Utilities Strip Section -->
+    <div class="top-admin-utility-strip">
+        <span style="color: #16a34a; font-weight: 600; font-size: 13px;">✓ Admin Session Enabled</span>
+        <button class="btn-utility" onclick="alert('Manage matches action clicked.')">⚙️ Manage Matches</button>
+        <button class="btn-utility" style="color: #dc2626;" onclick="alert('Logout action clicked.')">Logout</button>
+    </div>
+
+    <!-- Main Workspace Frame -->
+    <div class="workspace-main-view">
+        
+        <header class="header-row-layout">
+            <div>
+                <h1 style="font-size: 24px; font-weight: 800;">🏆 Tournament Manager</h1>
+                <p style="color: #64748b; font-size: 14px; margin-top: 2px;">Bren Avalon Sports Meet 2026</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn-live-summary" onclick="alert('Opening all sports live feed results panel...')">📊 All Sports Live Results</button>
+                <div class="badge-sport-indicator">Badminton</div>
+            </div>
+        </header>
+
+        <!-- Subnav menu bar navigation trackers -->
+        <nav class="category-tab-slider">
+            <button class="pill-tab-item">Junior</button>
+            <button class="pill-tab-item active-item">Jr Dbls</button>
+            <button class="pill-tab-item">Sr Boys</button>
+            <button class="pill-tab-item">Sr Girls</button>
+            <button class="pill-tab-item">Sr Dbls</button>
+            <button class="pill-tab-item">Adult Dbls</button>
+            <button class="pill-tab-item">Adults single</button>
+        </nav>
+
+        <!-- Layout Row Elements Configuration Systems Group Tracking Layout Frame maps -->
+        <div class="layout-row-group">
+            
+            <!-- Panel Item 1: Group Fixtures Row List Registry Track maps mapping -->
+            <div class="content-panel-card">
+                <div class="panel-headline-strip">
+                    <h2>Group Stage Matches (Group A)</h2>
+                    <span style="background-color: #e2e8f0; color: #64748b; font-size: 12px; padding: 3px 8px; border-radius: 10px; font-weight: 600;">10 matches</span>
+                </div>
+
+                <div class="fixtures-listing-stack">
+                    <!-- Match Block 1 -->
+                    <div class="match-row-strip-item">
+                        <div class="team-block-unit winner-highlight">Aarav & Anish <span class="score-display-box">14</span></div>
+                        <div class="vs-text-center">vs</div>
+                        <div class="team-block-unit align-right-text"><span class="score-display-box">12</span> Ujma & Ijma ✓</div>
+                    </div>
+
+                    <!-- Match Block 2 -->
+                    <div class="match-row-strip-item">
+                        <div class="team-block-unit">Aarav & Anish <span class="score-display-box">6</span></div>
+                        <div class="vs-text-center">vs</div>
+                        <div class="team-block-unit align-right-text winner-highlight"><span class="score-display-box">13</span> Jonathan & Aarav J ✓</div>
+                    </div>
+
+                    <!-- Match Block 3 -->
+                    <div class="match-row-strip-item">
+                        <div class="team-block-unit">Aarav & Anish <span class="score-display-box">6</span></div>
+                        <div class="vs-text-center">vs</div>
+                        <div class="team-block-unit align-right-text winner-highlight"><span class="score-display-box">13</span> Aarav P & Vihaan ✓</div>
+                    </div>
+
+                    <!-- Match Block 4 -->
+
