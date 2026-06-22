@@ -59,7 +59,7 @@ function renderAll() {
 }
 
 function clearDisabled() {
-  document.body.classList.remove('viewer-mode');
+  if (_isAdmin) document.body.classList.remove('viewer-mode');
   const app = document.getElementById('app');
   app.querySelectorAll('input, button, select').forEach(el => {
     if (el.closest('#loginOverlay')) return;

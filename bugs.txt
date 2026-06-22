@@ -1,96 +1,116 @@
-I found the bug.
+es, I can see why.
 
-The issue is that you're using:
+Your HTML correctly marks the button as:
 
-state.phase
+<button class="btn btn-secondary admin-only"
+        onclick="toggleManagePanel()">
+  ⚙️ Manage
+</button>
 
-for two different purposes:
+and your CSS says:
 
-Tournament progress
-Current screen being viewed
+body.viewer-mode .admin-only {
+    display: none !important;
+}
 
-In renderAll():
+So in theory the Manage button should disappear.
 
-showScreen('screen-groups', state.phase === 'groups');
-showScreen('screen-fixtures', state.phase === 'fixtures');
-showScreen('screen-knockout', state.phase === 'knockout');
-showScreen('screen-champion', state.phase === 'champion');
+The problem is likely here:
 
-So if the tournament is currently at:
+function showResultsPage() {
+  ...
+  renderResults();
+  applyViewerMode();
+  document.querySelectorAll('.admin-only')
+          .forEach(el => el.style.display = 'none');
+}
 
-state.phase = 'fixtures'
+but inside renderResults() the first line is:
 
-then only Fixtures screen is visible.
+clearDisabled();
 
-When a viewer clicks:
+and clearDisabled() does:
 
-View Fixtures →
+document.body.classList.remove('viewer-mode');
 
-it calls:
+...
+app.querySelectorAll('.admin-only')
+   .forEach(el => el.classList.remove('hidden'));
 
-goToFixtures()
+So your code is constantly fighting itself:
 
-which changes:
+showResultsPage()
+    ↓
+applyViewerMode()
 
-state.phase = 'fixtures';
+renderResults()
+    ↓
+clearDisabled()
+    ↓
+remove viewer-mode
+    ↓
+show admin controls again
+Quick Test
 
-and rerenders.
+Open browser DevTools and run:
 
-But there is no equivalent public navigation that lets a viewer go:
+document.body.classList.contains('viewer-mode')
 
-Groups ← Fixtures ← Knockout ← Champion
+If it returns:
 
-without changing tournament state.
+false
 
-Why you're stuck
+while viewing Results page as a viewer, that's the bug.
 
-Let's say:
+Fix #1 (Recommended)
 
-Sr Doubles
-All group matches complete
-Tournament phase = fixtures
+Modify clearDisabled():
 
-As a viewer:
+Current:
 
-You can see Fixtures
-You cannot see Groups
-You cannot see Knockout
-You cannot see Champion
+document.body.classList.remove('viewer-mode');
 
-because those screens only appear when:
+Change to:
 
-state.phase === 'groups'
-state.phase === 'knockout'
-state.phase === 'champion'
+if (_isAdmin) {
+    document.body.classList.remove('viewer-mode');
+}
 
-respectively.
+This prevents viewer mode from being removed accidentally.
 
-The correct fix
+Fix #2 (Even Better)
 
-Create:
+At the end of renderResults() add:
 
-let currentView = null;
+if (!_isAdmin) {
+    applyViewerMode();
+}
 
-Example:
+That guarantees admin controls stay hidden on Results screen.
 
-currentView = 'groups';
-currentView = 'fixtures';
-currentView = 'knockout';
-currentView = 'champion';
+Another bug I noticed
 
-Then:
+You currently have:
 
-showScreen('screen-groups', currentView === 'groups');
-showScreen('screen-fixtures', currentView === 'fixtures');
-showScreen('screen-knockout', currentView === 'knockout');
-showScreen('screen-champion', currentView === 'champion');
+toggleManagePanel() {
+   if (!_isAdmin) return;
+}
 
-while:
+which protects the action.
 
-state.phase
+But if a viewer can still see the Manage button, it creates confusion because clicking it does nothing.
 
-continues to mean:
+For viewer UX:
 
-Tournament progression
+Viewer should never see:
+⚙ Manage
+📥 Export
+📤 Import
+☁ Push All
+Add Category
+Reset Category
+Delete Category
 
-Only.
+If you fix the viewer-mode issue above, all of these should disappear automatically because they're already marked admin-only.
+
+My suspicion is that the root cause is the first line of clearDisabled(). That's the first thing I'd change
