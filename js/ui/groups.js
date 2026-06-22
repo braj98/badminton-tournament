@@ -76,7 +76,7 @@ function toggleEditMode() {
   const btn = document.getElementById('editToggleBtn');
   if (_editMode) {
     btn.textContent = '✏️ Editing';
-    btn.style.background = '#16a34a';
+    btn.style.background = '#2563eb';
     btn.style.color = '#fff';
   } else {
     btn.textContent = '✏️ Edit';

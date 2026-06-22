@@ -5,15 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Badminton Tournament Manager</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 <div id="app">
-  <h1 style="cursor:pointer;" onclick="goHome()">🏆 Tournament Manager</h1>
+  <div class="header">
+    <div class="title-group">
+      <h1 onclick="goHome()">🏆 Tournament Manager</h1>
+      <span class="tournament-badge" id="eventBadge">BREN AVALON SPORTS MEET 2026</span>
+    </div>
+    <div class="sport-tag" id="sportTag">Badminton</div>
+  </div>
 
-  <div id="adminBanner" class="hidden" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-size:.85rem;text-align:center;color:#166534;">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></div>
+  <!-- ============ HEADER ACTIONS ============ -->
+  <div class="header-actions">
+    <button class="btn btn-xs admin-only" onclick="toggleManagePanel()">⚙️ Manage</button>
+    <button class="btn btn-xs" data-public="1" onclick="showResultsPage()">📊 Results</button>
+    <span id="adminBanner" class="hidden admin-tag">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></span>
+  </div>
 
-  <!-- Login dialog -->
+  <div id="managePanel" class="card hidden" style="margin-top:6px;margin-bottom:12px;">
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
+      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="document.getElementById('importFileInput').click()">📤 Import</button>
+      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="pushAllToCloud()" title="Push all categories to Supabase">☁️ Push All</button>
+      <div id="importConfirmBox" class="hidden" style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;">
+        <div style="font-size:.75rem;color:#dc2626;margin-bottom:6px;">⚠️ This will overwrite <strong>all current data</strong> for <span id="importWarningCount">all</span> categories. Type <strong>IMPORT</strong> to confirm:</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="text" id="importConfirmInput" style="flex:1;min-width:50px;padding:3px 6px;border:2px solid #fecaca;border-radius:4px;font-size:.75rem;" placeholder="IMPORT">
+          <button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="confirmImport()">Go</button>
+          <button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" onclick="cancelImport()">Cancel</button>
+        </div>
+        <span id="importConfirmError" style="font-size:.7rem;color:#dc2626;display:block;margin-top:4px;"></span>
+      </div>
+    </div>
+    <div id="manageCategoryList"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;">
+      <h3 style="font-size:.9rem;margin-bottom:8px;">Add Category</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="newCatName" placeholder="Category name" style="flex:1;min-width:140px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
+        <select id="newCatType" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
+          <option value="singles">Singles</option>
+          <option value="doubles">Doubles</option>
+        </select>
+        <select id="newCatSport" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
+          <option value="badminton">Badminton</option>
+          <option value="tableTennis">Table Tennis</option>
+          <option value="chess">Chess</option>
+        </select>
+        <input type="text" id="newCatEvent" placeholder="Event name" style="flex:1;min-width:120px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
+        <button class="btn admin-only" style="padding:8px 16px;" onclick="addCategoryFromUI()">Add</button>
+      </div>
+      <span id="manageError" class="text-muted" style="font-size:.8rem;display:block;margin-top:6px;"></span>
+    </div>
+  </div>
+
+  <!-- ============ LOGIN ============ -->
   <div id="loginOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:200;display:flex;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:var(--radius);padding:24px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
       <h3 style="margin-bottom:12px;">Admin Login</h3>
@@ -26,56 +76,40 @@
       <span id="loginError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:6px;"></span>
     </div>
   </div>
-  <!-- ============ EVENT BAR ============ -->
-  <div id="eventBar" class="event-bar"></div>
-  <!-- ============ SPORT BAR ============ -->
-  <div id="sportBar" class="sport-bar"></div>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div id="breadcrumb" class="breadcrumb hidden"></div>
+
+  <!-- ============ CATEGORY BAR ============ -->
   <div id="catBar" class="cat-bar"></div>
 
-  <!-- ============ MANAGE CATEGORIES ============ -->
-  <div style="margin-bottom:16px;">
-    <button class="btn btn-secondary admin-only" style="padding:6px 14px;font-size:.8rem;" onclick="toggleManagePanel()">⚙️ Manage</button>
-    <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="showResultsPage()" data-public="1">📊 Results</button>
-    <div id="managePanel" class="card hidden" style="margin-top:8px;">
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="exportAll()">📥 Export</button>
-      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="document.getElementById('importFileInput').click()">📤 Import</button>
-      <button class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="pushAllToCloud()" title="Push all categories to Supabase">☁️ Push All</button>
-        <div id="importConfirmBox" class="hidden" style="flex:1;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;">
-          <div style="font-size:.75rem;color:#dc2626;margin-bottom:6px;">⚠️ This will overwrite <strong>all current data</strong> for <span id="importWarningCount">all</span> categories. Type <strong>IMPORT</strong> to confirm:</div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <input type="text" id="importConfirmInput" style="flex:1;min-width:50px;padding:3px 6px;border:2px solid #fecaca;border-radius:4px;font-size:.75rem;" placeholder="IMPORT">
-            <button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="confirmImport()">Go</button>
-            <button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" onclick="cancelImport()">Cancel</button>
-          </div>
-          <span id="importConfirmError" style="font-size:.7rem;color:#dc2626;display:block;margin-top:4px;"></span>
-        </div>
-      </div>
-      <div id="manageCategoryList"></div>
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;">
-        <h3 style="font-size:.9rem;margin-bottom:8px;">Add Category</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" id="newCatName" placeholder="Category name" style="flex:1;min-width:140px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
-          <select id="newCatType" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
-            <option value="singles">Singles</option>
-            <option value="doubles">Doubles</option>
-          </select>
-          <select id="newCatSport" style="padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
-            <option value="badminton">Badminton</option>
-            <option value="tableTennis">Table Tennis</option>
-            <option value="chess">Chess</option>
-          </select>
-          <input type="text" id="newCatEvent" placeholder="Event name" style="flex:1;min-width:120px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
-          <button class="btn admin-only" style="padding:8px 16px;" onclick="addCategoryFromUI()">Add</button>
-        </div>
-        <span id="manageError" class="text-muted" style="font-size:.8rem;display:block;margin-top:6px;"></span>
-      </div>
-    </div>
+  <!-- ============ TOURNAMENT TABS ============ -->
+  <div id="tournamentTabs" class="tournament-tabs hidden">
+    <button class="tab-btn" data-tab="groups" onclick="switchTab('groups')">Groups</button>
+    <button class="tab-btn" data-tab="fixtures" onclick="switchTab('fixtures')">Fixtures</button>
+    <button class="tab-btn" data-tab="knockout" onclick="switchTab('knockout')">Knockout</button>
+    <button class="tab-btn" data-tab="champion" onclick="switchTab('champion')">🏆 Champion</button>
+  </div>
+
+  <!-- ============ ACTION BAR ============ -->
+  <div id="actionBar" class="action-bar">
+    <h2 class="stage-title" id="stageTitle">Setup</h2>
+    <div id="actionBarRight"></div>
   </div>
 
   <!-- ============ HOME ============ -->
   <div id="screen-home" class="screen">
     <div id="homeContent"></div>
+  </div>
+
+  <!-- ============ EVENT PAGE ============ -->
+  <div id="screen-event" class="screen">
+    <div id="eventContent"></div>
+  </div>
+
+  <!-- ============ SPORT PAGE ============ -->
+  <div id="screen-sport" class="screen">
+    <div id="sportContent"></div>
   </div>
 
   <!-- ============ SETUP ============ -->
@@ -130,17 +164,12 @@
         <button id="editToggleBtn" class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="toggleEditMode()">✏️ Edit</button>
       </div>
       <div id="groupDisplay" class="group-grid"></div>
-      <button class="btn btn-block mt-16" data-public="1" onclick="goToFixtures()">View Fixtures →</button>
     </div>
   </div>
 
   <!-- ============ FIXTURES ============ -->
   <div id="screen-fixtures" class="screen">
     <div class="card">
-      <div class="flex justify-between items-center mb-12">
-        <h2 style="margin:0;">Group Stage Matches</h2>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToGroups()">← Groups</button>
-      </div>
       <div id="fixtureList"></div>
       <div id="groupStandings"></div>
       <button id="btnProceedKnockout" class="btn btn-block mt-16 hidden admin-only" onclick="goToKnockout()">Proceed to Knockout →</button>
@@ -151,27 +180,17 @@
   <!-- ============ KNOCKOUT ============ -->
   <div id="screen-knockout" class="screen">
     <div class="card">
-      <div class="flex justify-between items-center mb-12">
-        <h2 style="margin:0;">Knockout Stage</h2>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToFixturesFromKnockout()">← Fixtures</button>
-      </div>
       <div id="bracket"></div>
-      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
-        <button class="btn btn-secondary" style="flex:1;padding:6px 14px;font-size:.8rem;" data-public="1" onclick="goToGroups()">← Groups</button>
-        <button id="btnShowResults" class="btn hidden admin-only" style="flex:1;padding:6px 14px;font-size:.8rem;" onclick="showResults()">🏆 Show Results</button>
-        <button id="btnViewChampion" class="btn hidden" style="flex:1;padding:6px 14px;font-size:.8rem;" data-public="1" onclick="viewChampion()">🏆 View Champion</button>
+      <div class="footer-nav">
+        <button class="btn btn-secondary btn-sm" data-public="1" onclick="goToGroups()">← Back to Groups</button>
+        <button id="btnShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()">📊 Results Table</button>
+        <button id="btnViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()">📊 Results Table</button>
       </div>
     </div>
   </div>
 
   <!-- ============ CHAMPION ============ -->
   <div id="screen-champion" class="screen">
-    <div class="card" style="margin-bottom:8px;">
-      <div class="flex justify-between items-center">
-        <h2 style="margin:0;font-size:1rem;">🏆 Champion</h2>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="goBackFromChampion()" data-public="1">← Back</button>
-      </div>
-    </div>
     <div class="card champion-card">
       <div class="crown" id="championCatLabel"></div>
       <div class="trophy">🏆</div>
@@ -202,7 +221,7 @@
   <div id="screen-results" class="screen">
     <div class="card">
       <div class="flex justify-between items-center mb-12">
-        <h2 style="margin:0;">📊 Knockout Results</h2>
+        <h2 style="margin:0;">Results Table</h2>
         <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="closeResults()" data-public="1">← Back</button>
       </div>
       <div id="resultsList"></div>

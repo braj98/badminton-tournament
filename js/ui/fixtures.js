@@ -7,7 +7,11 @@ function renderFixtures() {
   for (const key of groups) {
     const gf = fixtures.filter(f => f.group === key);
     if (gf.length === 0) continue;
-    html += '<div class="match-group-label">Group ' + key + '</div>';
+    html += '<div class="fixture-group-card">'
+      + '<div class="fixture-group-header">'
+      + '<span class="fixture-group-label">Group ' + key + '</span>'
+      + '<span class="fixture-group-count">' + gf.length + ' match' + (gf.length > 1 ? 'es' : '') + '</span>'
+      + '</div><div class="fixture-group-matches">';
     for (const f of gf) {
       const done = f.done;
       html += '<div class="match-row' + (done ? ' match-done' : '') + '">'
@@ -27,9 +31,10 @@ function renderFixtures() {
           + '<span class="score-text">' + (f.s2 ?? '') + '</span>';
       }
       html += '<span class="pname">' + escapeHtml(pName(f.p2)) + '</span>'
-        + (done ? '<span class="done-label">✓</span>' : '')
+        + (done ? '<span class="match-done-label">✓</span>' : '')
         + '</div>';
     }
+    html += '</div></div>';
   }
   container.innerHTML = html;
   const stContainer = document.getElementById('groupStandings');
@@ -37,7 +42,11 @@ function renderFixtures() {
   for (const key of groups) {
     const rows = state.standings[key];
     if (!rows) continue;
-    stHtml += '<div class="match-group-label">Group ' + key + '</div>'
+    stHtml += '<div class="fixture-group-card" style="margin-top:0;">'
+      + '<div class="fixture-group-header">'
+      + '<span class="fixture-group-label">Group ' + key + '</span>'
+      + '<span class="fixture-group-count">Standings</span>'
+      + '</div>'
       + '<table class="standings-table"><thead><tr>'
       + '<th>Player</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>PD</th><th>Rk</th>'
       + '</tr></thead><tbody>';
@@ -53,7 +62,7 @@ function renderFixtures() {
         + '<td class="' + (r.rank === 1 ? 'rank-1' : '') + '">' + r.rank + '</td>'
         + '</tr>';
     }
-    stHtml += '</tbody></table>';
+    stHtml += '</tbody></table></div>';
   }
   stContainer.innerHTML = stHtml;
   const allDone = fixtures.every(f => f.done);

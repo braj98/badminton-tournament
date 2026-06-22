@@ -48,6 +48,7 @@ async function login() {
   const cloudCats = await fetchCategoriesFromCloud();
   if (cloudCats && cloudCats.length) {
     saveCategories(cloudCats);
+    migrateCategorySports();
   }
   updateBanners();
   renderAll();

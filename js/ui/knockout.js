@@ -5,63 +5,66 @@ function renderKnockout() {
   const ko = state.knockout;
   if (!ko || ko.length === 0) { container.innerHTML = '<p class="text-muted">No knockout matches.</p>'; return; }
   const rounds = ['QF', 'SF', 'Final'];
+  const roundLabels = { QF: 'Quarter Final', SF: 'Semi Final', Final: 'Final' };
   let html = '';
   for (const round of rounds) {
     const matches = ko.filter(m => m.round === round);
     if (matches.length === 0) continue;
-    html += '<div class="bracket-round"><h3>' + (round === 'QF' ? 'Quarter Finals' : round === 'SF' ? 'Semi Finals' : 'Final') + '</h3>';
+    html += '<div class="bracket-round"><div class="round-title">' + roundLabels[round] + 's</div>';
     for (const m of matches) {
-      const isFinal = m.round === 'Final';
-      html += '<div class="bracket-match">';
-      if (isFinal) {
-        html += '<span class="pname">' + escapeHtml(pName(m.p1)) + '</span>';
-        if (_isAdmin) {
+      var isFinal = m.round === 'Final';
+      var done = m.done;
+      var canPlay = m.p1 && m.p2;
+      html += '<div class="match-card' + (done ? ' match-done' : '') + '">'
+        + '<div class="match-card-header">'
+        + '<span class="match-label">' + roundLabels[round] + '</span>'
+        + '<span class="match-status">' + (done ? '✓ ' + escapeHtml(pName(m.winner)) : (canPlay ? '● Ready to Play' : '— Waiting')) + '</span>'
+        + '</div>'
+        + '<div class="match-body">'
+        + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p1)) + '</div><div class="team-names">' + escapeHtml(pName(m.p1)) + '</div></div>'
+        + '<div class="vs-circle">VS</div>'
+        + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p2)) + '</div><div class="team-names">' + escapeHtml(pName(m.p2)) + '</div></div>'
+        + '</div>';
+      if (canPlay && _isAdmin) {
+        html += '<div class="match-score-area">';
+        if (isFinal) {
           html += renderFinalSetInputs(m);
         } else {
-          html += renderFinalSetText(m);
-        }
-        html += '<span class="pname">' + escapeHtml(pName(m.p2)) + '</span>'
-          + (m.done ? '<span class="winner-badge">🏆 ' + escapeHtml(pName(m.winner)) + '</span>' : '');
-      } else {
-        const canPlay = m.p1 && m.p2;
-        html += '<span class="pname">' + escapeHtml(pName(m.p1)) + '</span>';
-        if (canPlay) {
-          if (_isAdmin) {
-            html += '<input class="score-input" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s1 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ks2\').value)" onfocus="this.select()">'
-              + '<span class="vs">vs</span>'
-              + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
-          } else {
-            html += '<span class="score-text">' + (m.s1 ?? '') + '</span>'
-              + '<span class="vs">vs</span>'
-              + '<span class="score-text">' + (m.s2 ?? '') + '</span>';
-          }
-        } else {
-          html += '<span style="min-width:56px;text-align:center;">—</span>'
+          html += '<input class="score-input" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s1 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ks2\').value)" onfocus="this.select()">'
             + '<span class="vs">vs</span>'
-            + '<span style="min-width:56px;text-align:center;">—</span>';
+            + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
         }
-        html += '<span class="pname">' + escapeHtml(pName(m.p2)) + '</span>'
-          + (m.done ? '<span class="winner-badge">→ ' + escapeHtml(pName(m.winner)) + '</span>' : '');
+        html += '</div>';
+      } else if (canPlay && !_isAdmin) {
+        if (isFinal) {
+          html += '<div class="match-score-area">' + renderFinalSetText(m) + '</div>';
+        } else if (m.s1 !== null && m.s2 !== null) {
+          html += '<div class="match-score-area"><span class="score-text">' + escapeHtml(m.s1) + '</span><span class="vs">vs</span><span class="score-text">' + escapeHtml(m.s2) + '</span></div>';
+        }
       }
       html += '</div>';
     }
     html += '</div>';
   }
   container.innerHTML = html;
-  const finalMatch = ko.find(m => m.id === 'final');
+  const finalMatch = ko.find(function(mm) { return mm.id === 'final'; });
   const finalDone = finalMatch && finalMatch.done;
   document.getElementById('btnShowResults').classList.toggle('hidden', !(finalDone && _isAdmin));
   document.getElementById('btnViewChampion').classList.toggle('hidden', !finalDone);
+  var _ab1 = document.getElementById('actionBarShowResults');
+  var _ab2 = document.getElementById('actionBarViewChampion');
+  if (_ab1) _ab1.classList.toggle('hidden', !(finalDone && _isAdmin));
+  if (_ab2) _ab2.classList.toggle('hidden', !finalDone);
 }
 
 function renderFinalSetText(m) {
   if (!m.sets) return '<span class="vs">vs</span>';
   var _cfg = getCurrentConfig();
-  let h = '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">';
+  let h = '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
   for (let i = 0; i < _cfg.finalSets; i++) {
     const s = m.sets[i];
     if (!s || s.s1 === null) break;
-    h += '<span style="font-size:.8rem;padding:2px 4px;">S' + (i+1) + ': ' + escapeHtml(s.s1) + '-' + escapeHtml(s.s2) + '</span>';
+    h += '<span style="font-size:.85rem;font-weight:600;padding:2px 8px;background:var(--bg-page);border-radius:4px;">S' + (i+1) + ': ' + escapeHtml(s.s1) + '-' + escapeHtml(s.s2) + '</span>';
   }
   h += '</div>';
   return h;
@@ -81,7 +84,7 @@ function renderFinalSets(m) {
 
 function renderFinalSetInputs(m) {
   var _cfg = getCurrentConfig();
-  let h = '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">';
+  let h = '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
   for (let i = 0; i < _cfg.finalSets; i++) {
     const s = m.sets ? m.sets[i] : null;
     h += '<span style="display:flex;align-items:center;gap:2px;font-size:.8rem;">'
@@ -99,7 +102,7 @@ function renderFinalSetInputs(m) {
 
 function enterKnockoutScore(id, s1, s2) {
   if (!_isAdmin) return;
-  const m = state.knockout.find(m => m.id === id);
+  const m = state.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   m.s1 = parseInt(s1) || 0;
   m.s2 = parseInt(s2) || 0;
@@ -114,7 +117,7 @@ function enterKnockoutScore(id, s1, s2) {
   }
   state.knockout = advanceWinner(state.knockout);
   if (state.phase === 'champion') {
-    const _fm = state.knockout.find(mm => mm.id === 'final');
+    var _fm = state.knockout.find(function(mm) { return mm.id === 'final'; });
     if (_fm && _fm.done && _fm.winner) {
       state.champion = _fm.winner;
       state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
@@ -126,7 +129,7 @@ function enterKnockoutScore(id, s1, s2) {
 
 function enterFinalSet(id, setNum, s1, s2) {
   if (!_isAdmin) return;
-  const m = state.knockout.find(m => m.id === id);
+  const m = state.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   var _cfg = getCurrentConfig();
   if (!m.sets) {
@@ -158,7 +161,7 @@ function enterFinalSet(id, setNum, s1, s2) {
   }
   state.knockout = advanceWinner(state.knockout);
   if (state.phase === 'champion') {
-    const _fm = state.knockout.find(mm => mm.id === 'final');
+    var _fm = state.knockout.find(function(mm) { return mm.id === 'final'; });
     if (_fm && _fm.done && _fm.winner) {
       state.champion = _fm.winner;
       state.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;

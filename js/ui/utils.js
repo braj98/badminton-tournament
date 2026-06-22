@@ -18,3 +18,15 @@ function pName(id) {
   }
   return id;
 }
+
+function getInitials(id) {
+  if (!id) return '?';
+  var name = pName(id);
+  if (!name || name === 'TBD') return '?';
+  var parts = name.split(/[ &]+/);
+  var initials = '';
+  for (var i = 0; i < parts.length && i < 2; i++) {
+    if (parts[i].length > 0) initials += parts[i][0].toUpperCase();
+  }
+  return initials || '?';
+}

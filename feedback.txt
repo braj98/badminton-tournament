@@ -1,146 +1,348 @@
-What Still Needs Improvement
+ournament Manager - Current Assessment & Next Steps
+Overall Status
 
-Right now I see some duplication.
+The project has successfully evolved from a badminton application into a reusable tournament platform.
 
-For example:
+Current estimated completion:
 
-// models/tournament.js
-createTournament()
+Core Tournament Engine
 
-// engine/state.js
-defaultState()
+85%
 
-These are both defining tournament structure in different places.
+Completed:
 
-I would eventually have:
+Group Allocation
+Fixtures
+Standings
+Qualification
+Knockout
+Champion
+Architecture
 
-models/
-    tournament.js
-    participant.js
-    match.js
+80%
 
-be the ONLY place that defines data structures.
+Completed:
 
-Then:
+Models
+Engine
+Storage
+UI separation
+Sport configuration
 
-engine/
+Remaining:
 
-only manipulates them.
+Event model
+AppState cleanup
+Removal of global variables
+User Experience
 
-Biggest Architectural Issue Remaining
+65%
 
-You still have:
+This is now the biggest improvement area.
 
-let state = null;
-let currentCategory = null;
-let currentView = null;
-let _isAdmin = false;
+The application works.
 
-as globals.
+The navigation model still feels technical rather than user-focused.
 
-For V1 this is okay.
+High Priority Bugs
+Bug 1
 
-For multi-sport V2 I'd create:
+Category Tabs Not Visible
 
-AppState = {
-    tournament,
-    currentCategory,
-    currentView,
-    user
-}
+Likely Cause:
 
-and pass it around.
+Home page hides:
 
-This will eliminate a lot of strange bugs.
+catBar
 
-Multi-Sport Readiness Score
-Current Version
-Badminton only:
-9/10
-Reusable Sports Platform
-6.5/10
+but it is not explicitly restored when leaving home mode.
 
-Why?
+Action:
 
-Because the engine still assumes badminton concepts:
+Ensure:
 
-groups
-qualifiers
-knockout
-champion
-runnerUp
+catBar.style.display = ''
 
-are hardcoded into the state model.
+whenever:
 
-What I Would Do Next
+renderAll()
 
-Not React.
+shows tournament screens.
 
-Not new features.
+Bug 2
 
-Phase A
+Navigation State
 
-Create:
+Current concepts:
 
-models/
-    tournament.js
-    participant.js
-    match.js
+state.phase
+currentView
 
-properly.
+are much better than before.
 
-Example:
+Still verify:
 
+Viewer navigation never updates tournament state.
+
+Bug 3
+
+Results / Champion Navigation
+
+Validate:
+
+Groups
+→ Fixtures
+→ Knockout
+→ Champion
+
+can always be viewed by both:
+
+Admin
+Viewer
+
+without modifying tournament progress.
+
+UX Improvement Roadmap
+Current UX
+
+Event
+↓
+Sport
+↓
+Category Tabs
+↓
 Tournament
-{
-    sport,
-    format,
-    participants,
-    matches,
-    standings,
-    bracket
-}
-Phase B
 
-Create:
+Works.
 
-engine/
-    tournamentEngine.js
+Not yet intuitive.
 
-with public functions:
+Recommended UX
+Home
 
-createGroups()
-createFixtures()
-calculateStandings()
-generateKnockout()
-advanceWinner()
+🏆 Tournament Manager
 
-Then all UI calls only these APIs.
+Events
 
-Phase C
+Summer Games 2026
+Winter Games 2026
+Event Page
 
-Introduce sport configuration.
+Summer Games 2026
+
+Sports
+
+🏸 Badminton
+
+🏓 Table Tennis
+
+♟ Chess
+
+Sport Page
+
+Badminton
+
+Categories
+
+Junior Singles
+Senior Singles
+Senior Doubles
+Tournament Page
+
+Tabs:
+
+Groups
+Fixtures
+Knockout
+Champion
+
+Benefits
+
+Users always know:
+
+Where they are
+
+and
+
+How to navigate.
+
+Data Model Improvements
+Current
+
+Category
+
+Examples:
+
+Senior Singles
+Senior Doubles
+Future
+
+Event
+→ Sport
+→ Category
+→ Tournament
 
 Example:
 
-const SPORT_CONFIG = {
-  badminton: {
-    minPlayers: 2,
-    maxPlayers: 20,
-    bestOfFinal: 3
-  },
+Summer Games 2026
 
-  chess: {
-    minPlayers: 2,
-    maxPlayers: 50,
-    bestOfFinal: 1
-  },
+Badminton
 
-  tableTennis: {
-    minPlayers: 2,
-    maxPlayers: 32,
-    bestOfFinal: 5
-  }
+Men's Singles
+Women's Singles
+Doubles
+
+Table Tennis
+
+Open Singles
+
+Chess
+
+Open
+
+Benefits
+
+Supports multiple sports naturally.
+
+Sports Roadmap
+Phase 1
+
+Complete
+
+Badminton Singles
+Badminton Doubles
+Phase 2
+
+Add
+
+Table Tennis Singles
+Tennis Singles
+
+Expected effort:
+
+Low
+
+Reuse:
+
+Groups
+Standings
+Knockout
+Phase 3
+
+Add
+
+Chess
+Carrom
+
+Expected effort:
+
+Low
+
+Mostly scoring differences.
+
+Phase 4
+
+Add Team Sports
+
+Football
+Volleyball
+Basketball
+
+Expected effort:
+
+Medium
+
+Requires:
+
+Team model
+Team standings
+Phase 5
+
+Cricket
+
+Recommendation:
+
+Separate module.
+
+Do not force cricket into the same scoring engine.
+
+Architecture Improvements
+Introduce AppState
+
+Current:
+
+Global variables
+
+state
+currentCategory
+currentSport
+currentEvent
+currentView
+
+Future:
+
+AppState
+
+{
+user,
+currentEvent,
+currentSport,
+currentCategory,
+currentView,
+tournament
 }
 
-Then the engine becomes reusable.
+Benefits:
+
+Easier debugging
+Easier testing
+Easier future React migration
+Features To Avoid For Now
+
+Do NOT add:
+
+Notifications
+WhatsApp integration
+Historical analytics
+Player rankings
+Advanced statistics
+
+until UX and navigation are stable.
+
+Recommended Next Sprint
+
+Priority 1
+
+Fix navigation completely.
+
+Priority 2
+
+Fix category visibility issue.
+
+Priority 3
+
+Introduce Event → Sport → Category hierarchy.
+
+Priority 4
+
+Add Table Tennis.
+
+Priority 5
+
+Add Chess.
+
+Only after those are complete should larger enhancements be considered.
+
+Final Recommendation
+
+The platform is no longer a prototype.
+
+It is approaching a reusable tournament management product.
+
+The next major gains will come from:
+
+UX simplification
+Navigation improvements
+Better hierarchy
+
+not from adding more tournament logic.
