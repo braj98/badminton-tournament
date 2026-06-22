@@ -44,7 +44,7 @@ function renderActionBar() {
   right.innerHTML = '';
   if (AppState.view === 'knockout') {
     right.innerHTML = '<button id="actionBarShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()" style="margin-left:4px;">📊 Results</button>'
-      + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">📊 Results</button>';
+      + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">🏆 Champion</button>';
   }
 }
 // ===================== SAVE (orchestrates storage) =====================
@@ -72,11 +72,11 @@ function renderHomePage() {
   var _ab = document.getElementById('actionBar'); if (_ab) _ab.style.display = 'none';
   var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
   const cats = getCategories();
-  const events = [...new Set(cats.map(c => c.event || DEFAULT_EVENT))];
+  const events = [...new Set(cats.map(c => c.event || APP_CONFIG.defaultEvent))];
   const container = document.getElementById('homeContent');
   let html = '<h2 class="page-title">Events</h2><div class="home-events-list">';
   for (const ev of events) {
-    const eventCats = cats.filter(c => (c.event || DEFAULT_EVENT) === ev);
+    const eventCats = cats.filter(c => (c.event || APP_CONFIG.defaultEvent) === ev);
     let active = 0;
     for (const c of eventCats) {
       const st = localLoad(c.id);
@@ -112,7 +112,7 @@ function renderHomePage() {
 function renderBreadcrumb() {
   var bc = document.getElementById('breadcrumb');
   if (!bc) return;
-  if (AppState.view === 'home' || AppState.showingResults) { bc.classList.add('hidden'); return; }
+  if (AppState.view === 'home') { bc.classList.add('hidden'); return; }
   bc.classList.remove('hidden');
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'event') {
@@ -158,7 +158,7 @@ function renderEventPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('eventContent');
-  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === AppState.event; });
+  var cats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === AppState.event; });
   var sportCats = {};
   for (var i = 0; i < cats.length; i++) {
     var c = cats[i];
@@ -202,7 +202,7 @@ function renderSportPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('sportContent');
-  var cats = getCategories().filter(function(c) { return (c.event || DEFAULT_EVENT) === AppState.event && c.sport === AppState.sport; });
+  var cats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === AppState.event && c.sport === AppState.sport; });
   var html = '<h2 class="page-title">' + sportLabel(AppState.sport) + '</h2>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No categories in this sport.</p>';
@@ -292,7 +292,7 @@ function renderAll() {
   }
 
   if (!AppState.isAdmin && AppState.tournament && AppState.tournament.phase === 'setup') {
-    const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
+    const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
     let foundCat = null;
     for (const cat of cats) {
       if (cat.id === AppState.category) continue;

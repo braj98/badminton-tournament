@@ -16,7 +16,7 @@ function getSportIcon(sport) {
 
 function getActiveSports() {
   return SPORT_IDS.filter(s => {
-    const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event && c.sport === s);
+    const cats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event && c.sport === s);
     return cats.length > 0;
   });
 }

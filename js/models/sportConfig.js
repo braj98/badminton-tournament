@@ -3,6 +3,10 @@
 
 const SPORT_CONFIG = {
   badminton: {
+    displayName: "Badminton",
+    icon: "🏸",
+    supportsDoubles: true,
+    teamBased: false,
     minPlayers: 2,
     maxPlayers: 20,
     groupPointsToWin: 13,
@@ -15,6 +19,10 @@ const SPORT_CONFIG = {
     groupCounts: [1, 2, 4]
   },
   tableTennis: {
+    displayName: "Table Tennis",
+    icon: "🏓",
+    supportsDoubles: true,
+    teamBased: false,
     minPlayers: 2,
     maxPlayers: 32,
     groupPointsToWin: 11,
@@ -27,6 +35,10 @@ const SPORT_CONFIG = {
     groupCounts: [1, 2, 4]
   },
   chess: {
+    displayName: "Chess",
+    icon: "♟",
+    supportsDoubles: false,
+    teamBased: false,
     minPlayers: 2,
     maxPlayers: 50,
     groupPointsToWin: 1,
@@ -45,7 +57,7 @@ function getSportConfig(sport, format) {
   return format === 'doubles' ? { ...base, isTeamSport: true } : { ...base, isTeamSport: false };
 }
 
-const DEFAULT_EVENT = 'BREN AVALON SPORTS MEET 2026';
+
 
 function getCurrentConfig() {
   return getSportConfig(

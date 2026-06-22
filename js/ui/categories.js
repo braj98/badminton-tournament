@@ -1,10 +1,10 @@
 // ===================== CATEGORY DEFINITIONS =====================
 const FACTORY_CATEGORIES = [
-  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
-  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: DEFAULT_EVENT },
-  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
-  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
-  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: DEFAULT_EVENT },
+  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
+  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
+  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
+  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
+  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
 ];
 
 function migrateCategorySports() {
@@ -12,7 +12,7 @@ function migrateCategorySports() {
   let changed = false;
   for (const c of cats) {
     if (!c.sport) { c.sport = 'badminton'; changed = true; }
-    if (!c.event) { c.event = DEFAULT_EVENT; changed = true; }
+    if (!c.event) { c.event = APP_CONFIG.defaultEvent; changed = true; }
   }
   if (changed) saveCategories(cats);
 }
@@ -31,7 +31,7 @@ function renderSportBar() {
   const bar = document.getElementById('sportBar');
   if (!bar) return;
   const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
+  const cats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
   const sportSet = new Set(cats.map(c => c.sport));
   bar.innerHTML = '';
   for (const s of ['badminton', 'tableTennis', 'chess']) {
@@ -48,7 +48,7 @@ function switchSport(sport) {
   if (sport === AppState.sport) return;
   AppState.sport = sport;
   renderSportBar();
-  const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
+  const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
   if (cats.length > 0) {
     switchCategory(cats[0].id);
     return;
@@ -64,7 +64,7 @@ function switchSport(sport) {
 function renderEventBar() {
   const bar = document.getElementById('eventBar');
   if (!bar) return;
-  const events = [...new Set(getCategories().map(c => c.event || DEFAULT_EVENT))];
+  const events = [...new Set(getCategories().map(c => c.event || APP_CONFIG.defaultEvent))];
   bar.innerHTML = '';
   for (const ev of events) {
     const btn = document.createElement('button');
@@ -79,7 +79,7 @@ function switchEvent(ev) {
   if (ev === AppState.event) return;
   AppState.event = ev;
   renderEventBar();
-  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
+  const cats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
   if (cats.length > 0) {
     const sportCats = cats.filter(c => c.sport === AppState.sport);
     if (sportCats.length > 0) {
@@ -102,6 +102,8 @@ async function switchCategory(catId) {
   if (catId === AppState.category) return;
   if (AppState.category && AppState.tournament && AppState.tournament.phase !== 'setup') { saveState(); await flushCloudSave(); }
   AppState.category = catId;
+  const cat = getCategories().find(c => c.id === catId);
+  if (cat) { AppState.sport = cat.sport; AppState.event = cat.event || APP_CONFIG.defaultEvent; }
   let serverState = null;
   if (_supabase) {
     serverState = await fetchState(catId).catch(() => null);
@@ -112,10 +114,13 @@ async function switchCategory(catId) {
     localSave(catId, AppState.tournament);
   } else {
     const saved = localLoad(catId);
-    if (saved && saved.phase !== 'setup') {
+    if (saved && saved.phase && saved.phase !== 'setup') {
       AppState.tournament = saved;
     } else {
       AppState.tournament = defaultState();
+      const cat = getCategories().find(c => c.id === catId);
+      if (cat && cat.sport) AppState.tournament.sport = cat.sport;
+      if (cat && cat.type) AppState.tournament.format = cat.type;
     }
   }
   AppState.view = AppState.tournament.phase;
@@ -126,7 +131,7 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  for (const cat of getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event)) {
+  for (const cat of getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event)) {
     const btn = document.createElement('button');
     btn.className = 'cat-btn' + (cat.id === AppState.category ? ' active' : '');
     const s = localLoad(cat.id);
@@ -196,7 +201,7 @@ function renderManagePanel() {
     const running = saved && saved.phase !== 'setup';
     const sportName = getSportLabel(c.sport);
     const sportIcon = getSportIcon(c.sport);
-    const eventName = c.event || DEFAULT_EVENT;
+    const eventName = c.event || APP_CONFIG.defaultEvent;
     
     html += '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
@@ -286,7 +291,7 @@ function addCategory(label, type, sport, eventName) {
   while (cats.find(c => c.id === id)) {
     id = baseId + '_' + counter++;
   }
-  const ev = eventName || DEFAULT_EVENT;
+  const ev = eventName || APP_CONFIG.defaultEvent;
   cats.push({ id, label, type, sport: sport || 'badminton', event: ev });
   saveCategories(cats);
   if (_supabase) upsertCategories(cats);
@@ -313,12 +318,12 @@ function deleteCategory(id) {
     upsertCategories(filtered);
   }
   if (AppState.category === id) {
-    const remaining = getCategories().filter(c => c.sport === AppState.sport && (c.event || DEFAULT_EVENT) === AppState.event);
+    const remaining = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
     if (remaining.length > 0) { switchCategory(remaining[0].id); return; }
-    const eventCats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === AppState.event);
+    const eventCats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
     if (eventCats.length > 0) { AppState.sport = eventCats[0].sport; renderSportBar(); switchCategory(eventCats[0].id); return; }
     const all = getCategories();
-    if (all.length > 0) { AppState.event = all[0].event || DEFAULT_EVENT; AppState.sport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
+    if (all.length > 0) { AppState.event = all[0].event || APP_CONFIG.defaultEvent; AppState.sport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
   } else {
     renderCategoryBar();
   }

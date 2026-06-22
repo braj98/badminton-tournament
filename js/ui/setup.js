@@ -134,7 +134,10 @@ function confirmStart() {
 
 function startTournament() {
   if (!AppState.isAdmin) return;
-  const count = parseInt(document.getElementById('playerCount').value);
+  if (!AppState.category) { alert('No category selected.'); return; }
+  const cat = getCategories().find(c => c.id === AppState.category);
+  if (!cat) { alert('Category not found.'); return; }
+  const count = parseInt(document.getElementById('playerCount').value) || 0;
   if (isDoubles(AppState.category)) {
     const rows = document.querySelectorAll('#playerInputs > div');
     const names = [];
@@ -151,16 +154,15 @@ function startTournament() {
       names.push(teamName);
       members.push({ a: a, b: b });
     }
-    if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
+    const cfg = _setupConfig();
+    if (names.length < cfg.minPlayers || names.length > cfg.maxPlayers) { alert('Invalid player count. Must be between ' + cfg.minPlayers + ' and ' + cfg.maxPlayers + '.'); return; }
     AppState.tournament = defaultState();
-    const cat = getCategories().find(c => c.id === AppState.category);
-    AppState.tournament.sport = cat ? cat.sport : 'badminton';
+    AppState.tournament.sport = cat.sport || 'badminton';
     AppState.tournament.format = 'doubles';
     const pDbl = names.map((n, i) => createParticipant(n, members[i]));
     AppState.tournament.participants = pDbl;
     AppState.tournament.players = names;
     AppState.tournament.teamMembers = members;
-    const cfg = _setupConfig();
     AppState.tournament.groups = createGroups(pDbl, determineGroupCount(pDbl.length, cfg.groupThresholds, cfg.groupCounts));
     AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
     AppState.tournament.phase = 'groups';
@@ -178,15 +180,14 @@ function startTournament() {
       seen.add(n);
       names.push(n);
     }
-    if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
+    const cfg = _setupConfig();
+    if (names.length < cfg.minPlayers || names.length > cfg.maxPlayers) { alert('Invalid player count. Must be between ' + cfg.minPlayers + ' and ' + cfg.maxPlayers + '.'); return; }
     AppState.tournament = defaultState();
-    const cat = getCategories().find(c => c.id === AppState.category);
-    AppState.tournament.sport = cat ? cat.sport : 'badminton';
+    AppState.tournament.sport = cat.sport || 'badminton';
     AppState.tournament.format = 'singles';
     const pSingles = names.map(n => createParticipant(n));
     AppState.tournament.participants = pSingles;
     AppState.tournament.players = names;
-    const cfg = _setupConfig();
     AppState.tournament.groups = createGroups(pSingles, determineGroupCount(pSingles.length, cfg.groupThresholds, cfg.groupCounts));
     AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
     AppState.tournament.phase = 'groups';
