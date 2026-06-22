@@ -2,12 +2,10 @@
 let photoTarget = null;
 
 function viewChampion() {
-  if (!state.champion) {
-    const final = state.knockout.find(m => m.id === 'final');
-    if (final && final.done && final.winner) {
-      state.champion = final.winner;
-      state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
-    }
+  const final = state.knockout.find(m => m.id === 'final');
+  if (final && final.done && final.winner) {
+    state.champion = final.winner;
+    state.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
   }
   currentView = 'champion';
   renderAll();
