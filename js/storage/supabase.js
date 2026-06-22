@@ -85,8 +85,14 @@ function subscribeToChanges() {
       if (!key || !key.startsWith('btm_state_')) return;
       const catId = key.replace('btm_state_', '');
       const newData = payload.new ? payload.new.data : null;
-      if (newData && catId === currentCategory && newData._lastSave > state._lastSave && !_showingResults) {
-        state = newData; renderAll();
+      if (newData && catId === currentCategory && newData._lastSave > state._lastSave) {
+        state = newData;
+        localSave(catId, state);
+        if (_showingResults) {
+          renderResults();
+        } else {
+          renderAll();
+        }
       }
     })
     .subscribe();
@@ -104,9 +110,13 @@ async function checkAndUpdateFromServer() {
     const serverStr = JSON.stringify(serverState);
     if (serverStr !== localStr) {
       localSave(cat.id, serverState);
-      if (cat.id === currentCategory && !_showingResults) {
+      if (cat.id === currentCategory) {
         state = serverState;
-        renderAll();
+        if (_showingResults) {
+          renderResults();
+        } else {
+          renderAll();
+        }
       }
     }
   }
