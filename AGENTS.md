@@ -4,36 +4,44 @@ Badminton Tournament Manager for local apartment tournaments. No build step, no 
 
 ## Architecture
 
-Three-layer separation:
+Four-layer separation:
 
 ```
 js/
   engine/     — Pure business logic. No DOM, no storage. Functions take
   │             data in, return data out.
   │
+  models/     — Domain types + sport configuration. Single source of truth
+  │             for data structures.
+  │
   storage/    — Persistence. No DOM, no business logic. localStorage +
   │             Supabase.
   │
-  ui/         — DOM rendering + event handling. Orchestrates engine + storage.
+  ui/         — DOM rendering + event handling. Calls only tournamentEngine API.
 ```
 
 - `engine/state.js` — `defaultState()`, `MIN_ENTRIES`, `MAX_ENTRIES`
-- `engine/groups.js` — `allocateGroups()`, `determineGroupCount()`
-- `engine/fixtures.js` — `generateFixtures()`
+- `engine/groups.js` — `allocateGroups()`, `determineGroupCount(playerCount, thresholds?, groupCounts?)`
+- `engine/fixtures.js` — `generateFixtures()` (uses `createMatch()`)
 - `engine/standings.js` — `calculateStandings()` returns `{standings, qualifiers}`
-- `engine/knockout.js` — `generateKnockout()`, `advanceKnockout()`
+- `engine/knockout.js` — `generateKnockout()` (uses `createMatch()`), `advanceKnockout()`
+- `engine/tournamentEngine.js` — **Public API. UI calls only these:** `createGroups()`, `createFixtures()`, `computeStandings()`, `createKnockoutBracket()`, `advanceWinner()`
+- `models/participant.js` — `createParticipant(name, members)`, `findParticipant()`, `participantName()`
+- `models/match.js` — `createMatch(p1, p2, round, group, id?)`
+- `models/tournament.js` — `createTournament(sport, format)` (single source of truth for state shape), `isTeamSport(format)`
+- `models/sportConfig.js` — `SPORT_CONFIG` object with badminton/tableTennis/chess, `getSportConfig(sport, format)`, `getCurrentConfig()`
 - `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()`
-- `storage/supabase.js` — `initSupabase()`, auth, `upsertState()`, `fetchState()`, Realtime
-- `ui/utils.js` — `escapeHtml()`, `isDoubles()`
-- `ui/app.js` — globals (`state`, `currentCategory`, `currentView`), `saveState()`, `renderAll()`, navigation, `init()`
+- `storage/supabase.js` — `initSupabase()`, auth, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`
+- `ui/utils.js` — `escapeHtml()`, `isDoubles()`, `pName(id)` (resolves participant ID to display name)
+- `ui/app.js` — globals (`state`, `currentCategory`, `currentView`), `saveState()`, `renderAll()`, navigation, async `init()` (Supabase-first)
 - `ui/categories.js` — `switchCategory()`, category bar, manage panel, export/import
-- `ui/setup.js` — player input, `startTournament()`, `renderSetup()`
+- `ui/setup.js` — player input, `_setupConfig()` helper, `startTournament()`, `renderSetup()`
 - `ui/groups.js` — `renderGroups()`, `movePlayerToGroup()`, rename
 - `ui/fixtures.js` — `renderFixtures()`, `enterFixtureScore()`
 - `ui/knockout.js` — `renderKnockout()`, `enterKnockoutScore()`, `enterFinalSet()`
 - `ui/champion.js` — `renderChampion()`, `viewChampion()`, `showResults()`, photos
 
-Script load order: Engine → Storage → UI (15 scripts total).
+Script load order: Engine (5) → Models (4) → tournamentEngine → Storage (2) → UI (8) → Test (1) = 20 scripts total.
 
 ## Source of truth
 
@@ -45,8 +53,8 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 
 ## Key implementation details
 
-- **Scoring**: group/SF = single set first to 13; Final = Best of 3 first to 11 per set
-- **Groups**: <6 → 1 group, 6-10 → 2 groups, 11-20 → 4 groups, random balanced allocation
+- **Scoring**: group/SF = single set first to 13; Final = Best of 3 first to 11 per set (all from `sportConfig.js`)
+- **Groups**: <6 → 1 group, 6-10 → 2 groups, 11-20 → 4 groups (configurable via `getSportConfig().groupThresholds`)
 - **Fixtures**: interleaved across groups (A1, B1, A2, B2, ...)
 - **Standings**: sorted by wins → point diff → head-to-head → points for
 - **Top 2** per group qualify; bracket: QF → SF → Final (or direct Final for 1-2 groups)
@@ -54,13 +62,16 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 - **Score inputs stay editable** (no disabling) to allow corrections
 - Re-entering group scores after knockout has started will reset the bracket
 - **`state.phase` vs `currentView`** — `state.phase` tracks tournament progress only (setup → groups → fixtures → knockout → champion). `currentView` tracks which screen is displayed (independent of phase). Navigation functions set `currentView`, never `state.phase`. Only `goToKnockout()` and `showResults()` advance `state.phase`.
-- **Viewer controls hidden, not disabled** — `applyViewerMode()` uses `style.display = 'none'` to hide admin-only controls completely. `clearDisabled()` resets `style.display = ''`. Do NOT use `disabled` for viewer controls.
+- **Viewer controls hidden, not disabled** — `applyViewerMode()` uses CSS `body.viewer-mode` class + `display: none !important`. `clearDisabled()` resets `style.display = ''`. Do NOT use `disabled` for viewer controls.
 - **Viewer fixtures/knockout scores as text** — `renderFixtures()` and `renderKnockout()` check `_isAdmin` and render `<span class="score-text">` instead of `<input>` for viewers. Final sets render via `renderFinalSetText()` for viewers, `renderFinalSetInputs()` for admins.
 - **Viewer setup redirect** — if a viewer's category is in `setup` phase, `renderAll()` redirects to the first non-setup category, or shows "No active tournaments yet" on the results screen.
+- **Admin login** — only accessible via `?admin` URL param (reveals a link in the footer). Login overlay is hidden by default. `updateBanners()` manages admin banner visibility.
+- **`viewChampion()`** always re-syncs champion/runnerUp from knockout final (no stale state).
+- **Data migration** — `init()` auto-converts old localStorage state (names-as-IDs) to new format (participant IDs + participants array) on load. Idempotent.
 
 ## Categories
 
-- Dynamic — users can add/delete categories via the **Manage** button
+- Dynamic — users can add/delete categories via the **Manage** button.
 - 5 factory defaults: Junior, Jr Dbls, Sr Boys, Sr Girls, Sr Dbls
 - Deleting a running tournament is blocked (phase !== 'setup')
 - Adding auto-generates unique ID from label, checks for duplicates
@@ -68,10 +79,14 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 
 ## Persistence
 
-- All state in `localStorage`:
-  - `btm_state_{categoryId}` — per-category tournament state
-  - `btm_categories` — custom category list
-- No server, offline-capable
+- Supabase is primary source of truth; localStorage is cache.
+- `btm_state_{categoryId}` — per-category tournament state (localStorage)
+- `btm_categories` — custom category list (localStorage)
+- `upsertState()` has retry logic (3 attempts, exponential backoff 1s/2s)
+- `flushCloudSave()` cancels pending debounce and writes immediately
+- `init()` fetches from Supabase BEFORE first render
+- All categories synced from Supabase on startup
+- "Push All" removed (every `saveState()` writes to Supabase automatically)
 
 ## Safety confirmations (all require typing a word to confirm)
 
@@ -82,7 +97,7 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 
 ## Key constants
 
-- `MIN_ENTRIES = 2`, `MAX_ENTRIES = 20` — single place to change range
+- `MIN_ENTRIES = 2`, `MAX_ENTRIES = 20` — defaults (overridden by `sportConfig.js`)
 
 ## Photos
 
@@ -108,3 +123,23 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 - **switchCategory** awaits Supabase before render (no flicker)
 - **Realtime** uses `_lastSave` alone (no stringify comparison)
 - **Navigation vs Mutation separation** — nav functions change screen only (no save), mutation functions are admin-guarded
+
+## Feedback Phases Applied (from feedback.txt)
+
+**Phase A** — models/ is single source of truth for data structures:
+- `createTournament()` defines full state shape (moved from `defaultState()`)
+- `defaultState()` is a thin wrapper: `return createTournament('badminton', 'singles')`
+- `createMatch()` accepts optional `id` param for named knockout matches
+- Engine uses `createMatch()` instead of inline objects
+
+**Phase B** — tournamentEngine.js public API:
+- `tournamentEngine.js` is the only file UI calls
+- Functions: `createGroups()`, `createFixtures()`, `computeStandings()`, `createKnockoutBracket()`, `advanceWinner()`
+- Each wraps the corresponding engine internal function
+
+**Phase C** — sport configuration:
+- `sportConfig.js` has 3 sports: badminton, tableTennis, chess
+- `getSportConfig(sport, format)` returns config object
+- `getCurrentConfig()` reads from global state
+- `determineGroupCount()` accepts optional thresholds/counts arrays
+- All UI score input limits, player limits, and final set counts come from config
