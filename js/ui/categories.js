@@ -293,10 +293,18 @@ function handleImportFile(event) {
   event.target.value = '';
 }
 
+function cancelImport() {
+  document.getElementById('importConfirmBox').classList.add('hidden');
+  document.getElementById('importConfirmError').textContent = '';
+  _pendingImportData = null;
+}
+
 function confirmImport() {
   if (!_isAdmin) return;
   const input = document.getElementById('importConfirmInput');
-  if (input.value !== 'IMPORT') return;
+  const errEl = document.getElementById('importConfirmError');
+  if (input.value !== 'IMPORT') { errEl.textContent = 'Please type IMPORT to confirm.'; return; }
+  errEl.textContent = '';
   document.getElementById('importConfirmBox').classList.add('hidden');
   if (!_pendingImportData) return;
   const data = _pendingImportData;
