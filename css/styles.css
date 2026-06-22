@@ -116,5 +116,11 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
 .sport-btn:hover { border-color:var(--green); }
 .sport-btn.active { background:var(--green); color:#fff; border-color:var(--green); }
 
+/* Event bar */
+.event-bar { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.event-btn { padding:5px 14px; border:2px solid var(--border); border-radius:6px; background:var(--card); cursor:pointer; font-size:.78rem; font-weight:600; transition:all .15s; text-transform:uppercase; letter-spacing:.04em; }
+.event-btn:hover { border-color:#7c3aed; }
+.event-btn.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
+
 /* Utility */
 .hidden { display: none !important; }

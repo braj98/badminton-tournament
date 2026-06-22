@@ -1,6 +1,7 @@
 // ===================== APP STATE =====================
 let currentCategory = null;
 let currentSport = 'badminton';
+let currentEvent = DEFAULT_EVENT;
 let state = null;
 let currentView = null;
 let _showingResults = false;
@@ -21,7 +22,7 @@ function renderAll() {
   clearDisabled();
 
   if (!_isAdmin && state.phase === 'setup') {
-    const cats = getCategories().filter(c => c.sport === currentSport);
+    const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
     let foundCat = null;
     for (const cat of cats) {
       if (cat.id === currentCategory) continue;
@@ -35,6 +36,7 @@ function renderAll() {
       renderAll();
       return;
     }
+    renderEventBar();
     renderSportBar();
     renderCategoryBar();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -44,6 +46,7 @@ function renderAll() {
     return;
   }
 
+  renderEventBar();
   renderSportBar();
   renderCategoryBar();
   showScreen('screen-setup', state.phase === 'setup');
@@ -132,6 +135,7 @@ function goBackFromChampion() {
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
   _showingResults = true;
+  renderEventBar();
   renderSportBar();
   renderCategoryBar();
   document.getElementById('screen-results').classList.add('active');
@@ -310,7 +314,10 @@ async function init() {
     if (s && s.phase !== 'setup') { startCat = cat.id; break; }
   }
   const firstCat = getCategories()[0];
-  if (firstCat && firstCat.sport) currentSport = firstCat.sport;
+  if (firstCat) {
+    if (firstCat.sport) currentSport = firstCat.sport;
+    if (firstCat.event) currentEvent = firstCat.event;
+  }
   currentCategory = startCat || (firstCat ? firstCat.id : null);
   const saved = localLoad(currentCategory);
   if (saved && saved.phase !== 'setup') {

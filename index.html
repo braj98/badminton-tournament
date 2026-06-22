@@ -26,6 +26,8 @@
       <span id="loginError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:6px;"></span>
     </div>
   </div>
+  <!-- ============ EVENT BAR ============ -->
+  <div id="eventBar" class="event-bar"></div>
   <!-- ============ SPORT BAR ============ -->
   <div id="sportBar" class="sport-bar"></div>
   <div id="catBar" class="cat-bar"></div>
@@ -63,6 +65,7 @@
             <option value="tableTennis">Table Tennis</option>
             <option value="chess">Chess</option>
           </select>
+          <input type="text" id="newCatEvent" placeholder="Event name" style="flex:1;min-width:120px;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;">
           <button class="btn admin-only" style="padding:8px 16px;" onclick="addCategoryFromUI()">Add</button>
         </div>
         <span id="manageError" class="text-muted" style="font-size:.8rem;display:block;margin-top:6px;"></span>

@@ -1,10 +1,12 @@
 // ===================== CATEGORY DEFINITIONS =====================
+const DEFAULT_EVENT = 'Apartment Sports Meet 2026';
+
 const FACTORY_CATEGORIES = [
-  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton' },
-  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton' },
-  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton' },
-  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton' },
-  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton' },
+  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
+  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: DEFAULT_EVENT },
+  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
+  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: DEFAULT_EVENT },
+  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: DEFAULT_EVENT },
 ];
 
 function migrateCategorySports() {
@@ -12,6 +14,7 @@ function migrateCategorySports() {
   let changed = false;
   for (const c of cats) {
     if (!c.sport) { c.sport = 'badminton'; changed = true; }
+    if (!c.event) { c.event = DEFAULT_EVENT; changed = true; }
   }
   if (changed) saveCategories(cats);
 }
@@ -29,10 +32,12 @@ function updateBanners() {
 function renderSportBar() {
   const bar = document.getElementById('sportBar');
   if (!bar) return;
-  const sports = ['badminton', 'tableTennis', 'chess'];
   const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
+  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
+  const sportSet = new Set(cats.map(c => c.sport));
   bar.innerHTML = '';
-  for (const s of sports) {
+  for (const s of ['badminton', 'tableTennis', 'chess']) {
+    if (!sportSet.has(s)) continue;
     const btn = document.createElement('button');
     btn.className = 'sport-btn' + (s === currentSport ? ' active' : '');
     btn.textContent = labels[s] || s;
@@ -45,7 +50,7 @@ function switchSport(sport) {
   if (sport === currentSport) return;
   currentSport = sport;
   renderSportBar();
-  const cats = getCategories().filter(c => c.sport === currentSport);
+  const cats = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
   if (cats.length > 0) {
     switchCategory(cats[0].id);
     return;
@@ -55,6 +60,43 @@ function switchSport(sport) {
     currentView = 'setup';
     renderAll();
   }
+}
+
+// ===================== EVENT BAR =====================
+function renderEventBar() {
+  const bar = document.getElementById('eventBar');
+  if (!bar) return;
+  const events = [...new Set(getCategories().map(c => c.event || DEFAULT_EVENT))];
+  bar.innerHTML = '';
+  for (const ev of events) {
+    const btn = document.createElement('button');
+    btn.className = 'event-btn' + (ev === currentEvent ? ' active' : '');
+    btn.textContent = ev;
+    btn.onclick = function() { switchEvent(ev); };
+    bar.appendChild(btn);
+  }
+}
+
+function switchEvent(ev) {
+  if (ev === currentEvent) return;
+  currentEvent = ev;
+  renderEventBar();
+  const cats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
+  if (cats.length > 0) {
+    const sportCats = cats.filter(c => c.sport === currentSport);
+    if (sportCats.length > 0) {
+      switchCategory(sportCats[0].id);
+    } else {
+      currentSport = cats[0].sport;
+      renderSportBar();
+      switchCategory(cats[0].id);
+    }
+    return;
+  }
+  currentCategory = null;
+  state = defaultState();
+  currentView = 'setup';
+  renderAll();
 }
 
 // ===================== CATEGORY SWITCHING =====================
@@ -86,7 +128,7 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  for (const cat of getCategories().filter(c => c.sport === currentSport)) {
+  for (const cat of getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent)) {
     const btn = document.createElement('button');
     btn.className = 'cat-btn' + (cat.id === currentCategory ? ' active' : '');
     const s = localLoad(cat.id);
@@ -207,6 +249,7 @@ function addCategoryFromUI() {
   const nameInput = document.getElementById('newCatName');
   const typeSelect = document.getElementById('newCatType');
   const sportSelect = document.getElementById('newCatSport');
+  const eventInput = document.getElementById('newCatEvent');
   const errSpan = document.getElementById('manageError');
   const label = nameInput.value.trim();
   if (!label) { errSpan.textContent = 'Name is required.'; return; }
@@ -216,11 +259,13 @@ function addCategoryFromUI() {
     return;
   }
   errSpan.textContent = '';
-  addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton');
+  const ev = (eventInput ? eventInput.value.trim() : '') || currentEvent;
+  addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton', ev);
   nameInput.value = '';
+  if (eventInput) eventInput.value = '';
 }
 
-function addCategory(label, type, sport) {
+function addCategory(label, type, sport, eventName) {
   if (!_isAdmin) return;
   const cats = getCategories();
   const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
@@ -229,11 +274,16 @@ function addCategory(label, type, sport) {
   while (cats.find(c => c.id === id)) {
     id = baseId + '_' + counter++;
   }
-  cats.push({ id, label, type, sport: sport || 'badminton' });
+  const ev = eventName || DEFAULT_EVENT;
+  cats.push({ id, label, type, sport: sport || 'badminton', event: ev });
   saveCategories(cats);
   if (_supabase) upsertCategories(cats);
   const panel = document.getElementById('managePanel');
   if (!panel.classList.contains('hidden')) renderManagePanel();
+  if (ev !== currentEvent) {
+    currentEvent = ev;
+    renderEventBar();
+  }
   switchCategory(id);
 }
 
@@ -251,10 +301,12 @@ function deleteCategory(id) {
     upsertCategories(filtered);
   }
   if (currentCategory === id) {
-    const remaining = getCategories().filter(c => c.sport === currentSport);
+    const remaining = getCategories().filter(c => c.sport === currentSport && (c.event || DEFAULT_EVENT) === currentEvent);
     if (remaining.length > 0) { switchCategory(remaining[0].id); return; }
+    const eventCats = getCategories().filter(c => (c.event || DEFAULT_EVENT) === currentEvent);
+    if (eventCats.length > 0) { currentSport = eventCats[0].sport; renderSportBar(); switchCategory(eventCats[0].id); return; }
     const all = getCategories();
-    if (all.length > 0) { currentSport = all[0].sport; switchCategory(all[0].id); return; }
+    if (all.length > 0) { currentEvent = all[0].event || DEFAULT_EVENT; currentSport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
   } else {
     renderCategoryBar();
   }

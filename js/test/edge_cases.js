@@ -452,6 +452,56 @@ function testSportConfigFromCategory() {
   return pass;
 }
 
+function testCategoryEventLinking() {
+  console.log('\n=== Category Event Linking ===');
+  let pass = true;
+
+  // Factory defaults should have event field
+  for (const cat of FACTORY_CATEGORIES) {
+    pass &= assert(cat.event === DEFAULT_EVENT, 'Factory cat "' + cat.label + '" has event="' + DEFAULT_EVENT + '"');
+  }
+
+  // Simulate legacy categories without event
+  const legacyCats = [
+    { id: 'old1', label: 'Old 1', type: 'singles', sport: 'badminton' },
+  ];
+  const origGet = window.getCategories;
+  const origSave = window.saveCategories;
+  window.getCategories = function() { return legacyCats; };
+  let savedCats = null;
+  window.saveCategories = function(cats) { savedCats = cats; };
+  migrateCategorySports();
+  pass &= assert(savedCats[0].event === DEFAULT_EVENT, 'Legacy cat gained event="' + DEFAULT_EVENT + '"');
+  // Idempotent
+  savedCats = null;
+  migrateCategorySports();
+  pass &= assert(savedCats === null, 'migrateCategorySports idempotent for event');
+  window.getCategories = origGet;
+  window.saveCategories = origSave;
+
+  // Event filtering
+  const cats = [
+    { id: 'a', label: 'A', type: 'singles', sport: 'badminton', event: 'Event 1' },
+    { id: 'b', label: 'B', type: 'singles', sport: 'badminton', event: 'Event 1' },
+    { id: 'c', label: 'C', type: 'singles', sport: 'tableTennis', event: 'Event 2' },
+  ];
+  const e1 = cats.filter(c => c.event === 'Event 1');
+  pass &= assert(e1.length === 2, 'Filter Event 1 -> 2 categories');
+  const e2 = cats.filter(c => c.event === 'Event 2');
+  pass &= assert(e2.length === 1 && e2[0].id === 'c', 'Filter Event 2 -> 1 category');
+
+  // Unique events derived from categories
+  const events = [...new Set(cats.map(c => c.event))];
+  pass &= assert(events.length === 2 && events.includes('Event 1') && events.includes('Event 2'), 'Derived events = [Event 1, Event 2]');
+
+  // Sport filtering within an event
+  const event1Sports = [...new Set(cats.filter(c => c.event === 'Event 1').map(c => c.sport))];
+  pass &= assert(event1Sports.length === 1 && event1Sports[0] === 'badminton', 'Event 1 has only badminton sport');
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function testTournamentEngineAPI() {
   console.log('\n=== Tournament Engine API ===');
   let pass = true;
@@ -528,6 +578,7 @@ function runAllEdgeCaseTests() {
   let sportMigratePass = testCategorySportMigration();
   let sportFilterPass = testCategorySportFiltering();
   let sportFromCatPass = testSportConfigFromCategory();
+  let eventLinkingPass = testCategoryEventLinking();
 
   const counts = [2, 3, 4, 5, 6, 10, 11, 20];
   let totalPass = 0;
@@ -550,5 +601,6 @@ function runAllEdgeCaseTests() {
   console.log('   Category Sport Migration tests: ' + (sportMigratePass ? 'PASS' : 'FAIL'));
   console.log('   Category Sport Filtering tests: ' + (sportFilterPass ? 'PASS' : 'FAIL'));
   console.log('   Sport Config From Category tests: ' + (sportFromCatPass ? 'PASS' : 'FAIL'));
+  console.log('   Category Event Linking tests: ' + (eventLinkingPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }
