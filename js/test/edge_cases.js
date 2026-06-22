@@ -299,11 +299,76 @@ function testNewFormatFlow() {
   return pass;
 }
 
+function testTournamentEngineAPI() {
+  console.log('\n=== Tournament Engine API ===');
+  let pass = true;
+
+  const participants = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'].map(n => createParticipant(n));
+
+  // createGroups
+  const groupCount = determineGroupCount(participants.length);
+  pass &= assert(groupCount === 2, 'determineGroupCount returns 2 for 6 players');
+  const groups = createGroups(participants, groupCount);
+  pass &= assert(Object.keys(groups).length === 2, 'createGroups returns 2 groups');
+  const allIds = Object.values(groups).flat();
+  pass &= assert(allIds.length === 6, 'createGroups allocates all 6 players');
+  pass &= assert(allIds.every(id => id.startsWith('p')), 'createGroups stores participant IDs');
+
+  // createFixtures
+  const fixtures = createFixtures(groups);
+  pass &= assert(fixtures.length === 15, 'createFixtures generates 15 matches');
+  for (const f of fixtures) {
+    pass &= assert(typeof f.p1 === 'string' && typeof f.p2 === 'string', 'Fixture p1/p2 are strings');
+    pass &= assert(f.round === 'group', 'Fixture round = group');
+    pass &= assert(f.group !== null, 'Fixture has group assigned');
+  }
+
+  // Fill scores
+  for (const f of fixtures) { f.s1 = 13; f.s2 = Math.floor(Math.random() * 9); f.done = f.s1 !== f.s2; }
+
+  // computeStandings
+  const result = computeStandings(groups, fixtures, participants);
+  pass &= assert(result.standings !== undefined, 'computeStandings returns standings');
+  pass &= assert(result.qualifiers.length === 4, 'computeStandings returns 4 qualifiers');
+  for (const q of result.qualifiers) {
+    pass &= assert(q.id.startsWith('p'), 'Qualifier has participant id');
+  }
+
+  // createKnockoutBracket
+  const knockout = createKnockoutBracket(result.qualifiers);
+  pass &= assert(knockout.length === 3, 'createKnockoutBracket returns 3 matches');
+  for (const m of knockout) {
+    pass &= assert(m.round === 'SF' || m.round === 'Final', 'Knockout match round valid');
+  }
+
+  // advanceWinner — simulate full tournament
+  let ko = knockout.map(m => ({ ...m }));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const m of ko) {
+      if (m.p1 && m.p2 && !m.done) {
+        m.s1 = 11; m.s2 = Math.floor(Math.random() * 9);
+        m.done = true; m.winner = m.s1 > m.s2 ? m.p1 : m.p2;
+        changed = true;
+      }
+    }
+    if (changed) ko = advanceWinner(ko);
+  }
+  const finalMatch = ko.find(m => m.round === 'Final');
+  pass &= assert(finalMatch.p1 !== null && finalMatch.p2 !== null, 'advanceWinner populates Final');
+  pass &= assert(finalMatch.winner !== null, 'advanceWinner determines champion');
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function runAllEdgeCaseTests() {
   console.log('========================================');
   console.log('   EDGE CASE TEST SUITE');
   console.log('========================================');
 
+  let apiPass = testTournamentEngineAPI();
   let modelPass = testParticipantModel();
   let newFormatPass = testNewFormatFlow();
 
@@ -323,5 +388,6 @@ function runAllEdgeCaseTests() {
   console.log('   RESULTS: ' + totalPass + '/' + counts.length + ' edge case tests passed');
   console.log('   Model tests: ' + (modelPass ? 'PASS' : 'FAIL'));
   console.log('   New format flow tests: ' + (newFormatPass ? 'PASS' : 'FAIL'));
+  console.log('   Tournament Engine API tests: ' + (apiPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }

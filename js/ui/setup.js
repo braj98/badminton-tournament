@@ -152,8 +152,8 @@ function startTournament() {
     state.participants = pDbl;
     state.players = names;
     state.teamMembers = members;
-    state.groups = allocateGroups(pDbl, determineGroupCount(pDbl.length));
-    state.fixtures = generateFixtures(state.groups);
+    state.groups = createGroups(pDbl, determineGroupCount(pDbl.length));
+    state.fixtures = createFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
     saveState();
@@ -176,8 +176,8 @@ function startTournament() {
     const pSingles = names.map(n => createParticipant(n));
     state.participants = pSingles;
     state.players = names;
-    state.groups = allocateGroups(pSingles, determineGroupCount(pSingles.length));
-    state.fixtures = generateFixtures(state.groups);
+    state.groups = createGroups(pSingles, determineGroupCount(pSingles.length));
+    state.fixtures = createFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
     saveState();

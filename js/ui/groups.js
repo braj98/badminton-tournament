@@ -57,8 +57,8 @@ function movePlayerToGroup(playerIdx, targetGroup) {
   }
   state.groups[currentGroup] = state.groups[currentGroup].filter(p => p !== playerId);
   state.groups[targetGroup].push(playerId);
-  state.fixtures = generateFixtures(state.groups);
-  const result = calculateStandings(state.groups, state.fixtures, state.participants);
+  state.fixtures = createFixtures(state.groups);
+  const result = computeStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   if (state.knockout.length > 0) {

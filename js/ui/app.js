@@ -98,7 +98,7 @@ function goToGroups() {
 
 function goToFixtures() {
   currentView = 'fixtures';
-  const result = calculateStandings(state.groups, state.fixtures, state.participants);
+  const result = computeStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   renderAll();
@@ -108,14 +108,14 @@ function goToKnockout() {
   if (!_isAdmin) return;
   state.phase = 'knockout';
   currentView = 'knockout';
-  state.knockout = advanceKnockout(state.knockout);
+  state.knockout = advanceWinner(state.knockout);
   saveState();
   renderAll();
 }
 
 function goToFixturesFromKnockout() {
   currentView = 'fixtures';
-  const result = calculateStandings(state.groups, state.fixtures, state.participants);
+  const result = computeStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
   renderAll();

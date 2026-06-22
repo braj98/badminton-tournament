@@ -67,10 +67,10 @@ function enterFixtureScore(id, s1, s2) {
   f.s2 = parseInt(s2) || 0;
   f.done = f.s1 !== f.s2;
   f.updatedAt = Date.now();
-  const result = calculateStandings(state.groups, state.fixtures, state.participants);
+  const result = computeStandings(state.groups, state.fixtures, state.participants);
   state.standings = result.standings;
   state.qualifiers = result.qualifiers;
-  state.knockout = generateKnockout(state.qualifiers);
+  state.knockout = createKnockoutBracket(state.qualifiers);
   saveState();
   renderFixtures();
 }

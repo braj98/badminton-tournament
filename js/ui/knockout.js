@@ -108,7 +108,7 @@ function enterKnockoutScore(id, s1, s2) {
     m.done = false;
     m.winner = null;
   }
-  state.knockout = advanceKnockout(state.knockout);
+  state.knockout = advanceWinner(state.knockout);
   saveState();
   renderKnockout();
 }
@@ -138,7 +138,7 @@ function enterFinalSet(id, setNum, s1, s2) {
     m.s1 = null;
     m.s2 = null;
   }
-  state.knockout = advanceKnockout(state.knockout);
+  state.knockout = advanceWinner(state.knockout);
   saveState();
   renderKnockout();
 }
