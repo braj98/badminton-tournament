@@ -63,6 +63,7 @@ function clearDisabled() {
   const app = document.getElementById('app');
   app.querySelectorAll('input, button, select').forEach(el => {
     if (el.closest('#loginOverlay')) return;
+    if (el.type === 'file') { el.disabled = false; return; }
     el.style.display = '';
     el.disabled = false;
   });
