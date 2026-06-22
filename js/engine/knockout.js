@@ -1,36 +1,23 @@
 function generateKnockout(qualifiers) {
   if (qualifiers.length === 2) {
-    return [
-      { id: 'final', round: 'Final', p1: qualifiers[0].id, p2: qualifiers[1].id,
-        s1: null, s2: null, sets: null, done: false, winner: null }
-    ];
+    return [createMatch(qualifiers[0].id, qualifiers[1].id, 'Final', null, 'final')];
   }
   if (qualifiers.length === 4) {
     return [
-      { id: 'sf1', round: 'SF', p1: qualifiers[0].id, p2: qualifiers[3].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'sf2', round: 'SF', p1: qualifiers[1].id, p2: qualifiers[2].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'final', round: 'Final', p1: null, p2: null,
-        s1: null, s2: null, sets: null, done: false, winner: null }
+      createMatch(qualifiers[0].id, qualifiers[3].id, 'SF', null, 'sf1'),
+      createMatch(qualifiers[1].id, qualifiers[2].id, 'SF', null, 'sf2'),
+      createMatch(null, null, 'Final', null, 'final')
     ];
   }
   if (qualifiers.length === 8) {
     return [
-      { id: 'qf1', round: 'QF', p1: qualifiers[0].id, p2: qualifiers[3].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf2', round: 'QF', p1: qualifiers[1].id, p2: qualifiers[2].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf3', round: 'QF', p1: qualifiers[4].id, p2: qualifiers[7].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'qf4', round: 'QF', p1: qualifiers[5].id, p2: qualifiers[6].id,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'sf1', round: 'SF', p1: null, p2: null,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'sf2', round: 'SF', p1: null, p2: null,
-        s1: null, s2: null, sets: null, done: false, winner: null },
-      { id: 'final', round: 'Final', p1: null, p2: null,
-        s1: null, s2: null, sets: null, done: false, winner: null }
+      createMatch(qualifiers[0].id, qualifiers[3].id, 'QF', null, 'qf1'),
+      createMatch(qualifiers[1].id, qualifiers[2].id, 'QF', null, 'qf2'),
+      createMatch(qualifiers[4].id, qualifiers[7].id, 'QF', null, 'qf3'),
+      createMatch(qualifiers[5].id, qualifiers[6].id, 'QF', null, 'qf4'),
+      createMatch(null, null, 'SF', null, 'sf1'),
+      createMatch(null, null, 'SF', null, 'sf2'),
+      createMatch(null, null, 'Final', null, 'final')
     ];
   }
   return [];

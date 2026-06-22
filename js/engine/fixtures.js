@@ -6,7 +6,7 @@ function generateFixtures(groups) {
     const matches = [];
     for (let i = 0; i < members.length; i++) {
       for (let j = i + 1; j < members.length; j++) {
-        matches.push({ group: key, p1: members[i], p2: members[j], s1: null, s2: null, done: false });
+        matches.push(createMatch(members[i], members[j], 'group', key));
       }
     }
     byGroup[key] = matches;

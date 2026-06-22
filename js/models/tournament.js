@@ -1,10 +1,22 @@
 function createTournament(sport, format) {
-  const base = defaultState();
   return {
-    ...base,
+    phase: 'setup',
     sport: sport || 'badminton',
     format: format || 'singles',
-    participants: []
+    participants: [],
+    players: [],
+    groups: {},
+    fixtures: [],
+    standings: {},
+    qualifiers: [],
+    knockout: [],
+    champion: null,
+    runnerUp: null,
+    championPhoto: null,
+    runnerUpPhoto: null,
+    teamMembers: [],
+    completedAt: null,
+    _lastSave: null
   };
 }
 

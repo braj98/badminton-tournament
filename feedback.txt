@@ -1,0 +1,146 @@
+What Still Needs Improvement
+
+Right now I see some duplication.
+
+For example:
+
+// models/tournament.js
+createTournament()
+
+// engine/state.js
+defaultState()
+
+These are both defining tournament structure in different places.
+
+I would eventually have:
+
+models/
+    tournament.js
+    participant.js
+    match.js
+
+be the ONLY place that defines data structures.
+
+Then:
+
+engine/
+
+only manipulates them.
+
+Biggest Architectural Issue Remaining
+
+You still have:
+
+let state = null;
+let currentCategory = null;
+let currentView = null;
+let _isAdmin = false;
+
+as globals.
+
+For V1 this is okay.
+
+For multi-sport V2 I'd create:
+
+AppState = {
+    tournament,
+    currentCategory,
+    currentView,
+    user
+}
+
+and pass it around.
+
+This will eliminate a lot of strange bugs.
+
+Multi-Sport Readiness Score
+Current Version
+Badminton only:
+9/10
+Reusable Sports Platform
+6.5/10
+
+Why?
+
+Because the engine still assumes badminton concepts:
+
+groups
+qualifiers
+knockout
+champion
+runnerUp
+
+are hardcoded into the state model.
+
+What I Would Do Next
+
+Not React.
+
+Not new features.
+
+Phase A
+
+Create:
+
+models/
+    tournament.js
+    participant.js
+    match.js
+
+properly.
+
+Example:
+
+Tournament
+{
+    sport,
+    format,
+    participants,
+    matches,
+    standings,
+    bracket
+}
+Phase B
+
+Create:
+
+engine/
+    tournamentEngine.js
+
+with public functions:
+
+createGroups()
+createFixtures()
+calculateStandings()
+generateKnockout()
+advanceWinner()
+
+Then all UI calls only these APIs.
+
+Phase C
+
+Introduce sport configuration.
+
+Example:
+
+const SPORT_CONFIG = {
+  badminton: {
+    minPlayers: 2,
+    maxPlayers: 20,
+    bestOfFinal: 3
+  },
+
+  chess: {
+    minPlayers: 2,
+    maxPlayers: 50,
+    bestOfFinal: 1
+  },
+
+  tableTennis: {
+    minPlayers: 2,
+    maxPlayers: 32,
+    bestOfFinal: 5
+  }
+}
+
+Then the engine becomes reusable.
