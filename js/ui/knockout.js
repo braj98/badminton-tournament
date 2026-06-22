@@ -126,7 +126,9 @@ function enterFinalSet(id, setNum, s1, s2) {
     m.sets = [];
     for (var _i = 0; _i < _cfg.finalSets; _i++) m.sets.push({s1:null,s2:null});
   }
-  m.sets[setNum] = { s1: parseInt(s1)||0, s2: parseInt(s2)||0 };
+  const v1 = s1 === '' || s1 === null || s1 === undefined ? null : parseInt(s1) || 0;
+  const v2 = s2 === '' || s2 === null || s2 === undefined ? null : parseInt(s2) || 0;
+  m.sets[setNum] = { s1: v1, s2: v2 };
   m.updatedAt = Date.now();
   let w1 = 0, w2 = 0;
   for (const s of m.sets) {
@@ -138,7 +140,7 @@ function enterFinalSet(id, setNum, s1, s2) {
   var _needed = Math.ceil(_cfg.finalSets / 2);
   if ((w1 >= _needed || w2 >= _needed) && m.p1 && m.p2) {
     m.done = true;
-    m.winner = w1 >= 2 ? m.p1 : m.p2;
+    m.winner = w1 >= _needed ? m.p1 : m.p2;
     m.s1 = w1;
     m.s2 = w2;
   } else {
