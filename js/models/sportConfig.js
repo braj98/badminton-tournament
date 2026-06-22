@@ -45,7 +45,7 @@ function getSportConfig(sport, format) {
   return format === 'doubles' ? { ...base, isTeamSport: true } : { ...base, isTeamSport: false };
 }
 
-const DEFAULT_EVENT = 'Apartment Sports Meet 2026';
+const DEFAULT_EVENT = 'BREN AVALON SPORTS MEET 2026';
 
 function getCurrentConfig() {
   return getSportConfig(
