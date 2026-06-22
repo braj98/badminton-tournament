@@ -13,11 +13,12 @@ function renderFixtures() {
       html += '<div class="match-row' + (done ? ' match-done' : '') + '">'
         + '<span class="pname">' + escapeHtml(pName(f.p1)) + '</span>';
       if (_isAdmin) {
-        html += '<input class="score-input" type="number" min="0" max="30" value="' + (f.s1 ?? '') + '" '
+        var _max = getCurrentConfig().maxScoreInput;
+        html += '<input class="score-input" type="number" min="0" max="' + _max + '" value="' + (f.s1 ?? '') + '" '
           + 'onchange="enterFixtureScore(' + f.id + ',this.value,this.parentElement.querySelector(\'.s2\').value)" '
           + 'onfocus="this.select()">'
           + '<span class="vs">vs</span>'
-          + '<input class="score-input s2" type="number" min="0" max="30" value="' + (f.s2 ?? '') + '" '
+          + '<input class="score-input s2" type="number" min="0" max="' + _max + '" value="' + (f.s2 ?? '') + '" '
           + 'onchange="enterFixtureScore(' + f.id + ',this.parentElement.querySelector(\'.score-input\').value,this.value)" '
           + 'onfocus="this.select()">';
       } else {

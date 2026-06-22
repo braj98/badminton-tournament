@@ -2,6 +2,11 @@
 let _lastGoodCount = 4;
 let _pendingReduceCount = 0;
 
+function _setupConfig() {
+  const cat = getCategories().find(c => c.id === currentCategory);
+  return getSportConfig('badminton', cat && cat.type === 'doubles' ? 'doubles' : 'singles');
+}
+
 function rebuildPlayerInputs(count) {
   const container = document.getElementById('playerInputs');
   const existingValues = [];
@@ -54,8 +59,9 @@ function rebuildPlayerInputs(count) {
 
 function onPlayerCountChange() {
   if (!_isAdmin) return;
-  const newCount = parseInt(document.getElementById('playerCount').value) || MIN_ENTRIES;
-  const clamped = Math.max(MIN_ENTRIES, Math.min(MAX_ENTRIES, newCount));
+  const cfg = _setupConfig();
+  const newCount = parseInt(document.getElementById('playerCount').value) || cfg.minPlayers;
+  const clamped = Math.max(cfg.minPlayers, Math.min(cfg.maxPlayers, newCount));
   document.getElementById('playerCount').value = clamped;
   if (clamped === _lastGoodCount) return;
   if (clamped > _lastGoodCount) {
@@ -144,7 +150,7 @@ function startTournament() {
       names.push(teamName);
       members.push({ a: a, b: b });
     }
-    if (names.length < MIN_ENTRIES || names.length > MAX_ENTRIES) return;
+    if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
     state = defaultState();
     state.sport = 'badminton';
     state.format = 'doubles';
@@ -152,7 +158,8 @@ function startTournament() {
     state.participants = pDbl;
     state.players = names;
     state.teamMembers = members;
-    state.groups = createGroups(pDbl, determineGroupCount(pDbl.length));
+    const cfg = _setupConfig();
+    state.groups = createGroups(pDbl, determineGroupCount(pDbl.length, cfg.groupThresholds, cfg.groupCounts));
     state.fixtures = createFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
@@ -169,14 +176,15 @@ function startTournament() {
       seen.add(n);
       names.push(n);
     }
-    if (names.length < MIN_ENTRIES || names.length > MAX_ENTRIES) return;
+    if (names.length < _setupConfig().minPlayers || names.length > _setupConfig().maxPlayers) return;
     state = defaultState();
     state.sport = 'badminton';
     state.format = 'singles';
     const pSingles = names.map(n => createParticipant(n));
     state.participants = pSingles;
     state.players = names;
-    state.groups = createGroups(pSingles, determineGroupCount(pSingles.length));
+    const cfg = _setupConfig();
+    state.groups = createGroups(pSingles, determineGroupCount(pSingles.length, cfg.groupThresholds, cfg.groupCounts));
     state.fixtures = createFixtures(state.groups);
     state.phase = 'groups';
     currentView = state.phase;
@@ -191,11 +199,12 @@ function renderSetup() {
   const cat = getCategories().find(c => c.id === currentCategory);
   document.getElementById('setupTitle').textContent = 'New ' + (cat ? escapeHtml(cat.label) + ' — ' : '') + 'Tournament';
   const pc = document.getElementById('playerCount');
-  pc.min = MIN_ENTRIES;
-  pc.max = MAX_ENTRIES;
+  const cfg = _setupConfig();
+  pc.min = cfg.minPlayers;
+  pc.max = cfg.maxPlayers;
   document.getElementById('setupLabel').textContent = isDoubles(currentCategory)
-    ? 'Number of teams (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')'
-    : 'Number of players (' + MIN_ENTRIES + '-' + MAX_ENTRIES + ')';
+    ? 'Number of teams (' + cfg.minPlayers + '-' + cfg.maxPlayers + ')'
+    : 'Number of players (' + cfg.minPlayers + '-' + cfg.maxPlayers + ')';
   const bar = document.getElementById('resumeBar');
   bar.classList.toggle('hidden', !saved || saved.phase === 'setup');
   const resetSection = document.getElementById('resetSection');
@@ -203,6 +212,7 @@ function renderSetup() {
   document.getElementById('resetConfirmBox').classList.add('hidden');
   document.getElementById('startConfirmBox').classList.add('hidden');
   document.getElementById('reduceConfirmBox').classList.add('hidden');
-  _lastGoodCount = parseInt(pc.value) || MIN_ENTRIES;
+  const cfg2 = _setupConfig();
+  _lastGoodCount = parseInt(pc.value) || cfg2.minPlayers;
   rebuildPlayerInputs(_lastGoodCount);
 }

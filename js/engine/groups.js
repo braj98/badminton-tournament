@@ -1,4 +1,10 @@
-function determineGroupCount(playerCount) {
+function determineGroupCount(playerCount, thresholds, groupCounts) {
+  if (thresholds && groupCounts) {
+    for (let i = 0; i < thresholds.length; i++) {
+      if (playerCount <= thresholds[i]) return groupCounts[i];
+    }
+    return groupCounts[groupCounts.length - 1];
+  }
   if (playerCount < 6) return 1;
   if (playerCount <= 10) return 2;
   return 4;

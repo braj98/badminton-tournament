@@ -1,5 +1,6 @@
 function renderKnockout() {
   clearDisabled();
+  var _koCfg = getCurrentConfig();
   const container = document.getElementById('bracket');
   const ko = state.knockout;
   if (!ko || ko.length === 0) { container.innerHTML = '<p class="text-muted">No knockout matches.</p>'; return; }
@@ -26,9 +27,9 @@ function renderKnockout() {
         html += '<span class="pname">' + escapeHtml(pName(m.p1)) + '</span>';
         if (canPlay) {
           if (_isAdmin) {
-            html += '<input class="score-input" type="number" min="0" max="30" value="' + (m.s1 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ks2\').value)" onfocus="this.select()">'
+            html += '<input class="score-input" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s1 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ks2\').value)" onfocus="this.select()">'
               + '<span class="vs">vs</span>'
-              + '<input class="score-input ks2" type="number" min="0" max="30" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
+              + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
           } else {
             html += '<span class="score-text">' + (m.s1 ?? '') + '</span>'
               + '<span class="vs">vs</span>'
@@ -55,8 +56,9 @@ function renderKnockout() {
 
 function renderFinalSetText(m) {
   if (!m.sets) return '<span class="vs">vs</span>';
+  var _cfg = getCurrentConfig();
   let h = '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < _cfg.finalSets; i++) {
     const s = m.sets[i];
     if (!s || s.s1 === null) break;
     h += '<span style="font-size:.8rem;padding:2px 4px;">S' + (i+1) + ': ' + escapeHtml(s.s1) + '-' + escapeHtml(s.s2) + '</span>';
@@ -67,8 +69,9 @@ function renderFinalSetText(m) {
 
 function renderFinalSets(m) {
   if (!m.sets) return '<span class="vs">vs</span>';
+  var _cfg = getCurrentConfig();
   let h = '';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < _cfg.finalSets; i++) {
     const s = m.sets[i];
     if (!s || s.s1 === null) break;
     h += '<span style="font-size:.8rem;padding:0 4px;">' + escapeHtml(s.s1) + '-' + escapeHtml(s.s2) + '</span>';
@@ -77,15 +80,16 @@ function renderFinalSets(m) {
 }
 
 function renderFinalSetInputs(m) {
+  var _cfg = getCurrentConfig();
   let h = '<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < _cfg.finalSets; i++) {
     const s = m.sets ? m.sets[i] : null;
     h += '<span style="display:flex;align-items:center;gap:2px;font-size:.8rem;">'
       + 'S' + (i+1) + ':'
-      + '<input class="score-input" type="number" min="0" max="15" style="width:56px;" value="' + (s ? (s.s1 ?? '') : '') + '" '
+      + '<input class="score-input" type="number" min="0" max="' + _cfg.maxFinalSetInput + '" style="width:56px;" value="' + (s ? (s.s1 ?? '') : '') + '" '
       + 'onchange="enterFinalSet(\'' + m.id + '\',' + i + ',this.value,this.parentElement.querySelector(\'.fs2-' + i + '\').value)" onfocus="this.select()">'
       + '-'
-      + '<input class="score-input fs2-' + i + '" type="number" min="0" max="15" style="width:56px;" value="' + (s ? (s.s2 ?? '') : '') + '" '
+      + '<input class="score-input fs2-' + i + '" type="number" min="0" max="' + _cfg.maxFinalSetInput + '" style="width:56px;" value="' + (s ? (s.s2 ?? '') : '') + '" '
       + 'onchange="enterFinalSet(\'' + m.id + '\',' + i + ',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">'
       + '</span>';
   }
@@ -117,7 +121,11 @@ function enterFinalSet(id, setNum, s1, s2) {
   if (!_isAdmin) return;
   const m = state.knockout.find(m => m.id === id);
   if (!m) return;
-  if (!m.sets) m.sets = [{s1:null,s2:null},{s1:null,s2:null},{s1:null,s2:null}];
+  var _cfg = getCurrentConfig();
+  if (!m.sets) {
+    m.sets = [];
+    for (var _i = 0; _i < _cfg.finalSets; _i++) m.sets.push({s1:null,s2:null});
+  }
   m.sets[setNum] = { s1: parseInt(s1)||0, s2: parseInt(s2)||0 };
   m.updatedAt = Date.now();
   let w1 = 0, w2 = 0;
@@ -127,7 +135,8 @@ function enterFinalSet(id, setNum, s1, s2) {
       else if (s.s2 > s.s1) w2++;
     }
   }
-  if ((w1 >= 2 || w2 >= 2) && m.p1 && m.p2) {
+  var _needed = Math.ceil(_cfg.finalSets / 2);
+  if ((w1 >= _needed || w2 >= _needed) && m.p1 && m.p2) {
     m.done = true;
     m.winner = w1 >= 2 ? m.p1 : m.p2;
     m.s1 = w1;

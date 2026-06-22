@@ -299,6 +299,53 @@ function testNewFormatFlow() {
   return pass;
 }
 
+function testSportConfig() {
+  console.log('\n=== Sport Config ===');
+  let pass = true;
+
+  const badm = getSportConfig('badminton', 'singles');
+  pass &= assert(badm.minPlayers === 2, 'badminton minPlayers = 2');
+  pass &= assert(badm.maxPlayers === 20, 'badminton maxPlayers = 20');
+  pass &= assert(badm.groupPointsToWin === 13, 'badminton group scoring = 13');
+  pass &= assert(badm.finalSets === 3, 'badminton final sets = 3');
+  pass &= assert(badm.isTeamSport === false, 'badminton singles isTeamSport = false');
+
+  const dbls = getSportConfig('badminton', 'doubles');
+  pass &= assert(dbls.isTeamSport === true, 'doubles isTeamSport = true');
+  pass &= assert(dbls.finalSets === 3, 'doubles inherits finalSets = 3');
+
+  const tt = getSportConfig('tableTennis', 'singles');
+  pass &= assert(tt.maxPlayers === 32, 'tableTennis maxPlayers = 32');
+  pass &= assert(tt.finalSets === 5, 'tableTennis final sets = 5');
+
+  const chess = getSportConfig('chess', 'singles');
+  pass &= assert(chess.maxPlayers === 50, 'chess maxPlayers = 50');
+  pass &= assert(chess.finalSets === 1, 'chess final sets = 1');
+
+  // determineGroupCount with config thresholds
+  const thresh = badm.groupThresholds;
+  const counts = badm.groupCounts;
+  pass &= assert(determineGroupCount(4, thresh, counts) === 1, '4 players -> 1 group');
+  pass &= assert(determineGroupCount(8, thresh, counts) === 2, '8 players -> 2 groups');
+  pass &= assert(determineGroupCount(12, thresh, counts) === 4, '12 players -> 4 groups');
+  pass &= assert(determineGroupCount(20, thresh, counts) === 4, '20 players -> 4 groups');
+
+  // getCurrentConfig with simulated state
+  var s = { sport: 'badminton', format: 'singles' };
+  var savedState = state;
+  state = s;
+  var cur = getCurrentConfig();
+  pass &= assert(cur.minPlayers === 2, 'getCurrentConfig reads state');
+  state = savedState;
+
+  // backward compat for determineGroupCount (no config)
+  pass &= assert(determineGroupCount(4) === 1, 'determineGroupCount(4) backward compat = 1');
+  pass &= assert(determineGroupCount(8) === 2, 'determineGroupCount(8) backward compat = 2');
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function testTournamentEngineAPI() {
   console.log('\n=== Tournament Engine API ===');
   let pass = true;
@@ -371,6 +418,7 @@ function runAllEdgeCaseTests() {
   let apiPass = testTournamentEngineAPI();
   let modelPass = testParticipantModel();
   let newFormatPass = testNewFormatFlow();
+  let configPass = testSportConfig();
 
   const counts = [2, 3, 4, 5, 6, 10, 11, 20];
   let totalPass = 0;
@@ -389,5 +437,6 @@ function runAllEdgeCaseTests() {
   console.log('   Model tests: ' + (modelPass ? 'PASS' : 'FAIL'));
   console.log('   New format flow tests: ' + (newFormatPass ? 'PASS' : 'FAIL'));
   console.log('   Tournament Engine API tests: ' + (apiPass ? 'PASS' : 'FAIL'));
+  console.log('   Sport Config tests: ' + (configPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }
