@@ -1,0 +1,301 @@
+// ===================== CATEGORIES =====================
+const FACTORY_CATEGORIES = [
+  { id: 'junior', label: 'Junior', type: 'singles' },
+  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles' },
+  { id: 'senior_boys', label: 'Sr Boys', type: 'singles' },
+  { id: 'senior_girls', label: 'Sr Girls', type: 'singles' },
+  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles' },
+];
+
+function getCategories() {
+  try {
+    const raw = localStorage.getItem('btm_categories');
+    if (raw) { const c = JSON.parse(raw); if (c.length) return c; }
+  } catch(e) {}
+  saveCategories(FACTORY_CATEGORIES);
+  return [...FACTORY_CATEGORIES];
+}
+
+function saveCategories(cats) {
+  try { localStorage.setItem('btm_categories', JSON.stringify(cats)); } catch(e) {}
+}
+
+function switchCategory(catId) {
+  if (catId === currentCategory) return;
+  if (currentCategory && state && state.phase !== 'setup') saveState();
+  currentCategory = catId;
+  const saved = loadState(catId);
+  if (saved && saved.phase !== 'setup') {
+    state = saved;
+  } else {
+    state = defaultState();
+  }
+  renderAll();
+}
+
+function renderCategoryBar() {
+  const bar = document.getElementById('catBar');
+  bar.innerHTML = '';
+  for (const cat of getCategories()) {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat.id === currentCategory ? ' active' : '');
+    const s = loadState(cat.id);
+    let dotClass = 'setup';
+    if (s) {
+      if (s.phase === 'champion') dotClass = 'done';
+      else if (s.phase !== 'setup') dotClass = 'playing';
+    }
+    btn.innerHTML = '<span class="dot ' + dotClass + '"></span>' + cat.label;
+    btn.onclick = function() { switchCategory(cat.id); };
+    bar.appendChild(btn);
+  }
+}
+
+function showResetConfirm() {
+  if (!_isAdmin) return;
+  const box = document.getElementById('resetConfirmBox');
+  box.classList.toggle('hidden');
+  document.getElementById('resetConfirmInput').value = '';
+  document.getElementById('resetError').textContent = '';
+}
+
+function executeReset() {
+  if (!_isAdmin) return;
+  const input = document.getElementById('resetConfirmInput');
+  if (input.value !== 'RESET') {
+    document.getElementById('resetError').textContent = 'Please type RESET to confirm.';
+    return;
+  }
+  resetCategory(currentCategory);
+  document.getElementById('resetConfirmBox').classList.add('hidden');
+}
+
+function resetCategory(catId) {
+  if (!_isAdmin) return;
+  try { localStorage.removeItem('btm_state_' + catId); } catch(e) {}
+  if (currentCategory === catId) {
+    state = defaultState();
+    renderAll();
+  } else {
+    renderCategoryBar();
+  }
+  const panel = document.getElementById('managePanel');
+  if (!panel.classList.contains('hidden')) renderManagePanel();
+}
+
+function toggleManagePanel() {
+  if (!_isAdmin) return;
+  const panel = document.getElementById('managePanel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) renderManagePanel();
+}
+
+function renderManagePanel() {
+  const container = document.getElementById('manageCategoryList');
+  const cats = getCategories();
+  let html = '';
+  for (const c of cats) {
+    const saved = loadState(c.id);
+    const running = saved && saved.phase !== 'setup';
+    html += '<div style="display:flex;flex-direction:column;padding:6px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<span><strong>' + c.label + '</strong> <span class="text-muted" style="font-size:.8rem;">(' + c.type + ')</span></span>'
+      + '<span style="display:flex;gap:6px;">'
+      + (running ? '<button class="btn btn-outline" style="padding:4px 8px;font-size:.75rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + c.id + '\')">Reset</button>' : '')
+      + '<button class="btn btn-secondary" style="padding:4px 12px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
+      + '</span>'
+      + '</div>'
+      + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
+        + '<span style="font-size:.75rem;color:#dc2626;">Type RESET:</span>'
+        + '<input type="text" id="manageResetInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="RESET">'
+        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeManageReset(\'' + c.id + '\')">Go</button>'
+        + '</div>' : '')
+      + (!running ? '<div id="manageDeleteConfirm_' + c.id + '" class="hidden" style="margin-top:6px;display:flex;gap:6px;align-items:center;">'
+        + '<span style="font-size:.75rem;color:#dc2626;">Type DELETE:</span>'
+        + '<input type="text" id="manageDeleteInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="DELETE">'
+        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeDeleteConfirm(\'' + c.id + '\')">Go</button>'
+        + '</div>' : '')
+      + '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function toggleManageReset(catId) {
+  const div = document.getElementById('manageReset_' + catId);
+  div.classList.toggle('hidden');
+  const input = document.getElementById('manageResetInput_' + catId);
+  if (input) input.value = '';
+}
+
+function executeManageReset(catId) {
+  if (!_isAdmin) return;
+  const input = document.getElementById('manageResetInput_' + catId);
+  if (!input || input.value !== 'RESET') return;
+  resetCategory(catId);
+}
+
+function toggleDeleteConfirm(catId) {
+  const div = document.getElementById('manageDeleteConfirm_' + catId);
+  if (!div) return;
+  div.classList.toggle('hidden');
+  const input = document.getElementById('manageDeleteInput_' + catId);
+  if (input) input.value = '';
+}
+
+function executeDeleteConfirm(catId) {
+  if (!_isAdmin) return;
+  const input = document.getElementById('manageDeleteInput_' + catId);
+  if (!input || input.value !== 'DELETE') return;
+  deleteCategory(catId);
+}
+
+function addCategoryFromUI() {
+  if (!_isAdmin) return;
+  const nameInput = document.getElementById('newCatName');
+  const typeSelect = document.getElementById('newCatType');
+  const errSpan = document.getElementById('manageError');
+  const label = nameInput.value.trim();
+  if (!label) { errSpan.textContent = 'Name is required.'; return; }
+  const cats = getCategories();
+  if (cats.find(c => c.label.toLowerCase() === label.toLowerCase())) {
+    errSpan.textContent = 'A category with this name already exists.';
+    return;
+  }
+  errSpan.textContent = '';
+  addCategory(label, typeSelect.value);
+  nameInput.value = '';
+}
+
+function addCategory(label, type) {
+  if (!_isAdmin) return;
+  const cats = getCategories();
+  const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
+  let id = baseId;
+  let counter = 1;
+  while (cats.find(c => c.id === id)) {
+    id = baseId + '_' + counter++;
+  }
+  cats.push({ id, label, type });
+  saveCategories(cats);
+  const panel = document.getElementById('managePanel');
+  if (!panel.classList.contains('hidden')) renderManagePanel();
+  switchCategory(id);
+}
+
+function deleteCategory(id) {
+  if (!_isAdmin) return;
+  const cats = getCategories();
+  if (cats.length <= 1) return;
+  const saved = loadState(id);
+  if (saved && saved.phase !== 'setup') return;
+  const filtered = cats.filter(c => c.id !== id);
+  saveCategories(filtered);
+  try { localStorage.removeItem('btm_state_' + id); } catch(e) {}
+  if (currentCategory === id) {
+    const remaining = getCategories();
+    switchCategory(remaining.length > 0 ? remaining[0].id : null);
+  } else {
+    renderCategoryBar();
+  }
+  const panel = document.getElementById('managePanel');
+  if (!panel.classList.contains('hidden')) renderManagePanel();
+}
+
+function resumeTournament() {
+  const saved = loadState(currentCategory);
+  if (saved && saved.phase !== 'setup') {
+    state = saved;
+    renderAll();
+  }
+}
+
+function exportAll() {
+  const cats = getCategories();
+  const states = {};
+  for (const c of cats) {
+    const s = loadState(c.id);
+    if (s) states[c.id] = s;
+  }
+  const data = { exportedAt: new Date().toISOString(), categories: cats, states: states };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'badminton-export.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+async function pushAllToCloud() {
+  if (!_isAdmin) return;
+  if (!_supabase) { alert('Supabase not connected.'); return; }
+  const cats = getCategories();
+  let pushed = 0, failed = 0;
+  for (const c of cats) {
+    const s = loadState(c.id);
+    if (!s) continue;
+    const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + c.id, data: s }, { onConflict: 'key' });
+    if (error) { failed++; console.warn('Failed to push ' + c.label + ':', error.message); }
+    else pushed++;
+  }
+  alert('Pushed ' + pushed + ' categories to cloud.' + (failed ? ' ' + failed + ' failed.' : ''));
+}
+
+let _pendingImportData = null;
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  _pendingImportData = null;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.categories || !data.states) {
+        alert('Invalid export file: missing categories or states.');
+        return;
+      }
+      _pendingImportData = data;
+      const cats = data.categories;
+      const active = Object.keys(data.states).filter(id => {
+        const s = data.states[id];
+        return s && s.phase !== 'setup';
+      });
+      const warnEl = document.getElementById('importWarningCount');
+      if (active.length > 0) {
+        warnEl.innerHTML = active.length + ' (includes ' + active.length + ' in-progress)';
+      } else {
+        warnEl.textContent = cats.length;
+      }
+      document.getElementById('importConfirmBox').classList.remove('hidden');
+      document.getElementById('importConfirmInput').value = '';
+    } catch(err) {
+      alert('Invalid JSON file.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function confirmImport() {
+  if (!_isAdmin) return;
+  const input = document.getElementById('importConfirmInput');
+  if (input.value !== 'IMPORT') return;
+  document.getElementById('importConfirmBox').classList.add('hidden');
+  if (!_pendingImportData) return;
+  const data = _pendingImportData;
+  _pendingImportData = null;
+  saveCategories(data.categories);
+  for (const id of Object.keys(data.states)) {
+    try { localStorage.setItem('btm_state_' + id, JSON.stringify(data.states[id])); } catch(e) {}
+  }
+  const saved = loadState(currentCategory);
+  if (saved && saved.phase !== 'setup') {
+    state = saved;
+  } else {
+    state = defaultState();
+  }
+  renderAll();
+  if (!document.getElementById('managePanel').classList.contains('hidden')) renderManagePanel();
+}

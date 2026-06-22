@@ -1,0 +1,40 @@
+Add:
+
+if (!_isAdmin) return;
+
+to every function that changes state.
+
+Priority 2
+
+Change:
+
+_isAdmin = true;
+
+fallbacks to:
+
+_isAdmin = false;
+Priority 3
+
+Make category switch fetch from Supabase.
+
+Priority 4
+
+Make saveState() async and await cloud writes.
+
+One thing worries me
+
+You mentioned:
+
+switching between view by non admin wipes data
+
+That symptom strongly suggests:
+
+switchCategory()
+↓
+defaultState()
+↓
+saveState()
+↓
+upsertState()
+
+is overwriting a valid tournament with an empty one.
