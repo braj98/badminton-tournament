@@ -172,31 +172,28 @@ function renderEventPage() {
   updateHeader();
   var container = document.getElementById('eventContent');
   var cats = getCategories().filter(function(c) { return c.event === AppState.event; });
-  var sportCats = {};
-  for (var i = 0; i < cats.length; i++) {
-    var c = cats[i];
-    if (!sportCats[c.sport]) sportCats[c.sport] = [];
-    sportCats[c.sport].push(c);
-  }
-  var html = '<h2 class="page-title">' + escapeHtml(AppState.event) + '</h2><div class="home-sport-grid">';
-  var sports = SPORT_IDS;
-  for (var si = 0; si < sports.length; si++) {
-    var s = sports[si];
-    if (!sportCats[s]) continue;
-    var active = 0;
-    for (var j = 0; j < sportCats[s].length; j++) {
-      var st = localLoad(sportCats[s][j].id);
-      if (st && st.phase !== 'setup') active++;
+  var html = '<h2 class="page-title">' + escapeHtml(AppState.event) + '</h2>';
+  if (cats.length === 0) {
+    html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this event.</p>';
+  } else {
+    html += '<div class="home-sport-grid">';
+    for (var i = 0; i < cats.length; i++) {
+      var c = cats[i];
+      var st = localLoad(c.id);
+      var phase = st ? st.phase : 'setup';
+      var statusIcon = phase === 'setup' ? '⚪' : phase === 'champion' ? '🏆' : '🟢';
+      var statusLabel = phase === 'setup' ? 'Not Started' : phase === 'champion' ? 'Complete' : 'In Progress';
+      var count = st && st.participants ? st.participants.length : 0;
+      var countLabel = c.type === 'doubles' ? 'teams' : 'players';
+      html += '<div class="home-sport-card" onclick="switchCategory(\'' + c.id + '\')">'
+        + '<div class="home-sport-icon">' + getSportIcon(c.sport) + '</div>'
+        + '<div class="home-sport-info">'
+        + '<div class="name">' + escapeHtml(c.label) + '</div>'
+        + '<div class="count">' + statusIcon + ' ' + statusLabel + (count > 0 ? ' &middot; ' + count + ' ' + countLabel : '') + '</div>'
+        + '</div>'
+        + '<div class="arrow">›</div></div>';
     }
-    html += '<div class="home-sport-card" onclick="goToSportPage(\'' + escapeHtml(AppState.event) + '\',\'' + s + '\')">'
-      + '<div class="home-sport-icon">' + getSportIcon(s) + '</div>'
-      + '<div class="home-sport-info"><div class="name">' + getSportLabel(s) + '</div>'
-      + '<div class="count">' + active + ' active / ' + sportCats[s].length + ' total</div></div>'
-      + '<div class="arrow">›</div></div>';
-  }
-  html += '</div>';
-  if (!sports.some(function(s) { return sportCats[s]; })) {
-    html = '<p class="text-muted text-center" style="padding:48px 0;">No categories in this event.</p>';
+    html += '</div>';
   }
   // Template management (admin only)
   if (isAdmin()) {
