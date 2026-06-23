@@ -384,14 +384,14 @@ function renderManagePanel() {
     + '<div class="form-field" style="flex:1;"><select id="manageNewTemplateType" class="form-input" style="font-size:.8rem;"><option value="singles">Singles</option><option value="doubles">Doubles</option></select></div>'
     + '<div style="display:flex;align-items:flex-end;"><button class="btn btn-sm" onclick="addTemplateFromManage()" style="font-size:.75rem;">➕ Add</button></div>'
     + '</div>'
-    + '<span id="manageTemplateError" style="font-size:.7rem;color:#dc2626;display:block;margin-top:4px;"></span>'
+    + '<span id="manageTemplateError" style="font-size:.7rem;color:var(--danger);display:block;margin-top:4px;"></span>'
     + '</div>';
 
   for (const tmpl of templates) {
     const saved = localLoad(tmpl.id);
     const running = saved && saved.phase !== 'setup';
     const evNames = events.filter(function(ev) { return ev.templateIds.indexOf(tmpl.id) !== -1; }).map(function(ev) { return ev.name; });
-    const evBadges = evNames.map(function(n) { return '<span style="font-size:.65rem;background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:4px;margin-right:4px;">' + escapeHtml(n) + '</span>'; }).join('');
+    const evBadges = evNames.map(function(n) { return '<span style="font-size:.65rem;background:var(--border);color:var(--text-muted);padding:1px 6px;border-radius:4px;margin-right:4px;">' + escapeHtml(n) + '</span>'; }).join('');
 
     html += '<div id="manageTmplRow_' + tmpl.id + '" style="padding:8px 0;border-bottom:1px solid var(--border);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
@@ -399,7 +399,7 @@ function renderManagePanel() {
       + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
       + '      <span style="font-size:1rem;">' + getSportIcon(tmpl.sport) + '</span>'
       + '      <span style="font-weight:600;font-size:.85rem;">' + escapeHtml(tmpl.name) + '</span>'
-      + '      <span style="font-size:.6rem;text-transform:uppercase;background:#f1f5f9;color:var(--text-muted);padding:1px 5px;border-radius:4px;font-weight:600;">' + tmpl.type + '</span>'
+      + '      <span style="font-size:.6rem;text-transform:uppercase;background:var(--primary-light);color:var(--text-muted);padding:1px 5px;border-radius:4px;font-weight:600;">' + tmpl.type + '</span>'
       + '    </div>'
       + '    <div style="font-size:.7rem;color:var(--text-muted);">' + getSportLabel(tmpl.sport) + (evBadges ? ' • ' + evBadges : '') + '</div>'
       + '  </div>'
@@ -407,11 +407,11 @@ function renderManagePanel() {
       + (AppState.view === 'event' && events.find(function(ev) { return ev.name === AppState.event && ev.templateIds.indexOf(tmpl.id) === -1; })
         ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.65rem;" onclick="linkTemplateToEvent(\'' + tmpl.id + '\')">➕ Link</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 6px;font-size:.7rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">✏️</button>'
-      + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
+      + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:var(--danger);color:var(--danger);" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteTemplateConfirm(\'' + tmpl.id + '\')">✕</button>'
       + '  </div>'
       + '</div>'
-      + '<div id="manageEditTmpl_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:8px;">'
+      + '<div id="manageEditTmpl_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:var(--primary-light);border:1px solid var(--border);border-radius:6px;padding:8px;">'
       + '  <div class="form-row" style="gap:6px;">'
       + '    <div class="form-field"><input type="text" id="editTmplLabel_' + tmpl.id + '" class="form-input" value="' + escapeHtml(tmpl.name) + '" style="font-size:.8rem;"></div>'
       + '    <div class="form-field"><select id="editTmplType_' + tmpl.id + '" class="form-input" style="font-size:.8rem;"><option value="singles"' + (tmpl.type === 'singles' ? ' selected' : '') + '>Singles</option><option value="doubles"' + (tmpl.type === 'doubles' ? ' selected' : '') + '>Doubles</option></select></div>'
@@ -422,14 +422,14 @@ function renderManagePanel() {
       + '    </div>'
       + '  </div>'
       + '</div>'
-      + (running ? '<div id="manageReset_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
-        + '<span style="font-size:.7rem;color:#dc2626;font-weight:500;">Type RESET:</span>'
-        + '<input type="text" id="manageResetInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid #fecaca;border-radius:6px;font-size:.75rem;" placeholder="RESET">'
-        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="executeManageReset(\'' + tmpl.id + '\')">Go</button></div>' : '')
-      + (!running ? '<div id="manageDeleteTmplConfirm_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
-        + '<span style="font-size:.7rem;color:#dc2626;font-weight:500;">Type DELETE:</span>'
-        + '<input type="text" id="manageDeleteTmplInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid #fecaca;border-radius:6px;font-size:.75rem;" placeholder="DELETE">'
-        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="executeDeleteTemplate(\'' + tmpl.id + '\')">Go</button></div>' : '')
+      + (running ? '<div id="manageReset_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.7rem;color:var(--danger);font-weight:500;">Type RESET:</span>'
+        + '<input type="text" id="manageResetInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid var(--danger);border-radius:6px;font-size:.75rem;" placeholder="RESET">'
+        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:var(--danger);" onclick="executeManageReset(\'' + tmpl.id + '\')">Go</button></div>' : '')
+      + (!running ? '<div id="manageDeleteTmplConfirm_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.7rem;color:var(--danger);font-weight:500;">Type DELETE:</span>'
+        + '<input type="text" id="manageDeleteTmplInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid var(--danger);border-radius:6px;font-size:.75rem;" placeholder="DELETE">'
+        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:var(--danger);" onclick="executeDeleteTemplate(\'' + tmpl.id + '\')">Go</button></div>' : '')
       + '</div>';
   }
   tmplContainer.innerHTML = html;
@@ -448,21 +448,6 @@ function executeManageReset(catId) {
   const input = document.getElementById('manageResetInput_' + catId);
   if (!input || input.value !== 'RESET') return;
   resetCategory(catId);
-}
-
-function toggleDeleteConfirm(catId) {
-  const div = document.getElementById('manageDeleteConfirm_' + catId);
-  if (!div) return;
-  div.classList.toggle('hidden');
-  const input = document.getElementById('manageDeleteInput_' + catId);
-  if (input) input.value = '';
-}
-
-function executeDeleteConfirm(catId) {
-  if (!isAdmin()) return;
-  const input = document.getElementById('manageDeleteInput_' + catId);
-  if (!input || input.value !== 'DELETE') return;
-  deleteCategory(catId);
 }
 
 // --- Template management from Manage panel ---
@@ -571,58 +556,6 @@ function deleteEventFromManage(eventName) {
   renderAll();
 }
 
-function toggleEditCategory(catId) {
-  var div = document.getElementById('manageEdit_' + catId);
-  if (!div) return;
-  div.classList.toggle('hidden');
-  if (!div.classList.contains('hidden')) {
-    populateEventDropdown('editEvent_' + catId, getCategories().find(function(c) { return c.id === catId; }).event || APP_CONFIG.defaultEvent);
-  }
-}
-
-function saveCategoryEdit(catId) {
-  if (!isAdmin()) return;
-  var cats = getCategories();
-  var idx = cats.findIndex(function(c) { return c.id === catId; });
-  if (idx === -1) return;
-  var cat = cats[idx];
-  var newLabel = document.getElementById('editLabel_' + catId).value.trim();
-  if (!newLabel) return;
-  var ev = document.getElementById('editEvent_' + catId).value;
-  if (ev === '__new__') {
-    ev = document.getElementById('editEvent_' + catId + 'Custom').value.trim();
-    if (!ev) return;
-  }
-  var oldEvent = cat.event || APP_CONFIG.defaultEvent;
-  var oldSport = cat.sport;
-  cat.label = newLabel;
-  cat.type = document.getElementById('editType_' + catId).value;
-  cat.sport = document.getElementById('editSport_' + catId).value;
-  cat.event = ev;
-  saveCategories(cats);
-  if (_supabase) syncMetadataToCloud();
-  var panel = document.getElementById('managePanel');
-  if (!panel.classList.contains('hidden')) renderManagePanel();
-  if (catId === AppState.category) {
-    if (ev !== oldEvent || cat.sport !== oldSport) {
-      AppState.event = ev;
-      AppState.sport = cat.sport;
-      var eventCats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === ev && c.sport === cat.sport; });
-      if (eventCats.length > 0) {
-        switchCategory(eventCats[0].id);
-      } else {
-        AppState.category = null;
-        AppState.tournament = defaultState();
-        renderEventBar();
-        renderSportBar();
-        navigateTo('setup');
-      }
-    } else {
-      renderCategoryBar();
-    }
-  }
-}
-
 function populateEventDropdown(selectId, selectedEvent) {
   var el = document.getElementById(selectId);
   if (!el) return;
@@ -644,55 +577,6 @@ function populateEventDropdown(selectId, selectedEvent) {
     var custom = document.getElementById(selectId + 'Custom');
     if (custom) custom.classList.toggle('hidden', el.value !== '__new__');
   };
-}
-
-function addCategory(label, type, sport, eventName) {
-  if (!isAdmin()) return;
-  const cats = getCategories();
-  const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
-  let id = baseId;
-  let counter = 1;
-  while (cats.find(c => c.id === id)) {
-    id = baseId + '_' + counter++;
-  }
-  const ev = eventName || APP_CONFIG.defaultEvent;
-  cats.push({ id, label, type, sport: sport || 'badminton', event: ev });
-  saveCategories(cats);
-  if (_supabase) syncMetadataToCloud();
-  const panel = document.getElementById('managePanel');
-  if (!panel.classList.contains('hidden')) renderManagePanel();
-  if (ev !== AppState.event) {
-    AppState.event = ev;
-    renderEventBar();
-  }
-  switchCategory(id);
-}
-
-function deleteCategory(id) {
-  if (!isAdmin()) return;
-  const cats = getCategories();
-  if (cats.length <= 1) return;
-  const saved = localLoad(id);
-  if (saved && saved.phase !== 'setup') return;
-  const filtered = cats.filter(c => c.id !== id);
-  saveCategories(filtered);
-  localClear(id);
-  if (_supabase) {
-    _supabase.from('state').delete().eq('key', getStateKey(id)).then().catch(() => {});
-    syncMetadataToCloud();
-  }
-  if (AppState.category === id) {
-    const remaining = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-    if (remaining.length > 0) { switchCategory(remaining[0].id); return; }
-    const eventCats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-    if (eventCats.length > 0) { AppState.sport = eventCats[0].sport; renderSportBar(); switchCategory(eventCats[0].id); return; }
-    const all = getCategories();
-    if (all.length > 0) { AppState.event = all[0].event || APP_CONFIG.defaultEvent; AppState.sport = all[0].sport; renderEventBar(); renderSportBar(); switchCategory(all[0].id); return; }
-  } else {
-    renderCategoryBar();
-  }
-  const panel = document.getElementById('managePanel');
-  if (!panel.classList.contains('hidden')) renderManagePanel();
 }
 
 // ===================== RESUME =====================

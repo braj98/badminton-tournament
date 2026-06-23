@@ -84,7 +84,7 @@ function renderHomePage() {
       + '<div class="event-icon">🏆</div>'
       + '<div class="event-info">'
       + '<div class="name">' + escapeHtml(ev.name) + '</div>'
-      + '<div class="count">' + active + ' active / ' + total + ' categories</div>'
+      + '<div class="count">' + active + ' active / ' + total + ' competitions</div>'
       + '</div>'
       + '<div class="arrow">›</div>'
       + '</div>';
@@ -207,12 +207,12 @@ function renderEventPage() {
       var t = evTemplates[ti];
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:.85rem;">'
         + '<span>' + escapeHtml(t.name) + ' <span style="font-size:.7rem;color:var(--text-muted);">(' + getSportLabel(t.sport) + ', ' + t.type + ')</span></span>'
-        + '<button class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;border-color:#dc2626;color:#dc2626;" onclick="toggleConfirmRemoveFromEvent(\'' + t.id + '\')">✕</button>'
+        + '<button class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;border-color:var(--danger);color:var(--danger);" onclick="toggleConfirmRemoveFromEvent(\'' + t.id + '\')">✕</button>'
         + '</div>'
-        + '<div id="confirmRemoveFromEvent_' + t.id + '" class="hidden" style="margin-top:4px;margin-bottom:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
-        + '<span style="font-size:.7rem;color:#dc2626;font-weight:500;">Type REMOVE:</span>'
-        + '<input type="text" id="confirmRemoveFromEventInput_' + t.id + '" style="flex:1;min-width:80px;padding:3px 6px;border:2px solid #fecaca;border-radius:6px;font-size:.75rem;" placeholder="REMOVE">'
-        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="executeRemoveFromEvent(\'' + t.id + '\')">Go</button></div>';
++ '<div id="confirmRemoveFromEvent_' + t.id + '" class="hidden" style="margin-top:4px;margin-bottom:6px;background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
++ '<span style="font-size:.7rem;color:var(--danger);font-weight:500;">Type REMOVE:</span>'
++ '<input type="text" id="confirmRemoveFromEventInput_' + t.id + '" style="flex:1;min-width:80px;padding:3px 6px;border:2px solid var(--danger);border-radius:6px;font-size:.75rem;" placeholder="REMOVE">'
++ '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:var(--danger);" onclick="executeRemoveFromEvent(\'' + t.id + '\')">Go</button></div>';
     }
     html += '</div>'
       + '<div class="form-row" style="margin-top:8px;">'
@@ -221,7 +221,7 @@ function renderEventPage() {
       + '<div class="form-field"><label class="form-label">Format</label><select id="newTemplateType" class="form-input" style="font-size:.8rem;"><option value="singles">Singles</option><option value="doubles">Doubles</option></select></div>'
       + '<div style="display:flex;align-items:flex-end;"><button class="btn btn-sm" onclick="addTemplateToCurrentEvent()" style="font-size:.8rem;">Add</button></div>'
       + '</div>'
-      + '<span id="eventTemplateError" style="font-size:.75rem;color:#dc2626;display:block;margin-top:4px;"></span>'
+      + '<span id="eventTemplateError" style="font-size:.75rem;color:var(--danger);display:block;margin-top:4px;"></span>'
       + '</div>';
   }
   if (container) container.innerHTML = html;
@@ -247,7 +247,7 @@ function renderSportPage() {
   var evTemplates = ev ? templates.filter(function(t) { return ev.templateIds.indexOf(t.id) !== -1 && t.sport === AppState.sport; }) : [];
   var html = '<h2 class="page-title">' + sportLabel(AppState.sport) + '</h2>';
   if (evTemplates.length === 0) {
-    html += '<p class="text-muted text-center" style="padding:48px 0;">No categories in this sport.</p>';
+    html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this sport.</p>';
   } else {
     for (var i = 0; i < evTemplates.length; i++) {
       var t = evTemplates[i];

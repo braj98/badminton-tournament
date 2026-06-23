@@ -1,432 +1,316 @@
-Tournament Manager V10 Review
-Overall Assessment
+Biggest Remaining Design Problem
+Event and Category Relationship
 
-Current maturity:
+I found:
 
-90-92%
+const cats = getCategories().filter(c => c.event === ev.name);
 
-This version is much closer to the recommended architecture than previous versions.
+inside UI code.
 
-Major additions:
+This means:
 
-Template model
-Event model
-Event bus (on/off/emit)
-Auth service separation
-Better AppState
-Better metadata synchronization
+Category still contains Event.
 
-The platform is now structurally capable of supporting multiple sports and multiple events.
-
-Comparison Against Recommended Architecture
-Event → Competition Template → Tournament
-
-Recommended:
-
-Event
-→ Competition Template
-→ Tournament Instance
-
-Current implementation:
-
-Templates
-Events
-Tournament State
-
-Status:
-
-90% aligned
-
-This is the biggest architectural improvement so far.
-
-Reusable Definitions
-
-Current:
-
-Templates are stored separately.
-
-Examples:
-
-Junior Singles
-Junior Doubles
-Senior Boys
-
-This matches the recommendation.
-
-Status:
-
-Implemented
-
-Event Layer
-
-Current:
-
-Events are independent objects.
-
-Categories reference events.
-
-This is better than older versions.
-
-However:
-
-Future recommendation:
-
-Events should reference templates.
-
-Templates should not reference events.
-
-Current status:
-
-Partially implemented.
-
-Strengths
-Event Bus
-
-New:
-
-on()
-off()
-emit()
-
-Excellent addition.
-
-Benefits:
-
-Loose coupling
-Easier future expansion
-Easier testing
-
-This is one of the most important improvements in V10.
-
-Priority:
-
-Keep and expand.
-
-Auth Separation
-
-Current:
-
-storage/auth.js
-
-Excellent.
-
-Authentication no longer leaks everywhere.
-
-Status:
-
-Good
-
-AppState
-
-Current:
-
-AppState = {
-  user,
-  event,
-  sport,
-  category,
-  loadingCategory,
-  view,
-  tournament,
-  ui
-}
-
-Good structure.
-
-No major concerns.
-
-Remaining Architecture Gaps
-Gap 1
-
-Category Still Contains Event
-
-Current model still resembles:
+Example:
 
 {
-  event: "BREN AVALON SPORTS MEET 2026"
+  "event": "BREN AVALON SPORTS MEET 2026"
 }
 
-inside category records.
+This is the same architectural concern from previous reviews.
 
-Long term:
+Why It Is A Problem
+
+Current:
+
+Category
+  └── Event
+
+Future preferred:
+
+Event
+  └── TemplateIds
+
+Example:
+
+Event
+
+{
+  "id":"sports_2026",
+  "templateIds":[
+      "junior_singles",
+      "senior_boys"
+  ]
+}
 
 Template
 
-should not know:
-
-Event
-
-Instead:
-
-Event
-
-should know:
-
-Templates
-
-Recommended:
-
-Event {
-   templateIds:[]
+{
+  "id":"junior_singles",
+  "sport":"badminton"
 }
 
-Priority:
+Template should never know which event uses it.
 
-High
+Event should decide that.
 
-Gap 2
+Recommendation
 
-Metadata Storage
+Move towards:
 
-Current:
+Template
+   ↓
+Event
+   ↓
+Tournament State
 
-btm_templates
-btm_events
-btm_categories
+instead of:
 
-stored in state table.
-
-Works.
-
-But eventually:
-
-templates table
-events table
-tournament_state table
-
-would be cleaner.
-
-Not urgent.
+Template
+   ↓
+Category
+   ↓
+Event
 
 Priority:
 
-Low
+HIGH
 
 Bugs / Risks
 Bug 1
 
-Cloud Save Race Condition
+Event Rename Is Dangerous
 
 Current:
 
-_pendingSave
+renameEvent(oldName,newName)
 
-contains:
+updates:
 
-{
-   catId,
-   data
-}
+ev.name
 
-Good improvement.
+but categories appear linked by:
 
-But still vulnerable if:
+c.event === ev.name
 
-Admin
+Risk:
 
-rapidly:
+Renaming an event can orphan categories.
 
-edits
-switches category
-edits again
+Example:
 
-before save completes.
+Before:
+
+BREN AVALON SPORTS MEET 2026
+
+After:
+
+Summer Games 2026
+
+Categories still contain:
+
+BREN AVALON SPORTS MEET 2026
+
+Result:
+
+Categories disappear.
+
+Priority:
+
+HIGH
+
+Bug 2
+
+Event Name Used As Key
+
+Current:
+
+AppState.event = ev.name
 
 Recommendation:
 
 Store:
 
-version
-timestamp
+AppState.eventId
 
-with pending save.
+and resolve name from event object.
 
-Priority:
-
-Medium
-
-Bug 2
-
-Realtime Subscription Filtering
-
-Current:
-
-key.startsWith(stateKeyPrefix)
-
-Potential issue:
-
-If prefix changes later.
-
-Recommendation:
-
-Create:
-
-isTournamentStateKey(key)
-
-single helper.
+Never use display name as identifier.
 
 Priority:
 
-Low
+HIGH
 
 Bug 3
 
-AppState Mutation
+Template ID Generation
 
 Current:
 
-Many direct assignments:
+createTemplateId(label)
 
-AppState.view =
-AppState.event =
-AppState.category =
-
-Recommendation:
-
-Introduce:
-
-setView()
-setEvent()
-setCategory()
-
-or
-
-dispatch()
-
-Not urgent.
-
-Priority:
-
-Medium
-
-UX Improvements
-Event Selector
-
-Current recommendation:
-
-Manage
-→ Event Dropdown
-→ Categories
-
-I agree.
-
-This is better than current organization.
-
-Suggested Manage Structure
-
-Manage
-
-Event
-Active Event Dropdown
-Create Event
-Edit Event
-Delete Event
-Competitions
-Create Competition
-Link Competition To Event
-Remove Competition From Event
-Cloud
-Sync Now
-Sync Status
-Import / Export
-Export Event
-Export Templates
-Category Cards
-
-Show:
-
-Junior Singles
-
-🏸 Badminton
-
-12 Players
-
-🟢 In Progress
-
-This would dramatically improve usability.
-
-Priority:
-
-High
-
-Biggest Improvement Opportunity
-
-Move from:
-
-Category
-
-to
-
-Competition
-
-conceptually.
+generates IDs from labels.
 
 Example:
 
+Junior Singles
+
+↓
+
+junior_singles
+
+Risk:
+
+Renaming label later causes confusion.
+
+Recommendation:
+
+Store:
+
+{
+  "id":"junior_singles",
+  "name":"Junior Singles"
+}
+
+ID never changes.
+
+Name can change.
+
+Priority:
+
+MEDIUM
+
+Bug 4
+
+Cloud Sync Metadata Race
+
 Current:
 
-Senior Boys
+syncMetadataToCloud()
 
-Future:
+writes:
 
-Competition:
-Senior Boys Singles
+templates
+events
+categories
 
-Sport:
-Badminton
+in parallel.
 
-Event:
-Sports Meet 2026
+Potential issue:
 
-This aligns better with multi-sport support.
+Partial success.
+
+Recommendation:
+
+Add:
+
+metadataVersion
+updatedAt
+
+for future recovery.
+
+Priority:
+
+LOW
+
+UX Improvements
+Event Dropdown
+
+I completely agree with your idea.
+
+Future Manage Panel:
+
+Manage
+│
+├── Event ▼
+│
+├── Competitions
+│
+├── Import / Export
+│
+├── Cloud Sync
+│
+└── Settings
+
+Much cleaner.
+
+Competition List
+
+When Event is selected:
+
+BREN AVALON SPORTS MEET 2026
+
+🏸 Junior Singles
+🏸 Junior Doubles
+🏸 Senior Boys
+
+🏓 Open Singles
+
+This is much easier to understand.
+
+Status Badges
+
+Show:
+
+⚪ Not Started
+
+🟢 In Progress
+
+🏆 Completed
+
+for every competition.
+
+Priority:
+
+HIGH
+
+Participant Counts
+
+Show:
+
+12 Players
+
+or
+
+8 Teams
+
+under each competition.
+
+Priority:
+
+MEDIUM
 
 Multi-Sport Readiness
 
-Current:
+Current estimate:
 
 Badminton 100%
-Table Tennis 95%
-Chess 90%
-Carrom 85%
+Table Tennis 98%
+Chess 95%
+Carrom 90%
 
-Architecture is now ready for Table Tennis.
+The architecture is now ready for Table Tennis.
+
+No major refactoring required.
 
 Recommended Next Sprint
 
 Priority 1
 
-Remove Event reference from templates/categories.
+Remove event references from category/template objects.
 
-Event should reference templates.
+Event should own templateIds.
 
 Priority 2
 
-Introduce Competition terminology.
+Introduce eventId everywhere.
+
+Stop using event names as identifiers.
 
 Priority 3
 
-Event dropdown in Manage panel.
+Add Event dropdown in Manage panel.
 
 Priority 4
 
-Competition status cards.
-
-Priority 5
-
-Add Table Tennis officially.
-
-My one architectural recommendation now
-
-Don't rush into adding more sports yet.
-
-Instead, finish this transition:
-
-Template
-   ↓
-Event
-   ↓
-Competition
-   ↓
-Tournament State
-
-Once that relationship is clean, addin
+Add competition status cards.

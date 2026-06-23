@@ -140,9 +140,9 @@ function confirmStart() {
 
 function startTournament() {
   if (!isAdmin()) return;
-  if (!AppState.category) { alert('No category selected.'); return; }
+  if (!AppState.category) { alert('No competition selected.'); return; }
   const cat = getCategories().find(c => c.id === AppState.category);
-  if (!cat) { alert('Category not found.'); return; }
+  if (!cat) { alert('Competition not found.'); return; }
   const count = parseInt(document.getElementById('playerCount').value) || 0;
   if (isDoubles(AppState.category)) {
     const rows = document.querySelectorAll('#playerInputs > div');

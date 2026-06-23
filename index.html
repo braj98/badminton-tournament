@@ -44,7 +44,7 @@
 
       <!-- Import warning box -->
       <div id="importConfirmBox" class="hidden confirm-box confirm-import">
-        <p class="confirm-text">⚠️ Overwrite all categories? Type <strong>IMPORT</strong>:</p>
+        <p class="confirm-text">⚠️ Overwrite all competitions? Type <strong>IMPORT</strong>:</p>
         <div class="confirm-actions">
           <input type="text" id="importConfirmInput" class="confirm-input" placeholder="IMPORT">
           <button class="btn confirm-btn" onclick="confirmImport()">Go</button>
@@ -71,7 +71,7 @@
 
   <!-- ============ LOGIN ============ -->
   <div id="loginOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:200;display:flex;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:var(--radius);padding:24px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+    <div style="background:var(--bg-card);border-radius:var(--radius);padding:24px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
       <h3 style="margin-bottom:12px;">Admin Login</h3>
       <input type="email" id="loginEmail" placeholder="Email" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;margin-bottom:8px;">
       <input type="password" id="loginPassword" placeholder="Password" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;margin-bottom:12px;">
@@ -152,7 +152,7 @@
       <div id="resetSection" class="hidden admin-only text-center mt-12" style="padding-top:12px;border-top:1px solid var(--border);">
       <button class="btn btn-outline admin-only" style="border-color:#dc2626;color:#dc2626;" onclick="showResetConfirm()">🗑 Reset Tournament</button>
       <div id="resetConfirmBox" class="hidden confirm-box confirm-reset admin-only">
-        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
+        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this competition:</p>
         <div class="confirm-actions">
           <input type="text" id="resetConfirmInput" class="confirm-input" placeholder="Type RESET">
           <button class="btn confirm-btn" style="white-space:nowrap;" onclick="executeReset()">Confirm</button>
@@ -213,7 +213,7 @@
       </div>
       <button class="btn btn-block mt-20 admin-only" onclick="showNewTournamentConfirm()">New Tournament</button>
       <div id="newTournamentConfirmBox" class="hidden confirm-box confirm-reset admin-only">
-        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
+        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this competition:</p>
         <div class="confirm-actions">
           <input type="text" id="newTournamentConfirmInput" class="confirm-input" placeholder="Type RESET">
           <button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmNewTournament()">Confirm</button>
