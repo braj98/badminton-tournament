@@ -1,482 +1,432 @@
-# Tournament Manager VNext - Event, Competition Template & Tournament Model
+Tournament Manager V10 Review
+Overall Assessment
 
-## Objective
+Current maturity:
 
-Separate:
+90-92%
 
-1. Reusable Definitions
-2. Event Configuration
-3. Tournament Data
+This version is much closer to the recommended architecture than previous versions.
 
-This will make the platform easier to manage as more sports and tournaments are added.
+Major additions:
 
----
+Template model
+Event model
+Event bus (on/off/emit)
+Auth service separation
+Better AppState
+Better metadata synchronization
 
-# Current Model
+The platform is now structurally capable of supporting multiple sports and multiple events.
 
-Current structure:
+Comparison Against Recommended Architecture
+Event → Competition Template → Tournament
+
+Recommended:
 
 Event
-→ Category
-→ Tournament
-
-Example:
-
-BREN AVALON SPORTS MEET 2026
-
-* Junior
-* Junior Doubles
-* Senior Boys
-* Senior Girls
-* Senior Doubles
-
-Problem:
-
-Categories are tied to a specific event.
-
-If a new event is created:
-
-Summer Games 2027
-
-the same categories need to be recreated.
-
-This creates duplication.
-
----
-
-# Proposed Model
-
-Introduce three layers:
-
-Competition Template
-→ Event
+→ Competition Template
 → Tournament Instance
 
----
+Current implementation:
 
-# Layer 1 - Competition Templates
+Templates
+Events
+Tournament State
 
-Competition Templates are reusable definitions.
+Status:
 
-Examples:
+90% aligned
 
-Badminton
+This is the biggest architectural improvement so far.
 
-* Junior Singles
-* Junior Doubles
-* Senior Boys
-* Senior Girls
-* Senior Doubles
-* Adults Singles
-* Adults Doubles
+Reusable Definitions
 
-Table Tennis
+Current:
 
-* Open Singles
-* Open Doubles
-
-Chess
-
-* Open Category
-
-These templates are created once and reused forever.
-
----
-
-## Competition Template Example
-
-```json
-{
-  "id": "junior_singles",
-  "name": "Junior Singles",
-  "sport": "badminton",
-  "type": "singles"
-}
-```
-
-Another example:
-
-```json
-{
-  "id": "tt_open",
-  "name": "Open Singles",
-  "sport": "tableTennis",
-  "type": "singles"
-}
-```
-
----
-
-# Layer 2 - Events
-
-Events represent actual tournaments being organized.
+Templates are stored separately.
 
 Examples:
-
-* BREN AVALON SPORTS MEET 2026
-* Summer Games 2027
-* Winter Games 2027
-
-Events do not define categories.
-
-Events only reference templates.
-
----
-
-## Event Example
-
-```json
-{
-  "id": "sports_meet_2026",
-  "name": "BREN AVALON SPORTS MEET 2026",
-
-  "competitionIds": [
-    "junior_singles",
-    "junior_doubles",
-    "senior_boys",
-    "senior_girls"
-  ]
-}
-```
-
----
-
-# Layer 3 - Tournament Instance
-
-Tournament Instance contains actual runtime data.
-
-Examples:
-
-* Players
-* Fixtures
-* Standings
-* Knockout
-* Champion
-
-This is what changes during tournament execution.
-
----
-
-## Tournament Instance Example
-
-```json
-{
-  "eventId": "sports_meet_2026",
-  "competitionId": "junior_singles",
-
-  "state": {
-    "players": [],
-    "groups": [],
-    "fixtures": [],
-    "knockout": {}
-  }
-}
-```
-
----
-
-# Benefits
-
-## Reusability
-
-Create category once.
-
-Reuse across multiple events.
-
-Example:
 
 Junior Singles
+Junior Doubles
+Senior Boys
 
-can be used in:
+This matches the recommendation.
 
-* Sports Meet 2026
-* Sports Meet 2027
-* Summer Games 2027
+Status:
 
-without recreation.
+Implemented
 
----
+Event Layer
 
-## Easier Maintenance
+Current:
 
-Rules exist in one place.
+Events are independent objects.
 
-If format changes:
+Categories reference events.
 
-Example:
+This is better than older versions.
 
-Junior Singles
+However:
 
-changes from:
+Future recommendation:
 
-Top 2 qualify
+Events should reference templates.
 
-to:
+Templates should not reference events.
 
-Top 4 qualify
+Current status:
 
-Only template changes.
+Partially implemented.
 
----
+Strengths
+Event Bus
 
-## Multi-Sport Ready
+New:
 
-Supports:
+on()
+off()
+emit()
 
-* Badminton
-* Table Tennis
-* Chess
-* Carrom
+Excellent addition.
 
-without architecture changes.
+Benefits:
 
----
+Loose coupling
+Easier future expansion
+Easier testing
 
-# Proposed Manage Screen
+This is one of the most important improvements in V10.
 
-## Current
+Priority:
 
-Manage
+Keep and expand.
 
-* Import
-* Export
-* Cloud Sync
-* Categories
+Auth Separation
 
----
+Current:
 
-## Proposed
+storage/auth.js
 
-Manage
+Excellent.
 
-### Events
+Authentication no longer leaks everywhere.
 
-* Create Event
-* Edit Event
-* Select Active Event
-* Delete Event
+Status:
 
----
+Good
 
-### Competition Templates
+AppState
 
-* Create Template
-* Edit Template
-* Delete Template
+Current:
 
-Examples:
+AppState = {
+  user,
+  event,
+  sport,
+  category,
+  loadingCategory,
+  view,
+  tournament,
+  ui
+}
 
-* Junior Singles
-* Senior Boys
-* Adults Doubles
-* TT Open Singles
+Good structure.
 
----
+No major concerns.
 
-### Import / Export
+Remaining Architecture Gaps
+Gap 1
 
-* Export Event
-* Export Templates
-* Import Event
-* Import Templates
+Category Still Contains Event
 
----
+Current model still resembles:
 
-### Cloud Sync
+{
+  event: "BREN AVALON SPORTS MEET 2026"
+}
 
-* Sync Now
-* View Sync Status
+inside category records.
 
----
+Long term:
 
-### Settings
+Template
 
-* Theme
-* Retention Period
-* Application Settings
-
----
-
-# Event Configuration Screen
-
-When creating an event:
-
-Example:
-
-BREN AVALON SPORTS MEET 2027
-
-Select Competitions:
-
-☑ Junior Singles
-
-☑ Junior Doubles
-
-☑ Senior Boys
-
-☑ Senior Girls
-
-☐ Adults Singles
-
-☐ Adults Doubles
-
-☐ TT Open Singles
-
-Save
-
----
-
-# Navigation Model
-
-Home
-
-↓
+should not know:
 
 Event
 
-↓
+Instead:
 
-Sport
+Event
 
-↓
+should know:
 
-Competition
+Templates
 
-↓
+Recommended:
 
-Tournament
+Event {
+   templateIds:[]
+}
 
----
+Priority:
 
-## Example
+High
 
-Home
+Gap 2
 
-↓
+Metadata Storage
 
-BREN AVALON SPORTS MEET 2026
+Current:
 
-↓
+btm_templates
+btm_events
+btm_categories
+
+stored in state table.
+
+Works.
+
+But eventually:
+
+templates table
+events table
+tournament_state table
+
+would be cleaner.
+
+Not urgent.
+
+Priority:
+
+Low
+
+Bugs / Risks
+Bug 1
+
+Cloud Save Race Condition
+
+Current:
+
+_pendingSave
+
+contains:
+
+{
+   catId,
+   data
+}
+
+Good improvement.
+
+But still vulnerable if:
+
+Admin
+
+rapidly:
+
+edits
+switches category
+edits again
+
+before save completes.
+
+Recommendation:
+
+Store:
+
+version
+timestamp
+
+with pending save.
+
+Priority:
+
+Medium
+
+Bug 2
+
+Realtime Subscription Filtering
+
+Current:
+
+key.startsWith(stateKeyPrefix)
+
+Potential issue:
+
+If prefix changes later.
+
+Recommendation:
+
+Create:
+
+isTournamentStateKey(key)
+
+single helper.
+
+Priority:
+
+Low
+
+Bug 3
+
+AppState Mutation
+
+Current:
+
+Many direct assignments:
+
+AppState.view =
+AppState.event =
+AppState.category =
+
+Recommendation:
+
+Introduce:
+
+setView()
+setEvent()
+setCategory()
+
+or
+
+dispatch()
+
+Not urgent.
+
+Priority:
+
+Medium
+
+UX Improvements
+Event Selector
+
+Current recommendation:
+
+Manage
+→ Event Dropdown
+→ Categories
+
+I agree.
+
+This is better than current organization.
+
+Suggested Manage Structure
+
+Manage
+
+Event
+Active Event Dropdown
+Create Event
+Edit Event
+Delete Event
+Competitions
+Create Competition
+Link Competition To Event
+Remove Competition From Event
+Cloud
+Sync Now
+Sync Status
+Import / Export
+Export Event
+Export Templates
+Category Cards
+
+Show:
+
+Junior Singles
 
 🏸 Badminton
 
-↓
+12 Players
 
-Senior Doubles
+🟢 In Progress
 
-↓
+This would dramatically improve usability.
 
-Groups / Fixtures / Knockout / Champion
+Priority:
 
----
+High
 
-# Database Design
+Biggest Improvement Opportunity
 
-## competition_templates
-
-```json
-{
-  "id": "",
-  "name": "",
-  "sport": "",
-  "type": ""
-}
-```
-
----
-
-## events
-
-```json
-{
-  "id": "",
-  "name": "",
-  "competitionIds": []
-}
-```
-
----
-
-## tournament_state
-
-```json
-{
-  "eventId": "",
-  "competitionId": "",
-  "data": {}
-}
-```
-
-Key:
-
-eventId + competitionId
-
----
-
-# Migration Strategy
-
-Phase 1
-
-Keep existing categories.
-
-Internally rename:
+Move from:
 
 Category
 
 to
 
-Competition Template
+Competition
 
-No UI change.
+conceptually.
 
----
-
-Phase 2
-
-Add Event Management.
-
-Allow event to reference templates.
-
----
-
-Phase 3
-
-Update navigation:
-
-Event
-→ Sport
-→ Competition
-
----
-
-Phase 4
-
-Add additional sports:
-
-* Table Tennis
-* Chess
-* Carrom
-
----
-
-# Recommendation
-
-Do not make Event a property of Category.
+Example:
 
 Current:
 
-Category
-{
-event
-}
+Senior Boys
 
 Future:
 
+Competition:
+Senior Boys Singles
+
+Sport:
+Badminton
+
+Event:
+Sports Meet 2026
+
+This aligns better with multi-sport support.
+
+Multi-Sport Readiness
+
+Current:
+
+Badminton 100%
+Table Tennis 95%
+Chess 90%
+Carrom 85%
+
+Architecture is now ready for Table Tennis.
+
+Recommended Next Sprint
+
+Priority 1
+
+Remove Event reference from templates/categories.
+
+Event should reference templates.
+
+Priority 2
+
+Introduce Competition terminology.
+
+Priority 3
+
+Event dropdown in Manage panel.
+
+Priority 4
+
+Competition status cards.
+
+Priority 5
+
+Add Table Tennis officially.
+
+My one architectural recommendation now
+
+Don't rush into adding more sports yet.
+
+Instead, finish this transition:
+
+Template
+   ↓
 Event
-{
-competitionIds
-}
+   ↓
+Competition
+   ↓
+Tournament State
 
-This keeps categories reusable and prevents duplication.
-
-The platform should treat Events as organizers of competitions, while Competition Templates define the reusable rules and structure.
-
+Once that relationship is clean, addin

@@ -333,65 +333,91 @@ function renderSettings() {
 
 function renderManagePanel() {
   renderSettings();
-  const container = document.getElementById('manageCategoryList');
-  if (!container) return;
-  const cats = getCategories();
+
+  // --- Events Section ---
+  const evContainer = document.getElementById('manageEventsList');
+  if (evContainer) {
+    const events = getEvents();
+    let evHtml = '';
+    for (const ev of events) {
+      const hasRunning = ev.templateIds.some(function(id) {
+        const s = localLoad(id);
+        return s && s.phase !== 'setup';
+      });
+      evHtml += '<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
+        + '<div><strong style="font-size:.85rem;">' + escapeHtml(ev.name) + '</strong>'
+        + '<span style="font-size:.7rem;color:var(--text-muted);margin-left:8px;">' + ev.templateIds.length + ' competitions</span></div>'
+        + '<div style="display:flex;gap:6px;">'
+        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" onclick="renameEventFromManage(\'' + escapeHtml(ev.name) + '\')">✏️</button>'
+        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" ' + (hasRunning ? 'disabled title="Has running tournaments"' : '') + ' onclick="deleteEventFromManage(\'' + escapeHtml(ev.name) + '\')">✕</button>'
+        + '</div></div>';
+    }
+    evHtml += '<div style="margin-top:8px;"><button class="btn btn-sm btn-secondary" onclick="createEventFromHome()" style="font-size:.75rem;">➕ New Event</button></div>';
+    evContainer.innerHTML = evHtml;
+  }
+
+  // --- Competitions Section ---
+  const tmplContainer = document.getElementById('manageTemplateList');
+  if (!tmplContainer) return;
+  const events = getEvents();
+  const templates = getTemplates();
   let html = '';
-  for (const c of cats) {
-    const saved = localLoad(c.id);
+
+  // Add new template form
+  html += '<div class="modal-form" style="margin-bottom:12px;padding:10px;background:var(--primary-light);border-radius:6px;">'
+    + '<div class="form-row" style="gap:6px;">'
+    + '<div class="form-field" style="flex:2;"><input type="text" id="manageNewTemplateLabel" class="form-input" placeholder="Competition name" style="font-size:.8rem;"></div>'
+    + '<div class="form-field" style="flex:1;"><select id="manageNewTemplateSport" class="form-input" style="font-size:.8rem;"><option value="badminton">🏸 Badminton</option><option value="tableTennis">🏓 TT</option><option value="chess">♟ Chess</option></select></div>'
+    + '<div class="form-field" style="flex:1;"><select id="manageNewTemplateType" class="form-input" style="font-size:.8rem;"><option value="singles">Singles</option><option value="doubles">Doubles</option></select></div>'
+    + '<div style="display:flex;align-items:flex-end;"><button class="btn btn-sm" onclick="addTemplateFromManage()" style="font-size:.75rem;">➕ Add</button></div>'
+    + '</div>'
+    + '<span id="manageTemplateError" style="font-size:.7rem;color:#dc2626;display:block;margin-top:4px;"></span>'
+    + '</div>';
+
+  for (const tmpl of templates) {
+    const saved = localLoad(tmpl.id);
     const running = saved && saved.phase !== 'setup';
-    const sportName = getSportLabel(c.sport);
-    const sportIcon = getSportIcon(c.sport);
-    const eventName = c.event || APP_CONFIG.defaultEvent;
-    
-    html += '<div id="manageRow_' + c.id + '" style="padding:10px 0;border-bottom:1px solid var(--border);">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
-      + '  <div style="display:flex;flex-direction:column;gap:2px;">'
+    const evNames = events.filter(function(ev) { return ev.templateIds.indexOf(tmpl.id) !== -1; }).map(function(ev) { return ev.name; });
+    const evBadges = evNames.map(function(n) { return '<span style="font-size:.65rem;background:#e2e8f0;color:#475569;padding:1px 6px;border-radius:4px;margin-right:4px;">' + escapeHtml(n) + '</span>'; }).join('');
+
+    html += '<div id="manageTmplRow_' + tmpl.id + '" style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+      + '  <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">'
       + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-      + '      <span style="font-size:1.1rem;">' + sportIcon + '</span>'
-      + '      <span style="font-weight:600;font-size:0.9rem;color:var(--text-main);">' + escapeHtml(c.label) + '</span>'
-      + '      <span style="font-size:0.65rem;text-transform:uppercase;background:#f1f5f9;color:var(--text-muted);padding:1px 6px;border-radius:4px;font-weight:600;">' + c.type + '</span>'
+      + '      <span style="font-size:1rem;">' + getSportIcon(tmpl.sport) + '</span>'
+      + '      <span style="font-weight:600;font-size:.85rem;">' + escapeHtml(tmpl.name) + '</span>'
+      + '      <span style="font-size:.6rem;text-transform:uppercase;background:#f1f5f9;color:var(--text-muted);padding:1px 5px;border-radius:4px;font-weight:600;">' + tmpl.type + '</span>'
       + '    </div>'
-      + '    <span style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(eventName) + ' • ' + sportName + '</span>'
+      + '    <div style="font-size:.7rem;color:var(--text-muted);">' + getSportLabel(tmpl.sport) + (evBadges ? ' • ' + evBadges : '') + '</div>'
       + '  </div>'
-      + '  <div style="display:flex;gap:6px;align-items:center;">'
-      + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.75rem;" onclick="toggleEditCategory(\'' + c.id + '\')">✏️</button>'
-      + (running ? '<button class="btn btn-outline" style="padding:4px 8px;font-size:.75rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + c.id + '\')">Reset</button>' : '')
-      + '<button class="btn btn-secondary" style="padding:4px 10px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
+      + '  <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">'
+      + '<button class="btn btn-secondary" style="padding:3px 6px;font-size:.7rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">✏️</button>'
+      + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
+      + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteTemplateConfirm(\'' + tmpl.id + '\')">✕</button>'
       + '  </div>'
       + '</div>'
-      + '<div id="manageEdit_' + c.id + '" class="hidden" style="margin-top:8px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:10px;">'
-      + '  <div style="display:flex;flex-direction:column;gap:8px;">'
-      + '    <div class="form-row">'
-      + '      <div class="form-field"><label class="form-label">Label</label><input type="text" id="editLabel_' + c.id + '" class="form-input" value="' + escapeHtml(c.label) + '"></div>'
-      + '      <div class="form-field"><label class="form-label">Format</label><select id="editType_' + c.id + '" class="form-input"><option value="singles"' + (c.type === 'singles' ? ' selected' : '') + '>Singles</option><option value="doubles"' + (c.type === 'doubles' ? ' selected' : '') + '>Doubles</option></select></div>'
+      + '<div id="manageEditTmpl_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:8px;">'
+      + '  <div class="form-row" style="gap:6px;">'
+      + '    <div class="form-field"><input type="text" id="editTmplLabel_' + tmpl.id + '" class="form-input" value="' + escapeHtml(tmpl.name) + '" style="font-size:.8rem;"></div>'
+      + '    <div class="form-field"><select id="editTmplType_' + tmpl.id + '" class="form-input" style="font-size:.8rem;"><option value="singles"' + (tmpl.type === 'singles' ? ' selected' : '') + '>Singles</option><option value="doubles"' + (tmpl.type === 'doubles' ? ' selected' : '') + '>Doubles</option></select></div>'
+      + '    <div class="form-field"><select id="editTmplSport_' + tmpl.id + '" class="form-input" style="font-size:.8rem;"><option value="badminton"' + (tmpl.sport === 'badminton' ? ' selected' : '') + '>🏸 Badminton</option><option value="tableTennis"' + (tmpl.sport === 'tableTennis' ? ' selected' : '') + '>🏓 TT</option><option value="chess"' + (tmpl.sport === 'chess' ? ' selected' : '') + '>♟ Chess</option></select></div>'
+      + '    <div style="display:flex;gap:4px;align-items:flex-end;">'
+      + '      <button class="btn" style="padding:4px 10px;font-size:.75rem;" onclick="saveTemplateEdit(\'' + tmpl.id + '\')">Save</button>'
+      + '      <button class="btn btn-secondary" style="padding:4px 10px;font-size:.75rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">Cancel</button>'
       + '    </div>'
-      + '    <div class="form-row">'
-      + '      <div class="form-field"><label class="form-label">Sport</label><select id="editSport_' + c.id + '" class="form-input"><option value="badminton"' + (c.sport === 'badminton' ? ' selected' : '') + '>Badminton</option><option value="tableTennis"' + (c.sport === 'tableTennis' ? ' selected' : '') + '>Table Tennis</option><option value="chess"' + (c.sport === 'chess' ? ' selected' : '') + '>Chess</option></select></div>'
-      + '      <div class="form-field"><label class="form-label">Event</label><select id="editEvent_' + c.id + '" class="form-input edit-event-select"></select><input type="text" id="editEvent_' + c.id + 'Custom" class="form-input hidden" style="margin-top:4px;" placeholder="New event name"></div>'
-      + '    </div>'
-      + '  </div>'
-      + '  <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px;">'
-      + '    <button class="btn" style="padding:4px 12px;font-size:.8rem;" onclick="saveCategoryEdit(\'' + c.id + '\')">Save</button>'
-      + '    <button class="btn btn-secondary" style="padding:4px 12px;font-size:.8rem;" onclick="toggleEditCategory(\'' + c.id + '\')">Cancel</button>'
       + '  </div>'
       + '</div>'
-      + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
-        + '<span style="font-size:.75rem;color:#dc2626;font-weight:500;">Type RESET:</span>'
-        + '<input type="text" id="manageResetInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="RESET">'
-        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeManageReset(\'' + c.id + '\')">Go</button></div>' : '')
-      + (!running ? '<div id="manageDeleteConfirm_' + c.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
-        + '<span style="font-size:.75rem;color:#dc2626;font-weight:500;">Type DELETE:</span>'
-        + '<input type="text" id="manageDeleteInput_' + c.id + '" style="flex:1;min-width:60px;padding:4px 8px;border:2px solid #fecaca;border-radius:6px;font-size:.8rem;" placeholder="DELETE">'
-        + '<button class="btn" style="padding:4px 10px;font-size:.75rem;background:#dc2626;" onclick="executeDeleteConfirm(\'' + c.id + '\')">Go</button></div>' : '')
+      + (running ? '<div id="manageReset_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.7rem;color:#dc2626;font-weight:500;">Type RESET:</span>'
+        + '<input type="text" id="manageResetInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid #fecaca;border-radius:6px;font-size:.75rem;" placeholder="RESET">'
+        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="executeManageReset(\'' + tmpl.id + '\')">Go</button></div>' : '')
+      + (!running ? '<div id="manageDeleteTmplConfirm_' + tmpl.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.7rem;color:#dc2626;font-weight:500;">Type DELETE:</span>'
+        + '<input type="text" id="manageDeleteTmplInput_' + tmpl.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid #fecaca;border-radius:6px;font-size:.75rem;" placeholder="DELETE">'
+        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:#dc2626;" onclick="executeDeleteTemplate(\'' + tmpl.id + '\')">Go</button></div>' : '')
       + '</div>';
   }
-  container.innerHTML = html;
-  // Populate event dropdowns for edit forms
-  for (const c of cats) {
-    var sel = document.getElementById('editEvent_' + c.id);
-    if (sel) populateEventDropdown('editEvent_' + c.id, c.event || APP_CONFIG.defaultEvent);
-  }
+  tmplContainer.innerHTML = html;
 }
 
 
@@ -422,6 +448,100 @@ function executeDeleteConfirm(catId) {
   const input = document.getElementById('manageDeleteInput_' + catId);
   if (!input || input.value !== 'DELETE') return;
   deleteCategory(catId);
+}
+
+// --- Template management from Manage panel ---
+
+function addTemplateFromManage() {
+  if (!isAdmin()) return;
+  const label = document.getElementById('manageNewTemplateLabel').value.trim();
+  if (!label) { document.getElementById('manageTemplateError').textContent = 'Name is required.'; return; }
+  const sport = document.getElementById('manageNewTemplateSport').value;
+  const type = document.getElementById('manageNewTemplateType').value;
+  const templates = getTemplates();
+  const key = label.toLowerCase() + '|' + sport + '|' + type;
+  if (templates.find(function(t) { return (t.name.toLowerCase() + '|' + t.sport + '|' + t.type) === key; })) {
+    document.getElementById('manageTemplateError').textContent = 'Already exists.';
+    return;
+  }
+  const id = createTemplateId(label);
+  templates.push({ id: id, name: label, sport: sport, type: type });
+  saveTemplates(templates);
+  if (_supabase) syncMetadataToCloud();
+  document.getElementById('manageNewTemplateLabel').value = '';
+  document.getElementById('manageTemplateError').textContent = '';
+  renderManagePanel();
+}
+
+function toggleEditTemplate(tmplId) {
+  const div = document.getElementById('manageEditTmpl_' + tmplId);
+  if (div) div.classList.toggle('hidden');
+}
+
+function saveTemplateEdit(tmplId) {
+  if (!isAdmin()) return;
+  const templates = getTemplates();
+  const tmpl = templates.find(function(t) { return t.id === tmplId; });
+  if (!tmpl) return;
+  tmpl.name = document.getElementById('editTmplLabel_' + tmplId).value.trim() || tmpl.name;
+  tmpl.type = document.getElementById('editTmplType_' + tmplId).value;
+  tmpl.sport = document.getElementById('editTmplSport_' + tmplId).value;
+  saveTemplates(templates);
+  if (_supabase) syncMetadataToCloud();
+  renderManagePanel();
+}
+
+function toggleDeleteTemplateConfirm(tmplId) {
+  const div = document.getElementById('manageDeleteTmplConfirm_' + tmplId);
+  if (!div) return;
+  div.classList.toggle('hidden');
+  const input = document.getElementById('manageDeleteTmplInput_' + tmplId);
+  if (input) input.value = '';
+}
+
+function executeDeleteTemplate(tmplId) {
+  if (!isAdmin()) return;
+  const input = document.getElementById('manageDeleteTmplInput_' + tmplId);
+  if (!input || input.value !== 'DELETE') return;
+  // Remove from all events
+  const events = getEvents();
+  for (const ev of events) {
+    ev.templateIds = ev.templateIds.filter(function(id) { return id !== tmplId; });
+  }
+  saveEvents(events);
+  // Clear state
+  localClear(tmplId);
+  if (_supabase) {
+    _supabase.from('state').delete().eq('key', getStateKey(tmplId)).then().catch(function() {});
+  }
+  // Remove from templates list
+  const templates = getTemplates();
+  const remaining = templates.filter(function(t) { return t.id !== tmplId; });
+  saveTemplates(remaining);
+  if (_supabase) syncMetadataToCloud();
+  if (AppState.category === tmplId) {
+    AppState.category = null;
+    AppState.tournament = defaultState();
+  }
+  renderManagePanel();
+}
+
+function renameEventFromManage(oldName) {
+  if (!isAdmin()) return;
+  const newName = prompt('Rename event "' + oldName + '" to:', oldName);
+  if (!newName || newName.trim() === '' || newName === oldName) return;
+  renameEvent(oldName, newName.trim());
+  renderManagePanel();
+  renderAll();
+}
+
+function deleteEventFromManage(eventName) {
+  if (!isAdmin()) return;
+  if (!confirm('Delete event "' + eventName + '" and all its competitions?')) return;
+  const result = deleteEvent(eventName);
+  if (result === false) { alert('Cannot delete: has running tournaments or only event.'); }
+  renderManagePanel();
+  renderAll();
 }
 
 function toggleEditCategory(catId) {
