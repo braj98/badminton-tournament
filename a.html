@@ -3,8 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournament Manager System</title>
+    <title>Tournament Manager - Champion Screen</title>
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            
+            /* Podium Colors */
+            --gold: #eab308;
+            --gold-light: #fef9c3;
+            --silver: #94a3b8;
+            --silver-light: #f1f5f9;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,294 +32,300 @@
         }
 
         body {
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: var(--bg-page);
+            color: var(--text-main);
             padding-bottom: 5rem;
         }
 
-        /* Top Bar styling */
-        .top-admin-utility-strip {
-            background-color: #f1f5f9;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .btn-utility {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* Main Workspace Content Area */
-        .workspace-main-view {
-            max-width: 1100px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .header-row-layout {
+        /* Top Header Navigation Panel */
+        .app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
         }
 
-        .badge-sport-indicator {
-            background-color: #2563eb;
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
+        .brand h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
 
-        .btn-live-summary {
-            background-color: #475569;
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        /* Category navigation slider tracking track maps */
-        .category-tab-slider {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .pill-tab-item {
-            background: none;
-            border: 1px solid transparent;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: #64748b;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .pill-tab-item.active-item {
-            background-color: #1e293b;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        /* Simplified Layout Framework System block structure mapping */
-        .layout-row-group {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-        }
-
-        .content-panel-card {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .panel-headline-strip {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .panel-headline-strip h2 {
-            font-size: 16px;
+        .brand p {
+            color: var(--text-muted);
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            margin-top: 0.15rem;
         }
 
-        /* Match lists structure maps */
-        .fixtures-listing-stack {
+        .header-actions {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .match-row-strip-item {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 0.75rem;
         }
 
-        .team-block-unit {
-            flex: 1;
-            font-size: 14px;
+        .btn-header {
+            background-color: var(--bg-page);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-header.accent {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border-color: transparent;
+        }
+
+        /* Main Workspace Content Framework */
+        .main-container {
+            max-width: 840px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Breadcrumbs styling */
+        .breadcrumbs-path {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .breadcrumbs-path span {
+            color: var(--text-main);
             font-weight: 500;
         }
 
-        .team-block-unit.align-right-text {
-            text-align: right;
+        /* Category Selector Tab Slider Bar */
+        .category-tab-row {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .team-block-unit.winner-highlight {
-            font-weight: 700;
-            color: #16a34a;
+        .tab-pill-btn {
+            background: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1.1rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
-        .score-display-box {
-            background-color: #f1f5f9;
-            padding: 4px 10px;
-            border-radius: 6px;
+        .tab-pill-btn::before {
+            content: "●";
+            font-size: 0.65rem;
+            color: #cbd5e1;
+        }
+
+        .tab-pill-btn.active-pill {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .tab-pill-btn.active-pill::before {
+            color: #38bdf8;
+        }
+
+        /* Secondary Stage Filtering Layout Subnavigation Track view controls */
+        .stage-sub-navbar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .stage-nav-item {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .stage-nav-item.active-stage {
+            color: var(--primary);
             font-weight: 700;
-            margin: 0 10px;
+        }
+
+        .stage-nav-item.active-stage::after {
+            content: "";
+            position: absolute;
+            bottom: -0.75rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary);
+        }
+
+        /* Podiums & Celebration Workspace Matrix view layout panels */
+        .celebration-podium-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .podium-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Champion Distinct Profile Card Elements */
+        .podium-card.champion-tier {
+            border: 2px solid var(--gold);
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf5 100%);
+        }
+
+        .podium-card.runner-up-tier {
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+            padding: 2rem;
+        }
+
+        .tier-badge-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
             display: inline-block;
-            min-width: 32px;
-            text-align: center;
         }
 
-        .winner-highlight .score-display-box {
-            background-color: #f0fdf4;
+        .champion-tier .tier-badge-label { color: var(--gold); }
+        .runner-up-tier .tier-badge-label { color: var(--silver); }
+
+        .big-emblem-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            line-height: 1;
         }
 
-        .vs-text-center {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 700;
-            text-transform: uppercase;
-            width: 30px;
-            text-align: center;
+        .winner-title-string {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
         }
 
-        /* Standings table data layout configuration sets */
-        .data-grid-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
+        .runner-up-tier .winner-title-string {
+            font-size: 1.35rem;
+            color: var(--text-main);
+            margin-bottom: 1.25rem;
         }
 
-        .data-grid-table th {
-            text-align: left;
-            padding: 10px;
-            color: #64748b;
-            border-bottom: 2px solid #e2e8f0;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .data-grid-table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .rank-circle-badge {
-            background-color: #f1f5f9;
-            font-weight: 700;
-            width: 24px;
-            height: 24px;
-            display: inline-flex;
+        /* Modern Image Dropzone Input Components mapping placeholder fields layout template */
+        .photo-uploader-dropzone {
+            max-width: 240px;
+            height: 160px;
+            margin: 0 auto;
+            border: 2px dashed #cbd5e1;
+            background-color: var(--bg-page);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-        }
-
-        /* Primary action button layout anchors */
-        .action-footer-center {
-            margin-top: 40px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .btn-primary-action-cta {
-            background-color: #2563eb;
-            color: #ffffff;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
+            gap: 0.5rem;
             cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .photo-uploader-dropzone:hover {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .dropzone-icon {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+        }
+
+        .dropzone-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .photo-uploader-dropzone:hover .dropzone-icon,
+        .photo-uploader-dropzone:hover .dropzone-text {
+            color: var(--primary);
+        }
+
+        /* App Context Page Bottom Sticky Mode Controls Strip info */
+        .mode-footer-info {
+            text-align: center;
+            margin-top: 4rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
     </style>
 </head>
 <body>
 
-    <!-- Admin Utilities Strip Section -->
-    <div class="top-admin-utility-strip">
-        <span style="color: #16a34a; font-weight: 600; font-size: 13px;">✓ Admin Session Enabled</span>
-        <button class="btn-utility" onclick="alert('Manage matches action clicked.')">⚙️ Manage Matches</button>
-        <button class="btn-utility" style="color: #dc2626;" onclick="alert('Logout action clicked.')">Logout</button>
-    </div>
+    <!-- Header Grid Area Controls Module component -->
+    <header class="app-header">
+        <div class="brand">
+            <h1>🏆 Tournament Manager</h1>
+            <p>Bren Avalon Sports Meet 2026</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header accent" onclick="alert('Opening Global Results Dashboard Feed Summary...')">📊 Results Feed</button>
+            <button class="btn-header" onclick="alert('Switching Context Profile Mode Framework...')">👁️ Viewer Mode</button>
+        </div>
+    </header>
 
-    <!-- Main Workspace Frame -->
-    <div class="workspace-main-view">
+    <div class="main-container">
         
-        <header class="header-row-layout">
-            <div>
-                <h1 style="font-size: 24px; font-weight: 800;">🏆 Tournament Manager</h1>
-                <p style="color: #64748b; font-size: 14px; margin-top: 2px;">Bren Avalon Sports Meet 2026</p>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button class="btn-live-summary" onclick="alert('Opening all sports live feed results panel...')">📊 All Sports Live Results</button>
-                <div class="badge-sport-indicator">Badminton</div>
-            </div>
-        </header>
+        <!-- Breadcrumbs Navigation History Tracker Stack Mapping context sets -->
+        <div class="breadcrumbs-path">
+            Home &gt; Bren Avalon Sports Meet 2026 &gt; Badminton &gt; <span>Sr Dbls</span>
+        </div>
 
-        <!-- Subnav menu bar navigation trackers -->
-        <nav class="category-tab-slider">
-            <button class="pill-tab-item">Junior</button>
-            <button class="pill-tab-item active-item">Jr Dbls</button>
-            <button class="pill-tab-item">Sr Boys</button>
-            <button class="pill-tab-item">Sr Girls</button>
-            <button class="pill-tab-item">Sr Dbls</button>
-            <button class="pill-tab-item">Adult Dbls</button>
-            <button class="pill-tab-item">Adults single</button>
+        <!-- Horizontal Scroll Category Tab Strip Panel mapping framework arrays -->
+        <nav class="category-tab-row" id="tabSliderRow">
+            <button class="tab-pill-btn">Junior</button>
+            <button class="tab-pill-btn">Jr Dbls</button>
+            <button class="tab-pill-btn">Sr Boys</button>
+            <button class="tab-pill-btn">Sr Girls</button>
+            <button class="tab-pill-btn active-pill">Sr Dbls</button>
+            <button class="tab-pill-btn">Adult Dbls</button>
+            <button class="tab-pill-btn">Adults single</button>
         </nav>
 
-        <!-- Layout Row Elements Configuration Systems Group Tracking Layout Frame maps -->
-        <div class="layout-row-group">
-            
-            <!-- Panel Item 1: Group Fixtures Row List Registry Track maps mapping -->
-            <div class="content-panel-card">
-                <div class="panel-headline-strip">
-                    <h2>Group Stage Matches (Group A)</h2>
-                    <span style="background-color: #e2e8f0; color: #64748b; font-size: 12px; padding: 3px 8px; border-radius: 10px; font-weight: 600;">10 matches</span>
-                </div>
-
-                <div class="fixtures-listing-stack">
-                    <!-- Match Block 1 -->
-                    <div class="match-row-strip-item">
-                        <div class="team-block-unit winner-highlight">Aarav & Anish <span class="score-display-box">14</span></div>
-                        <div class="vs-text-center">vs</div>
-                        <div class="team-block-unit align-right-text"><span class="score-display-box">12</span> Ujma & Ijma ✓</div>
-                    </div>
-
-                    <!-- Match Block 2 -->
-                    <div class="match-row-strip-item">
-                        <div class="team-block-unit">Aarav & Anish <span class="score-display-box">6</span></div>
-                        <div class="vs-text-center">vs</div>
-                        <div class="team-block-unit align-right-text winner-highlight"><span class="score-display-box">13</span> Jonathan & Aarav J ✓</div>
-                    </div>
-
-                    <!-- Match Block 3 -->
-                    <div class="match-row-strip-item">
-                        <div class="team-block-unit">Aarav & Anish <span class="score-display-box">6</span></div>
-                        <div class="vs-text-center">vs</div>
-                        <div class="team-block-unit align-right-text winner-highlight"><span class="score-display-box">13</span> Aarav P & Vihaan ✓</div>
-                    </div>
-
-                    <!-- Match Block 4 -->
+        <!-- Secondary Workflow Context Filter Menu Line Layout view maps -->
+        <nav class="stage-sub-navbar" id="stageNavbar">
+            <div class="stage-nav-item">Groups</div>
+            <div class="stage-nav-item">Fixtures</div>
 

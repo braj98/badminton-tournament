@@ -53,48 +53,19 @@
         <span id="importConfirmError" class="text-muted" style="font-size:.75rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
 
+      <!-- Settings -->
+      <div id="settingsSection" class="hidden" style="margin-bottom:16px;">
+        <h3 style="font-size:.95rem;margin-bottom:10px;font-weight:600;color:var(--text-main);border-bottom:1px solid var(--border);padding-bottom:6px;">Settings</h3>
+        <div id="settingsContent"></div>
+      </div>
+
       <!-- Categories List -->
       <h3 style="font-size:.95rem;margin-bottom:10px;font-weight:600;color:var(--text-main);border-bottom:1px solid var(--border);padding-bottom:6px;">Categories</h3>
       <div id="manageCategoryList" class="modal-list"></div>
 
-      <!-- Add Category Form -->
-      <div class="modal-form">
-        <h3 style="font-size:.95rem;margin-top:0;margin-bottom:12px;font-weight:600;">Add New Category</h3>
-        
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label">Category Label</label>
-              <input type="text" id="newCatName" class="form-input" placeholder="e.g. Junior Singles">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Event Name</label>
-              <select id="newCatEvent" class="form-input"></select>
-              <input type="text" id="newCatEventCustom" class="form-input hidden" style="margin-top:4px;" placeholder="New event name">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-field">
-              <label class="form-label">Format</label>
-              <select id="newCatType" class="form-input">
-                <option value="singles">Singles</option>
-                <option value="doubles">Doubles</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label">Sport</label>
-              <select id="newCatSport" class="form-input">
-                <option value="badminton">Badminton</option>
-                <option value="tableTennis">Table Tennis</option>
-                <option value="chess">Chess</option>
-              </select>
-            </div>
-          </div>
-
-          <button class="btn btn-block admin-only" style="margin-top:4px;" onclick="addCategoryFromUI()">Add Category</button>
-        </div>
-        <span id="manageError" style="font-size:.8rem;color:#dc2626;display:block;margin-top:6px;text-align:center;"></span>
+      <div class="modal-form" style="background:var(--primary-light);border-radius:6px;padding:12px;margin-top:8px;font-size:.8rem;color:var(--text-muted);">
+        <p style="margin:0;">Create competitions via <strong>Home → Event</strong> → <strong>Add Template</strong>.<br>
+        Create events via <strong>➕ New Event</strong> on the Home page.</p>
       </div>
     </div>
   </div>

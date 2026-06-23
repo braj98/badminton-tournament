@@ -1471,52 +1471,7 @@ function testCategoryManagement() {
   console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
   return pass;
 }
-  console.log('\n=== Action Bar (Knockout Results Buttons) ===');
-  let pass = true;
 
-  var bar = document.getElementById('actionBar');
-  pass &= assert(!!bar, 'actionBar element exists');
-  if (!bar) return false;
-
-  const _origView = AppState.view;
-
-  // Action bar hidden on event/sport/home
-  AppState.view = 'home';
-  renderActionBar();
-  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on home');
-
-  AppState.view = 'event';
-  renderActionBar();
-  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on event');
-
-  AppState.view = 'sport';
-  renderActionBar();
-  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on sport');
-
-  // ActionBar visible on tournament views
-  AppState.view = 'setup';
-  renderActionBar();
-  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on setup');
-
-  AppState.view = 'groups';
-  renderActionBar();
-  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on groups');
-
-  // Knockout: should have Results buttons in right area
-  AppState.view = 'knockout';
-  renderActionBar();
-  var right = document.getElementById('actionBarRight');
-  if (right) {
-    var btns = right.querySelectorAll('button');
-    pass &= assert(btns.length >= 2, 'Knockout actionBar has 2+ buttons (got ' + btns.length + ')');
-  }
-
-  AppState.view = _origView;
-  renderActionBar();
-
-  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
-  return pass;
-}
 
 function runAllNavigationTests() {
   console.log('\n========================================');

@@ -1,0 +1,2101 @@
+{
+  "exportedAt": "2026-06-23T19:35:11.136Z",
+  "categories": [
+    {
+      "id": "junior",
+      "type": "singles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Junior",
+      "sport": "badminton"
+    },
+    {
+      "id": "junior_doubles",
+      "type": "doubles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Jr Dbls",
+      "sport": "badminton"
+    },
+    {
+      "id": "senior_boys",
+      "type": "singles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Sr Boys",
+      "sport": "badminton"
+    },
+    {
+      "id": "senior_girls",
+      "type": "singles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Sr Girls",
+      "sport": "badminton"
+    },
+    {
+      "id": "senior_doubles",
+      "type": "doubles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Sr Dbls",
+      "sport": "badminton"
+    },
+    {
+      "id": "adult_dbls",
+      "type": "doubles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Adult Dbls",
+      "sport": "badminton"
+    },
+    {
+      "id": "adults_single",
+      "type": "singles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "Adults single",
+      "sport": "badminton"
+    },
+    {
+      "id": "ddd",
+      "type": "singles",
+      "event": "BREN AVALON SPORTS MEET 2026",
+      "label": "ddd",
+      "sport": "tableTennis"
+    }
+  ],
+  "states": {
+    "junior": {
+      "phase": "setup",
+      "groups": {},
+      "players": [],
+      "champion": null,
+      "fixtures": [],
+      "knockout": [],
+      "runnerUp": null,
+      "standings": {},
+      "qualifiers": [],
+      "teamMembers": [],
+      "participants": [],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    },
+    "junior_doubles": {
+      "phase": "champion",
+      "groups": {
+        "A": [
+          "p2",
+          "p4",
+          "p0",
+          "p1",
+          "p3"
+        ]
+      },
+      "players": [
+        "Jonathan & Aarav J",
+        "Aarav P & Vihaan",
+        "Aariv & Anish",
+        "Aadarsh & Shreyansh",
+        "Ujma & Ijma"
+      ],
+      "champion": "p1",
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p2",
+          "p2": "p4",
+          "s1": 14,
+          "s2": 12,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 1,
+          "p1": "p2",
+          "p2": "p0",
+          "s1": 6,
+          "s2": 13,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 2,
+          "p1": "p2",
+          "p2": "p1",
+          "s1": 6,
+          "s2": 13,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 3,
+          "p1": "p2",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 4,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 4,
+          "p1": "p4",
+          "p2": "p0",
+          "s1": 1,
+          "s2": 13,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 5,
+          "p1": "p4",
+          "p2": "p1",
+          "s1": 3,
+          "s2": 13,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 6,
+          "p1": "p4",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 2,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 7,
+          "p1": "p0",
+          "p2": "p1",
+          "s1": 9,
+          "s2": 13,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 8,
+          "p1": "p0",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 1,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 9,
+          "p1": "p1",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 2,
+          "done": true,
+          "group": "A"
+        }
+      ],
+      "knockout": [
+        {
+          "id": "final",
+          "p1": "p1",
+          "p2": "p0",
+          "s1": 2,
+          "s2": 0,
+          "done": true,
+          "sets": [
+            {
+              "s1": 13,
+              "s2": 12
+            },
+            {
+              "s1": 13,
+              "s2": 11
+            },
+            {
+              "s1": null,
+              "s2": null
+            }
+          ],
+          "round": "Final",
+          "winner": "p1",
+          "updatedAt": 1782223834800
+        }
+      ],
+      "runnerUp": "p0",
+      "_lastSave": 1782242554866,
+      "standings": {
+        "A": [
+          {
+            "id": "p1",
+            "pa": 20,
+            "pd": 32,
+            "pf": 52,
+            "won": 4,
+            "lost": 0,
+            "name": "Aarav P & Vihaan",
+            "rank": 1,
+            "played": 4
+          },
+          {
+            "id": "p0",
+            "pa": 21,
+            "pd": 27,
+            "pf": 48,
+            "won": 3,
+            "lost": 1,
+            "name": "Jonathan & Aarav J",
+            "rank": 2,
+            "played": 4
+          },
+          {
+            "id": "p2",
+            "pa": 42,
+            "pd": -3,
+            "pf": 39,
+            "won": 2,
+            "lost": 2,
+            "name": "Aariv & Anish",
+            "rank": 3,
+            "played": 4
+          },
+          {
+            "id": "p4",
+            "pa": 42,
+            "pd": -13,
+            "pf": 29,
+            "won": 1,
+            "lost": 3,
+            "name": "Ujma & Ijma",
+            "rank": 4,
+            "played": 4
+          },
+          {
+            "id": "p3",
+            "pa": 52,
+            "pd": -43,
+            "pf": 9,
+            "won": 0,
+            "lost": 4,
+            "name": "Aadarsh & Shreyansh",
+            "rank": 5,
+            "played": 4
+          }
+        ]
+      },
+      "updatedAt": 1782242554866,
+      "qualifiers": [
+        {
+          "id": "p1",
+          "name": "Aarav P & Vihaan",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p0",
+          "name": "Jonathan & Aarav J",
+          "rank": 2,
+          "group": "A"
+        }
+      ],
+      "completedAt": 1782228785357,
+      "teamMembers": [
+        {
+          "a": "Jonathan",
+          "b": "Aarav J"
+        },
+        {
+          "a": "Aarav P",
+          "b": "Vihaan"
+        },
+        {
+          "a": "Aariv",
+          "b": "Anish"
+        },
+        {
+          "a": "Aadarsh",
+          "b": "Shreyansh"
+        },
+        {
+          "a": "Ujma",
+          "b": "Ijma"
+        }
+      ],
+      "participants": [
+        {
+          "id": "p0",
+          "name": "Jonathan & Aarav J",
+          "members": null,
+          "createdAt": 1782128526639
+        },
+        {
+          "id": "p1",
+          "name": "Aarav P & Vihaan",
+          "members": null,
+          "createdAt": 1782128526639
+        },
+        {
+          "id": "p2",
+          "name": "Aariv & Anish",
+          "members": null,
+          "createdAt": 1782128526639
+        },
+        {
+          "id": "p3",
+          "name": "Aadarsh & Shreyansh",
+          "members": null,
+          "createdAt": 1782128526639
+        },
+        {
+          "id": "p4",
+          "name": "Ujma & Ijma",
+          "members": null,
+          "createdAt": 1782128526639
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    },
+    "senior_boys": {
+      "phase": "knockout",
+      "sport": "badminton",
+      "format": "singles",
+      "groups": {
+        "A": [
+          "p9",
+          "p5",
+          "p0",
+          "p2",
+          "p6"
+        ],
+        "B": [
+          "p8",
+          "p4",
+          "p7",
+          "p1",
+          "p3"
+        ]
+      },
+      "players": [
+        "Jerson",
+        "Jonathan",
+        "Vibhav",
+        "Ridharv",
+        "Aditya",
+        "Ansh",
+        "Aksaj",
+        "Adhrik",
+        "Sidharth",
+        "Satvik"
+      ],
+      "champion": null,
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p9",
+          "p2": "p5",
+          "s1": 13,
+          "s2": 7,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225778742
+        },
+        {
+          "id": 1,
+          "p1": "p8",
+          "p2": "p4",
+          "s1": 13,
+          "s2": 1,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226064802
+        },
+        {
+          "id": 2,
+          "p1": "p9",
+          "p2": "p0",
+          "s1": 13,
+          "s2": 6,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225899294
+        },
+        {
+          "id": 3,
+          "p1": "p8",
+          "p2": "p7",
+          "s1": 13,
+          "s2": 4,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226000708
+        },
+        {
+          "id": 4,
+          "p1": "p9",
+          "p2": "p2",
+          "s1": 13,
+          "s2": 2,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225726505
+        },
+        {
+          "id": 5,
+          "p1": "p8",
+          "p2": "p1",
+          "s1": 6,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226049282
+        },
+        {
+          "id": 6,
+          "p1": "p9",
+          "p2": "p6",
+          "s1": 4,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225699487
+        },
+        {
+          "id": 7,
+          "p1": "p8",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 3,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226085129
+        },
+        {
+          "id": 8,
+          "p1": "p5",
+          "p2": "p0",
+          "s1": 13,
+          "s2": 4,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225716505
+        },
+        {
+          "id": 9,
+          "p1": "p4",
+          "p2": "p7",
+          "s1": 2,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226102032
+        },
+        {
+          "id": 10,
+          "p1": "p5",
+          "p2": "p2",
+          "s1": 12,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225918289
+        },
+        {
+          "id": 11,
+          "p1": "p4",
+          "p2": "p1",
+          "s1": 7,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226170553
+        },
+        {
+          "id": 12,
+          "p1": "p5",
+          "p2": "p6",
+          "s1": 3,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225937692
+        },
+        {
+          "id": 13,
+          "p1": "p4",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 12,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226021676
+        },
+        {
+          "id": 14,
+          "p1": "p0",
+          "p2": "p2",
+          "s1": 10,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225965720
+        },
+        {
+          "id": 15,
+          "p1": "p7",
+          "p2": "p1",
+          "s1": 2,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226154620
+        },
+        {
+          "id": 16,
+          "p1": "p0",
+          "p2": "p6",
+          "s1": 4,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225747833
+        },
+        {
+          "id": 17,
+          "p1": "p7",
+          "p2": "p3",
+          "s1": 8,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226183582
+        },
+        {
+          "id": 18,
+          "p1": "p2",
+          "p2": "p6",
+          "s1": 7,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782225982053
+        },
+        {
+          "id": 19,
+          "p1": "p1",
+          "p2": "p3",
+          "s1": 13,
+          "s2": 5,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226196083
+        }
+      ],
+      "knockout": [
+        {
+          "id": "sf1",
+          "p1": "p6",
+          "p2": "p8",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": "sf2",
+          "p1": "p9",
+          "p2": "p1",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": "final",
+          "p1": null,
+          "p2": null,
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "Final",
+          "winner": null,
+          "updatedAt": null
+        }
+      ],
+      "runnerUp": null,
+      "_lastSave": 1782242559930,
+      "standings": {
+        "A": [
+          {
+            "id": "p6",
+            "pa": 18,
+            "pd": 34,
+            "pf": 52,
+            "won": 4,
+            "lost": 0,
+            "name": "Aksaj",
+            "rank": 1,
+            "played": 4
+          },
+          {
+            "id": "p9",
+            "pa": 28,
+            "pd": 15,
+            "pf": 43,
+            "won": 3,
+            "lost": 1,
+            "name": "Satvik",
+            "rank": 2,
+            "played": 4
+          },
+          {
+            "id": "p2",
+            "pa": 48,
+            "pd": -13,
+            "pf": 35,
+            "won": 2,
+            "lost": 2,
+            "name": "Vibhav",
+            "rank": 3,
+            "played": 4
+          },
+          {
+            "id": "p5",
+            "pa": 43,
+            "pd": -8,
+            "pf": 35,
+            "won": 1,
+            "lost": 3,
+            "name": "Ansh",
+            "rank": 4,
+            "played": 4
+          },
+          {
+            "id": "p0",
+            "pa": 52,
+            "pd": -28,
+            "pf": 24,
+            "won": 0,
+            "lost": 4,
+            "name": "Jerson",
+            "rank": 5,
+            "played": 4
+          }
+        ],
+        "B": [
+          {
+            "id": "p1",
+            "pa": 20,
+            "pd": 32,
+            "pf": 52,
+            "won": 4,
+            "lost": 0,
+            "name": "Jonathan",
+            "rank": 1,
+            "played": 4
+          },
+          {
+            "id": "p8",
+            "pa": 21,
+            "pd": 24,
+            "pf": 45,
+            "won": 3,
+            "lost": 1,
+            "name": "Sidharth",
+            "rank": 2,
+            "played": 4
+          },
+          {
+            "id": "p3",
+            "pa": 47,
+            "pd": -14,
+            "pf": 33,
+            "won": 1,
+            "lost": 3,
+            "name": "Ridharv",
+            "rank": 3,
+            "played": 4
+          },
+          {
+            "id": "p7",
+            "pa": 41,
+            "pd": -14,
+            "pf": 27,
+            "won": 1,
+            "lost": 3,
+            "name": "Adhrik",
+            "rank": 4,
+            "played": 4
+          },
+          {
+            "id": "p4",
+            "pa": 51,
+            "pd": -28,
+            "pf": 23,
+            "won": 1,
+            "lost": 3,
+            "name": "Aditya",
+            "rank": 5,
+            "played": 4
+          }
+        ]
+      },
+      "updatedAt": 1782242559930,
+      "qualifiers": [
+        {
+          "id": "p6",
+          "name": "Aksaj",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p9",
+          "name": "Satvik",
+          "rank": 2,
+          "group": "A"
+        },
+        {
+          "id": "p1",
+          "name": "Jonathan",
+          "rank": 1,
+          "group": "B"
+        },
+        {
+          "id": "p8",
+          "name": "Sidharth",
+          "rank": 2,
+          "group": "B"
+        }
+      ],
+      "completedAt": null,
+      "teamMembers": [],
+      "participants": [
+        {
+          "id": "p0",
+          "name": "Jerson",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p1",
+          "name": "Jonathan",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p2",
+          "name": "Vibhav",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p3",
+          "name": "Ridharv",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p4",
+          "name": "Aditya",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p5",
+          "name": "Ansh",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p6",
+          "name": "Aksaj",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p7",
+          "name": "Adhrik",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p8",
+          "name": "Sidharth",
+          "members": null,
+          "createdAt": 1782225519469
+        },
+        {
+          "id": "p9",
+          "name": "Satvik",
+          "members": null,
+          "createdAt": 1782225519469
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    },
+    "senior_girls": {
+      "phase": "knockout",
+      "sport": "badminton",
+      "format": "singles",
+      "groups": {
+        "A": [
+          "p15",
+          "p10",
+          "p11"
+        ],
+        "B": [
+          "p14",
+          "p13",
+          "p12"
+        ]
+      },
+      "players": [
+        "Mukta",
+        "Arna",
+        "Sanvi",
+        "Alina",
+        "Shrutika",
+        "Medha"
+      ],
+      "champion": null,
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p15",
+          "p2": "p10",
+          "s1": 5,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226480978
+        },
+        {
+          "id": 1,
+          "p1": "p14",
+          "p2": "p13",
+          "s1": 13,
+          "s2": 3,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226517471
+        },
+        {
+          "id": 2,
+          "p1": "p15",
+          "p2": "p11",
+          "s1": 13,
+          "s2": 5,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226492686
+        },
+        {
+          "id": 3,
+          "p1": "p14",
+          "p2": "p12",
+          "s1": 13,
+          "s2": 1,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226522227
+        },
+        {
+          "id": 4,
+          "p1": "p10",
+          "p2": "p11",
+          "s1": 13,
+          "s2": 10,
+          "done": true,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226502243
+        },
+        {
+          "id": 5,
+          "p1": "p13",
+          "p2": "p12",
+          "s1": 6,
+          "s2": 13,
+          "done": true,
+          "sets": null,
+          "group": "B",
+          "round": "group",
+          "winner": null,
+          "updatedAt": 1782226533032
+        }
+      ],
+      "knockout": [
+        {
+          "id": "sf1",
+          "p1": "p10",
+          "p2": "p12",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": "sf2",
+          "p1": "p15",
+          "p2": "p14",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": "final",
+          "p1": null,
+          "p2": null,
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "Final",
+          "winner": null,
+          "updatedAt": null
+        }
+      ],
+      "runnerUp": null,
+      "_lastSave": 1782240522182,
+      "standings": {
+        "A": [
+          {
+            "id": "p10",
+            "pa": 15,
+            "pd": 11,
+            "pf": 26,
+            "won": 2,
+            "lost": 0,
+            "name": "Mukta",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p15",
+            "pa": 18,
+            "pd": 0,
+            "pf": 18,
+            "won": 1,
+            "lost": 1,
+            "name": "Medha",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p11",
+            "pa": 26,
+            "pd": -11,
+            "pf": 15,
+            "won": 0,
+            "lost": 2,
+            "name": "Arna",
+            "rank": 3,
+            "played": 2
+          }
+        ],
+        "B": [
+          {
+            "id": "p14",
+            "pa": 4,
+            "pd": 22,
+            "pf": 26,
+            "won": 2,
+            "lost": 0,
+            "name": "Shrutika",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p12",
+            "pa": 19,
+            "pd": -5,
+            "pf": 14,
+            "won": 1,
+            "lost": 1,
+            "name": "Sanvi",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p13",
+            "pa": 26,
+            "pd": -17,
+            "pf": 9,
+            "won": 0,
+            "lost": 2,
+            "name": "Alina",
+            "rank": 3,
+            "played": 2
+          }
+        ]
+      },
+      "qualifiers": [
+        {
+          "id": "p10",
+          "name": "Mukta",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p15",
+          "name": "Medha",
+          "rank": 2,
+          "group": "A"
+        },
+        {
+          "id": "p14",
+          "name": "Shrutika",
+          "rank": 1,
+          "group": "B"
+        },
+        {
+          "id": "p12",
+          "name": "Sanvi",
+          "rank": 2,
+          "group": "B"
+        }
+      ],
+      "completedAt": null,
+      "teamMembers": [],
+      "participants": [
+        {
+          "id": "p10",
+          "name": "Mukta",
+          "members": null,
+          "createdAt": 1782226306142
+        },
+        {
+          "id": "p11",
+          "name": "Arna",
+          "members": null,
+          "createdAt": 1782226306142
+        },
+        {
+          "id": "p12",
+          "name": "Sanvi",
+          "members": null,
+          "createdAt": 1782226306142
+        },
+        {
+          "id": "p13",
+          "name": "Alina",
+          "members": null,
+          "createdAt": 1782226306142
+        },
+        {
+          "id": "p14",
+          "name": "Shrutika",
+          "members": null,
+          "createdAt": 1782226306142
+        },
+        {
+          "id": "p15",
+          "name": "Medha",
+          "members": null,
+          "createdAt": 1782226306142
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null,
+      "updatedAt": 1782240522182
+    },
+    "senior_doubles": {
+      "phase": "champion",
+      "groups": {
+        "A": [
+          "p0",
+          "p2",
+          "p1"
+        ],
+        "B": [
+          "p4",
+          "p5",
+          "p3"
+        ]
+      },
+      "players": [
+        "Satvik & Vibhav",
+        "Kiyaan & Shruthi",
+        "Ridharv & Advik",
+        "Siddharth and Johnson",
+        "Ansh & Amaira",
+        "Aditya & Jerson"
+      ],
+      "champion": "p1",
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p0",
+          "p2": "p2",
+          "s1": 21,
+          "s2": 18,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 1,
+          "p1": "p4",
+          "p2": "p5",
+          "s1": 21,
+          "s2": 16,
+          "done": true,
+          "group": "B"
+        },
+        {
+          "id": 2,
+          "p1": "p0",
+          "p2": "p1",
+          "s1": 7,
+          "s2": 21,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 3,
+          "p1": "p4",
+          "p2": "p3",
+          "s1": 5,
+          "s2": 21,
+          "done": true,
+          "group": "B"
+        },
+        {
+          "id": 4,
+          "p1": "p2",
+          "p2": "p1",
+          "s1": 12,
+          "s2": 21,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 5,
+          "p1": "p5",
+          "p2": "p3",
+          "s1": 3,
+          "s2": 21,
+          "done": true,
+          "group": "B"
+        }
+      ],
+      "knockout": [
+        {
+          "id": "sf1",
+          "p1": "p1",
+          "p2": "p4",
+          "s1": 21,
+          "s2": 6,
+          "done": true,
+          "sets": null,
+          "round": "SF",
+          "winner": "p1"
+        },
+        {
+          "id": "sf2",
+          "p1": "p0",
+          "p2": "p3",
+          "s1": 15,
+          "s2": 21,
+          "done": true,
+          "sets": null,
+          "round": "SF",
+          "winner": "p3"
+        },
+        {
+          "id": "final",
+          "p1": "p1",
+          "p2": "p3",
+          "s1": 2,
+          "s2": 1,
+          "done": true,
+          "sets": [
+            {
+              "s1": 15,
+              "s2": 2
+            },
+            {
+              "s1": 9,
+              "s2": 15
+            },
+            {
+              "s1": 15,
+              "s2": 9
+            }
+          ],
+          "round": "Final",
+          "winner": "p1",
+          "updatedAt": 1782129042735
+        }
+      ],
+      "runnerUp": "p3",
+      "_lastSave": 1782240526728,
+      "standings": {
+        "A": [
+          {
+            "id": "p1",
+            "pa": 19,
+            "pd": 23,
+            "pf": 42,
+            "won": 2,
+            "lost": 0,
+            "name": "Kiyaan & Shruthi",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p0",
+            "pa": 39,
+            "pd": -11,
+            "pf": 28,
+            "won": 1,
+            "lost": 1,
+            "name": "Satvik & Vibhav",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p2",
+            "pa": 42,
+            "pd": -12,
+            "pf": 30,
+            "won": 0,
+            "lost": 2,
+            "name": "Ridharv & Advik",
+            "rank": 3,
+            "played": 2
+          }
+        ],
+        "B": [
+          {
+            "id": "p3",
+            "pa": 8,
+            "pd": 34,
+            "pf": 42,
+            "won": 2,
+            "lost": 0,
+            "name": "Siddharth and Johnson",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p4",
+            "pa": 37,
+            "pd": -11,
+            "pf": 26,
+            "won": 1,
+            "lost": 1,
+            "name": "Ansh & Amaira",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p5",
+            "pa": 42,
+            "pd": -23,
+            "pf": 19,
+            "won": 0,
+            "lost": 2,
+            "name": "Aditya & Jerson",
+            "rank": 3,
+            "played": 2
+          }
+        ]
+      },
+      "qualifiers": [
+        {
+          "id": "p1",
+          "name": "Kiyaan & Shruthi",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p0",
+          "name": "Satvik & Vibhav",
+          "rank": 2,
+          "group": "A"
+        },
+        {
+          "id": "p3",
+          "name": "Siddharth and Johnson",
+          "rank": 1,
+          "group": "B"
+        },
+        {
+          "id": "p4",
+          "name": "Ansh & Amaira",
+          "rank": 2,
+          "group": "B"
+        }
+      ],
+      "completedAt": 1782228798485,
+      "teamMembers": [
+        {
+          "a": "Sat",
+          "b": "Vib"
+        },
+        {
+          "a": "K",
+          "b": "S"
+        },
+        {
+          "a": "R",
+          "b": "A"
+        },
+        {
+          "a": "S",
+          "b": "J"
+        },
+        {
+          "a": "A",
+          "b": "A"
+        },
+        {
+          "a": "A",
+          "b": "J"
+        }
+      ],
+      "participants": [
+        {
+          "id": "p0",
+          "name": "Satvik & Vibhav",
+          "members": null,
+          "createdAt": 1782146385264
+        },
+        {
+          "id": "p1",
+          "name": "Kiyaan & Shruthi",
+          "members": null,
+          "createdAt": 1782146385264
+        },
+        {
+          "id": "p2",
+          "name": "Ridharv & Advik",
+          "members": null,
+          "createdAt": 1782146385264
+        },
+        {
+          "id": "p3",
+          "name": "Siddharth and Johnson",
+          "members": null,
+          "createdAt": 1782146385264
+        },
+        {
+          "id": "p4",
+          "name": "Ansh & Amaira",
+          "members": null,
+          "createdAt": 1782146385264
+        },
+        {
+          "id": "p5",
+          "name": "Aditya & Jerson",
+          "members": null,
+          "createdAt": 1782146385264
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null,
+      "updatedAt": 1782240526728
+    },
+    "adult_dbls": {
+      "phase": "champion",
+      "groups": {
+        "A": [
+          "p7",
+          "p9",
+          "p8",
+          "p6"
+        ]
+      },
+      "players": [
+        "Deepak & Ranjith",
+        "Sandeep & Archit",
+        "Subrat & Prasant",
+        "Pawan & Sai"
+      ],
+      "champion": "p6",
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p7",
+          "p2": "p9",
+          "s1": 1,
+          "s2": 0,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 1,
+          "p1": "p7",
+          "p2": "p8",
+          "s1": 21,
+          "s2": 18,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 2,
+          "p1": "p7",
+          "p2": "p6",
+          "s1": 1,
+          "s2": 2,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 3,
+          "p1": "p9",
+          "p2": "p8",
+          "s1": 12,
+          "s2": 21,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 4,
+          "p1": "p9",
+          "p2": "p6",
+          "s1": 9,
+          "s2": 21,
+          "done": true,
+          "group": "A"
+        },
+        {
+          "id": 5,
+          "p1": "p8",
+          "p2": "p6",
+          "s1": 0,
+          "s2": 1,
+          "done": true,
+          "group": "A"
+        }
+      ],
+      "knockout": [
+        {
+          "id": "final",
+          "p1": "p6",
+          "p2": "p7",
+          "s1": 2,
+          "s2": 0,
+          "done": true,
+          "sets": [
+            {
+              "s1": 15,
+              "s2": 10
+            },
+            {
+              "s1": 15,
+              "s2": 12
+            },
+            {
+              "s1": null,
+              "s2": null
+            }
+          ],
+          "round": "Final",
+          "winner": "p6",
+          "updatedAt": 1782129258074
+        }
+      ],
+      "runnerUp": "p7",
+      "_lastSave": 1782240527880,
+      "standings": {
+        "A": [
+          {
+            "id": "p6",
+            "pa": 10,
+            "pd": 14,
+            "pf": 24,
+            "won": 3,
+            "lost": 0,
+            "name": "Deepak & Ranjith",
+            "rank": 1,
+            "played": 3
+          },
+          {
+            "id": "p7",
+            "pa": 20,
+            "pd": 3,
+            "pf": 23,
+            "won": 2,
+            "lost": 1,
+            "name": "Sandeep & Archit",
+            "rank": 2,
+            "played": 3
+          },
+          {
+            "id": "p8",
+            "pa": 34,
+            "pd": 5,
+            "pf": 39,
+            "won": 1,
+            "lost": 2,
+            "name": "Subrat & Prasant",
+            "rank": 3,
+            "played": 3
+          },
+          {
+            "id": "p9",
+            "pa": 43,
+            "pd": -22,
+            "pf": 21,
+            "won": 0,
+            "lost": 3,
+            "name": "Pawan & Sai",
+            "rank": 4,
+            "played": 3
+          }
+        ]
+      },
+      "updatedAt": 1782240527880,
+      "qualifiers": [
+        {
+          "id": "p6",
+          "name": "Deepak & Ranjith",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p7",
+          "name": "Sandeep & Archit",
+          "rank": 2,
+          "group": "A"
+        }
+      ],
+      "teamMembers": [
+        {
+          "a": "Deepak",
+          "b": "Ranjith"
+        },
+        {
+          "a": "Sandeep",
+          "b": "Archit"
+        },
+        {
+          "a": "Subrat",
+          "b": "Prasant"
+        },
+        {
+          "a": "Pawan",
+          "b": "Sai"
+        }
+      ],
+      "participants": [
+        {
+          "id": "p6",
+          "name": "Deepak & Ranjith",
+          "members": null,
+          "createdAt": 1782129881426
+        },
+        {
+          "id": "p7",
+          "name": "Sandeep & Archit",
+          "members": null,
+          "createdAt": 1782129881426
+        },
+        {
+          "id": "p8",
+          "name": "Subrat & Prasant",
+          "members": null,
+          "createdAt": 1782129881426
+        },
+        {
+          "id": "p9",
+          "name": "Pawan & Sai",
+          "members": null,
+          "createdAt": 1782129881426
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    },
+    "adults_single": {
+      "phase": "knockout",
+      "groups": {
+        "A": [
+          "p19",
+          "p17",
+          "p15"
+        ],
+        "B": [
+          "p18",
+          "p16",
+          "p20"
+        ]
+      },
+      "players": [
+        "Deepak",
+        "Archit",
+        "Gaurang",
+        "Sai",
+        "Ranjith",
+        "Leo"
+      ],
+      "champion": null,
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p19",
+          "p2": "p17",
+          "s1": 15,
+          "s2": 21,
+          "done": true,
+          "group": "A",
+          "updatedAt": 1782225239769
+        },
+        {
+          "id": 1,
+          "p1": "p18",
+          "p2": "p16",
+          "s1": 15,
+          "s2": 21,
+          "done": true,
+          "group": "B",
+          "updatedAt": 1782225269913
+        },
+        {
+          "id": 2,
+          "p1": "p19",
+          "p2": "p15",
+          "s1": 11,
+          "s2": 21,
+          "done": true,
+          "group": "A",
+          "updatedAt": 1782227255626
+        },
+        {
+          "id": 3,
+          "p1": "p18",
+          "p2": "p20",
+          "s1": 1,
+          "s2": 0,
+          "done": true,
+          "group": "B",
+          "updatedAt": 1782225336065
+        },
+        {
+          "id": 4,
+          "p1": "p17",
+          "p2": "p15",
+          "s1": 5,
+          "s2": 21,
+          "done": true,
+          "group": "A",
+          "updatedAt": 1782225233548
+        },
+        {
+          "id": 5,
+          "p1": "p16",
+          "p2": "p20",
+          "s1": 1,
+          "s2": 0,
+          "done": true,
+          "group": "B",
+          "updatedAt": 1782225344076
+        }
+      ],
+      "knockout": [
+        {
+          "id": "sf1",
+          "p1": "p15",
+          "p2": "p18",
+          "s1": 21,
+          "s2": 14,
+          "done": true,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": "p15",
+          "updatedAt": 1782227490137
+        },
+        {
+          "id": "sf2",
+          "p1": "p17",
+          "p2": "p16",
+          "s1": 9,
+          "s2": 21,
+          "done": true,
+          "sets": null,
+          "group": null,
+          "round": "SF",
+          "winner": "p16",
+          "updatedAt": 1782227274562
+        },
+        {
+          "id": "final",
+          "p1": "p15",
+          "p2": "p16",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": null,
+          "round": "Final",
+          "winner": null,
+          "updatedAt": null
+        }
+      ],
+      "runnerUp": null,
+      "_lastSave": 1782242288002,
+      "standings": {
+        "A": [
+          {
+            "id": "p15",
+            "pa": 16,
+            "pd": 26,
+            "pf": 42,
+            "won": 2,
+            "lost": 0,
+            "name": "Deepak",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p17",
+            "pa": 36,
+            "pd": -10,
+            "pf": 26,
+            "won": 1,
+            "lost": 1,
+            "name": "Gaurang",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p19",
+            "pa": 42,
+            "pd": -16,
+            "pf": 26,
+            "won": 0,
+            "lost": 2,
+            "name": "Ranjith",
+            "rank": 3,
+            "played": 2
+          }
+        ],
+        "B": [
+          {
+            "id": "p16",
+            "pa": 15,
+            "pd": 7,
+            "pf": 22,
+            "won": 2,
+            "lost": 0,
+            "name": "Archit",
+            "rank": 1,
+            "played": 2
+          },
+          {
+            "id": "p18",
+            "pa": 21,
+            "pd": -5,
+            "pf": 16,
+            "won": 1,
+            "lost": 1,
+            "name": "Sai",
+            "rank": 2,
+            "played": 2
+          },
+          {
+            "id": "p20",
+            "pa": 2,
+            "pd": -2,
+            "pf": 0,
+            "won": 0,
+            "lost": 2,
+            "name": "Leo",
+            "rank": 3,
+            "played": 2
+          }
+        ]
+      },
+      "updatedAt": 1782242288002,
+      "qualifiers": [
+        {
+          "id": "p15",
+          "name": "Deepak",
+          "rank": 1,
+          "group": "A"
+        },
+        {
+          "id": "p17",
+          "name": "Gaurang",
+          "rank": 2,
+          "group": "A"
+        },
+        {
+          "id": "p16",
+          "name": "Archit",
+          "rank": 1,
+          "group": "B"
+        },
+        {
+          "id": "p18",
+          "name": "Sai",
+          "rank": 2,
+          "group": "B"
+        }
+      ],
+      "teamMembers": [],
+      "participants": [
+        {
+          "id": "p15",
+          "name": "Deepak",
+          "members": null,
+          "createdAt": 1782128526640
+        },
+        {
+          "id": "p16",
+          "name": "Archit",
+          "members": null,
+          "createdAt": 1782128526640
+        },
+        {
+          "id": "p17",
+          "name": "Gaurang",
+          "members": null,
+          "createdAt": 1782128526640
+        },
+        {
+          "id": "p18",
+          "name": "Sai",
+          "members": null,
+          "createdAt": 1782128526640
+        },
+        {
+          "id": "p19",
+          "name": "Ranjith",
+          "members": null,
+          "createdAt": 1782128526640
+        },
+        {
+          "id": "p20",
+          "name": "Leo",
+          "members": null,
+          "createdAt": 1782128526640
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    },
+    "ddd": {
+      "phase": "groups",
+      "sport": "tableTennis",
+      "format": "singles",
+      "groups": {
+        "A": [
+          "p5",
+          "p4",
+          "p7",
+          "p6"
+        ]
+      },
+      "players": [
+        "Player 1",
+        "Player 2",
+        "Player 3",
+        "Player 4"
+      ],
+      "champion": null,
+      "fixtures": [
+        {
+          "id": 0,
+          "p1": "p5",
+          "p2": "p4",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": 1,
+          "p1": "p5",
+          "p2": "p7",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": 2,
+          "p1": "p5",
+          "p2": "p6",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": 3,
+          "p1": "p4",
+          "p2": "p7",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": 4,
+          "p1": "p4",
+          "p2": "p6",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        },
+        {
+          "id": 5,
+          "p1": "p7",
+          "p2": "p6",
+          "s1": null,
+          "s2": null,
+          "done": false,
+          "sets": null,
+          "group": "A",
+          "round": "group",
+          "winner": null,
+          "updatedAt": null
+        }
+      ],
+      "knockout": [],
+      "runnerUp": null,
+      "_lastSave": 1782157570596,
+      "standings": {},
+      "qualifiers": [],
+      "completedAt": null,
+      "teamMembers": [],
+      "participants": [
+        {
+          "id": "p4",
+          "name": "Player 1",
+          "members": null,
+          "createdAt": 1782157549548
+        },
+        {
+          "id": "p5",
+          "name": "Player 2",
+          "members": null,
+          "createdAt": 1782157549548
+        },
+        {
+          "id": "p6",
+          "name": "Player 3",
+          "members": null,
+          "createdAt": 1782157549548
+        },
+        {
+          "id": "p7",
+          "name": "Player 4",
+          "members": null,
+          "createdAt": 1782157549548
+        }
+      ],
+      "championPhoto": null,
+      "runnerUpPhoto": null
+    }
+  }
+}

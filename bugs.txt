@@ -1,442 +1,361 @@
-Tournament Manager Platform - Product & Technical Roadmap
-Vision
+Remaining Bugs
+Bug 1
 
-Build a lightweight, reusable tournament management platform for apartment communities, clubs, schools, and local events.
+Category Bar Visibility
 
-The platform should support multiple sports while remaining easy to deploy, inexpensive to host, and simple to operate.
+Current:
 
-The system is not intended to be a permanent historical archive.
+renderHomePage()
 
-Data retention goal:
+contains:
 
-Current Year
-Previous Year
+catBar.style.display = 'none'
 
-Older tournament data may be archived or deleted.
+Multiple places still manipulate:
 
-Guiding Principles
-Keep It Simple
+catBar.style.display
 
-Avoid enterprise-level complexity.
+directly.
 
-Preferred stack:
+Risk:
 
-Frontend
-Supabase
-GitHub Pages / Vercel
+Future navigation bugs.
 
-Avoid:
+Recommendation:
 
-Dedicated backend servers
-Complex DevOps
-Heavy infrastructure
-Current Status (V1)
-Completed
-Tournament Management
-Categories
-Singles
-Doubles
-Group Generation
-Fixtures
-Standings
-Knockout Brackets
-Champion Page
-Persistence
-Local Storage
-Supabase Sync
-Security
-Admin Login
-Viewer Mode
-Deployment
-GitHub
-GitHub Pages
-Phase 1 - Stabilization (Current Priority)
-Goal
+Create:
 
-Make badminton tournament management stable and production-ready.
+updateNavigationVisibility()
 
-No new features.
+Single source of truth.
 
-No new sports.
+Priority:
 
-Fixes
-Viewer/Admin Separation
+High
 
-Viewer must never see:
+Bug 2
 
-Edit
-Rename
-Reset
-Add Category
-Delete Category
-Upload Photo
-Import
-Export
-Push to Cloud
-Score Entry Controls
+Navigation State Still Distributed
 
-Viewer should only see:
+Current navigation decisions are spread across:
 
-Groups
-Fixtures
-Standings
-Knockout
-Champion
-Results
-State Management
+renderAll()
 
-Separate:
+renderHomePage()
 
-Tournament State
+showResultsPage()
 
-Example:
+closeResults()
 
-Players
-Teams
-Groups
-Fixtures
-Scores
-Standings
-Knockout
+Risk:
 
-from
+Future regressions.
 
-UI State
+Recommendation:
 
-Example:
+Create:
 
-Current Screen
-Selected Category
-Expanded Panels
-Filters
+navigateTo(view)
 
-Rule:
+and centralize:
 
-Viewer navigation must never modify tournament state.
+AppState.view
+breadcrumb updates
+visibility updates
 
-Supabase Reliability
+Priority:
 
-Make Supabase the primary source of truth.
+High
 
-Flow:
+Bug 3
 
-Admin
-→ Supabase
+AppState.user Object Too Small
 
-Viewer
-← Supabase
-
-Local Storage
-= cache only
-
-Edge Case Testing
-
-Validate:
-
-2 Players
-3 Players
-4 Players
-5 Players
-6 Players
-10 Players
-11 Players
-20 Players
-
-For:
-
-Group Generation
-Qualification
-Knockout Creation
-Champion Determination
-Deliverable
-
-Stable Badminton Tournament Application
-
-Target:
-
-90%+ bug-free operation
-
-Phase 2 - Architecture Cleanup
-Goal
-
-Prepare platform for multiple sports.
-
-Introduce Domain Model
-
-Current model:
-
-Players
-Groups
-Fixtures
-
-Move towards:
-
-Tournament
-Category
-Participant
-Match
-Bracket
-Standings
-
-Example:
+Current:
 
 {
-tournamentId,
-sport,
-format,
-participants,
-matches
+role: "admin"
 }
 
-Separate Layers
-UI Layer
+Future:
 
-Responsible for:
+{
+role: "admin",
+email: "...",
+loggedInAt: ...
+}
 
-Rendering
-Navigation
-Forms
-Engine Layer
+Useful for:
 
-Responsible for:
+audit
+debugging
+future permissions
 
-Group Generation
-Fixture Generation
-Ranking
-Qualification
-Knockout Progression
-Storage Layer
+Priority:
 
-Responsible for:
+Low
 
-Supabase
-Local Cache
-Folder Structure
+Bug 4
 
-src/
+Cloud Save During Category Switch
 
-ui/
+Potential race condition.
 
-engine/
+Scenario:
 
-storage/
+Admin edits category A
 
-models/
+Immediately switches to category B
 
-assets/
+Debounced save fires later
 
-Deliverable
+Potential wrong save target.
 
-Clean architecture ready for multiple sports.
+Recommendation:
 
-Phase 3 - React Migration
-Goal
+When scheduling save:
 
-Improve maintainability.
+Store:
 
-Current HTML + JavaScript solution is acceptable for badminton.
+{
+categoryId,
+snapshot
+}
 
-However, supporting multiple sports will become difficult.
+instead of reading AppState later.
 
-Recommended stack:
+Priority:
 
-React
-Vite
-Supabase
+Medium
 
-Not required immediately.
+Architecture Improvements
+Create Navigation Service
 
-Do only after Phase 1 and Phase 2 are complete.
+Current:
 
-Benefits
-Component Reuse
+Many functions directly modify:
+
+AppState.view
+
+Future:
+
+navigateTo()
 
 Examples:
 
-Standings Table
-Match Card
-Bracket
-Champion Card
+navigateToHome()
 
-Reusable across all sports.
+navigateToEvent()
 
-Easier Maintenance
+navigateToCategory()
 
-Instead of:
+Benefits:
 
-2000+ line files
+easier debugging
+consistent rendering
+fewer edge cases
 
-Use:
+Priority:
 
-Small components
+High
 
-Better AI Assistance
+Create Visibility Service
 
-Modern AI tools generate React code more effectively than large vanilla JavaScript applications.
+Current:
 
-Deliverable
+Many places manipulate:
 
-Tournament Manager V2 Frontend
+style.display
 
-Phase 4 - Multi-Sport Support
-Goal
+directly.
 
-Support additional sports using the same engine.
+Future:
 
-Sports to Add
-Easy
-Table Tennis
-Tennis
-Chess
-Carrom
+updateNavigationVisibility()
 
-Mostly reuse existing logic.
+Controls:
 
-Medium
-Volleyball
-Football
-Basketball
+event bar
+sport bar
+category bar
+breadcrumb
+action bar
 
-Need team scoring models.
+Priority:
 
-Later
-Cricket
+High
 
-Requires different tournament and scoring models.
+State Key Management
 
-Sport Configuration
+Good improvement:
+
+getStateKey()
+
+exists.
+
+Continue using it everywhere.
+
+Never construct:
+
+btm_state_
+
+manually.
+
+Priority:
+
+High
+
+UX Improvements
+Breadcrumb Enhancement
+
+Current:
+
+Breadcrumb exists.
+
+Future:
+
+Make entire breadcrumb clickable.
 
 Example:
 
-{
-sport: "badminton",
-type: "singles",
-maxSets: 3,
-rankingRules: [...]
-}
+Home > Event > Sport > Category
 
-No hardcoded sport logic inside UI.
+Each segment navigates.
 
-Deliverable
+Priority:
 
-Reusable Sports Platform
+High
 
-Phase 5 - Tournament Operations
-Goal
+Category Status
 
-Improve tournament day experience.
+Show:
 
-Features
-Match Queue
+⚪ Not Started
 
-Determine next match automatically.
+🟢 In Progress
 
-Rules:
+🏆 Completed
 
-Alternate groups
-Avoid back-to-back matches for same player
-Prioritize waiting players
-Court Management
+Current category cards lack status visibility.
 
-Assign:
+Priority:
 
-Court 1
-Court 2
-Court 3
+High
 
-Track current matches.
+Participant Count
 
-Live Scoreboard
+Show:
 
-Public display mode.
+Senior Doubles
 
-Large screen TV support.
+12 Teams
 
-Mobile-Friendly View
+🟢 In Progress
 
-Optimized for:
+Useful on dashboard.
 
-Scorers
-Referees
-Organizers
-Deliverable
+Priority:
 
-Event-Day Operations Platform
+Medium
 
-Phase 6 - Community Platform
-Goal
+Viewer Mode Banner
 
-Support repeated tournaments.
+Current viewer/admin distinction works.
 
-Retention Policy
+Improve visibility.
 
-Maintain:
+Example:
 
-Current Year
-Previous Year
+👁 Viewer Mode
 
-Archive or purge older data.
+or
 
-Optional Features
-Hall of Fame
-Previous Champions
-Tournament Calendar
-Season Statistics
+🔧 Admin Mode
 
-Not mandatory.
+at top.
 
-Recommended Technology Roadmap
-Today
+Priority:
 
-GitHub Pages
-+
-Supabase
-+
-Vanilla JS
+Medium
 
-After Stabilization
+Multi-Sport Readiness
 
-GitHub Pages
-+
-Supabase
-+
-Modular JavaScript
+Current readiness:
 
-Long-Term
+Badminton 100%
+Table Tennis 95%
+Chess 90%
+Carrom 85%
 
-React
-+
-Vite
-+
-Supabase
+Excellent progress.
 
-What Not To Do
+Recommendation:
 
-Do not add:
+Add Table Tennis next.
 
-Multiple sports
-Player statistics
-Historical analytics
-Notifications
-WhatsApp integration
-Referee management
+This is the best architecture validation test.
 
-until Phase 1 is complete.
+Testing Gaps
 
-Every new feature before stabilization increases bug count and slows progress.
+Must still test:
 
-Success Criteria
+2 participants
+3 participants
+5 participants
+6 participants
+10 participants
+11 participants
+20 participants
 
-A successful V1 platform should allow:
+Validate:
 
-2-20 Players/Teams
-Singles and Doubles
-Group Stage
-Standings
+Group generation
 Qualification
-SF / QF / Final
-Champion Declaration
-Admin Management
-Viewer Access
+Knockout
+Champion
 
-with minimal manual intervention and reliable synchronization across devices.
+Priority:
+
+High
+
+Recommended Next Sprint
+
+Priority 1
+
+Create:
+
+updateNavigationVisibility()
+
+Priority 2
+
+Create:
+
+navigateTo()
+
+Priority 3
+
+Add category status badges.
+
+Priority 4
+
+Add participant counts.
+
+Priority 5
+
+Officially support Table Tennis.
+
+Final Verdict
+
+Architecture: 9.2/10
+
+Maintainability: 9/10
+
+Multi-Sport Readiness: 9/10
+
+UX: 8/10
+
+Production Readiness: 8.5/10
+
+Overall: 9/10
+
+This is the first version where I would stop doing architectural refactoring and start focusing on UX polish, testing, and adding the second sport.

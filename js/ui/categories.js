@@ -117,7 +117,6 @@ function renameEvent(oldName) {
   var panel = document.getElementById('managePanel');
   if (panel && !panel.classList.contains('hidden')) {
     renderManagePanel();
-    populateEventDropdown('newCatEvent', AppState.event);
   }
   if (AppState.category) {
     const s = localLoad(AppState.category);
@@ -162,6 +161,7 @@ function addTemplateToCurrentEvent() {
     ev.templateIds.push(tmpl.id);
     saveEvents(getEvents());
   }
+  if (_supabase) syncMetadataToCloud();
   document.getElementById('newTemplateLabel').value = '';
   document.getElementById('eventTemplateError').textContent = '';
   renderEventPage();
@@ -174,6 +174,7 @@ function removeTemplateFromCurrentEvent(templateId) {
   if (!ev) return;
   ev.templateIds = ev.templateIds.filter(function(id) { return id !== templateId; });
   saveEvents(events);
+  if (_supabase) syncMetadataToCloud();
   renderEventPage();
 }
 
@@ -183,6 +184,7 @@ function createEventFromHome() {
   if (!name || !name.trim()) return;
   const ev = createEvent(name.trim());
   if (!ev) { alert('Event already exists.'); return; }
+  if (_supabase) syncMetadataToCloud();
   AppState.event = ev.name;
   renderHomePage();
   goToEventPage(AppState.event);
@@ -290,11 +292,46 @@ function toggleManagePanel() {
   panel.classList.toggle('hidden');
   if (!panel.classList.contains('hidden')) {
     renderManagePanel();
-    populateEventDropdown('newCatEvent', AppState.event);
   }
 }
 
+// ===================== SETTINGS =====================
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('btm_settings');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { darkMode: false };
+}
+
+function saveSettings(settings) {
+  try { localStorage.setItem('btm_settings', JSON.stringify(settings)); } catch(e) {}
+}
+
+function toggleDarkMode() {
+  const settings = loadSettings();
+  settings.darkMode = !settings.darkMode;
+  saveSettings(settings);
+  document.body.classList.toggle('dark-mode', settings.darkMode);
+  renderSettings();
+}
+
+function renderSettings() {
+  const section = document.getElementById('settingsSection');
+  if (!section) return;
+  section.classList.remove('hidden');
+  const settings = loadSettings();
+  const container = document.getElementById('settingsContent');
+  container.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">'
+    + '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">'
+    + '<input type="checkbox" onchange="toggleDarkMode()"' + (settings.darkMode ? ' checked' : '') + '>'
+    + ' <span>Dark Mode</span>'
+    + '</label>'
+    + '</div>';
+}
+
 function renderManagePanel() {
+  renderSettings();
   const container = document.getElementById('manageCategoryList');
   if (!container) return;
   const cats = getCategories();
@@ -461,33 +498,6 @@ function populateEventDropdown(selectId, selectedEvent) {
   };
 }
 
-function addCategoryFromUI() {
-  if (!isAdmin()) return;
-  const nameInput = document.getElementById('newCatName');
-  const typeSelect = document.getElementById('newCatType');
-  const sportSelect = document.getElementById('newCatSport');
-  const eventSelect = document.getElementById('newCatEvent');
-  const errSpan = document.getElementById('manageError');
-  const label = nameInput.value.trim();
-  if (!label) { errSpan.textContent = 'Name is required.'; return; }
-  const cats = getCategories();
-  if (cats.find(c => c.label.toLowerCase() === label.toLowerCase())) {
-    errSpan.textContent = 'A category with this name already exists.';
-    return;
-  }
-  errSpan.textContent = '';
-  var ev = eventSelect.value;
-  if (ev === '__new__') {
-    ev = document.getElementById('newCatEventCustom').value.trim();
-    if (!ev) { errSpan.textContent = 'Enter a name for the new event.'; return; }
-  }
-  addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton', ev);
-  nameInput.value = '';
-  document.getElementById('newCatEventCustom').value = '';
-  document.getElementById('newCatEventCustom').classList.add('hidden');
-  eventSelect.value = AppState.event;
-}
-
 function addCategory(label, type, sport, eventName) {
   if (!isAdmin()) return;
   const cats = getCategories();
@@ -568,6 +578,7 @@ function exportAll() {
 async function pushAllToCloud() {
   if (!isAdmin()) return;
   if (!_supabase) { alert('Supabase not connected.'); return; }
+  await syncMetadataToCloud();
   const cats = getCategories();
   let pushed = 0, failed = 0;
   for (const c of cats) {
@@ -577,7 +588,7 @@ async function pushAllToCloud() {
     if (error) { failed++; console.warn('Failed to push ' + c.label + ':', error.message); }
     else pushed++;
   }
-  alert('Pushed ' + pushed + ' categories to cloud.' + (failed ? ' ' + failed + ' failed.' : ''));
+  alert('Synced metadata + ' + pushed + ' tournament states to cloud.' + (failed ? ' ' + failed + ' failed.' : ''));
 }
 
 let _pendingImportData = null;
@@ -648,3 +659,7 @@ function confirmImport() {
   navigateTo(AppState.tournament.phase);
   if (!document.getElementById('managePanel').classList.contains('hidden')) renderManagePanel();
 }
+
+// Init settings
+const _settings = loadSettings();
+if (_settings.darkMode) document.body.classList.add('dark-mode');

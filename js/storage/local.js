@@ -25,7 +25,7 @@ function localClear(catId) {
 function getCategories() {
   const templates = getTemplates();
   const events = getEvents();
-  if (templates.length && events.length) {
+  if (templates.length || events.length) {
     const result = [];
     for (const ev of events) {
       for (const tmplId of ev.templateIds) {
@@ -35,7 +35,7 @@ function getCategories() {
         }
       }
     }
-    if (result.length > 0) return result;
+    return result;
   }
   saveCategories(FACTORY_CATEGORIES);
   return [...FACTORY_CATEGORIES];

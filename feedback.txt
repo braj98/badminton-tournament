@@ -1,348 +1,482 @@
-ournament Manager - Current Assessment & Next Steps
-Overall Status
+# Tournament Manager VNext - Event, Competition Template & Tournament Model
 
-The project has successfully evolved from a badminton application into a reusable tournament platform.
+## Objective
 
-Current estimated completion:
+Separate:
 
-Core Tournament Engine
+1. Reusable Definitions
+2. Event Configuration
+3. Tournament Data
 
-85%
+This will make the platform easier to manage as more sports and tournaments are added.
 
-Completed:
+---
 
-Group Allocation
-Fixtures
-Standings
-Qualification
-Knockout
-Champion
-Architecture
+# Current Model
 
-80%
-
-Completed:
-
-Models
-Engine
-Storage
-UI separation
-Sport configuration
-
-Remaining:
-
-Event model
-AppState cleanup
-Removal of global variables
-User Experience
-
-65%
-
-This is now the biggest improvement area.
-
-The application works.
-
-The navigation model still feels technical rather than user-focused.
-
-High Priority Bugs
-Bug 1
-
-Category Tabs Not Visible
-
-Likely Cause:
-
-Home page hides:
-
-catBar
-
-but it is not explicitly restored when leaving home mode.
-
-Action:
-
-Ensure:
-
-catBar.style.display = ''
-
-whenever:
-
-renderAll()
-
-shows tournament screens.
-
-Bug 2
-
-Navigation State
-
-Current concepts:
-
-state.phase
-currentView
-
-are much better than before.
-
-Still verify:
-
-Viewer navigation never updates tournament state.
-
-Bug 3
-
-Results / Champion Navigation
-
-Validate:
-
-Groups
-→ Fixtures
-→ Knockout
-→ Champion
-
-can always be viewed by both:
-
-Admin
-Viewer
-
-without modifying tournament progress.
-
-UX Improvement Roadmap
-Current UX
+Current structure:
 
 Event
-↓
-Sport
-↓
-Category Tabs
-↓
-Tournament
-
-Works.
-
-Not yet intuitive.
-
-Recommended UX
-Home
-
-🏆 Tournament Manager
-
-Events
-
-Summer Games 2026
-Winter Games 2026
-Event Page
-
-Summer Games 2026
-
-Sports
-
-🏸 Badminton
-
-🏓 Table Tennis
-
-♟ Chess
-
-Sport Page
-
-Badminton
-
-Categories
-
-Junior Singles
-Senior Singles
-Senior Doubles
-Tournament Page
-
-Tabs:
-
-Groups
-Fixtures
-Knockout
-Champion
-
-Benefits
-
-Users always know:
-
-Where they are
-
-and
-
-How to navigate.
-
-Data Model Improvements
-Current
-
-Category
-
-Examples:
-
-Senior Singles
-Senior Doubles
-Future
-
-Event
-→ Sport
 → Category
 → Tournament
 
 Example:
 
-Summer Games 2026
+BREN AVALON SPORTS MEET 2026
+
+* Junior
+* Junior Doubles
+* Senior Boys
+* Senior Girls
+* Senior Doubles
+
+Problem:
+
+Categories are tied to a specific event.
+
+If a new event is created:
+
+Summer Games 2027
+
+the same categories need to be recreated.
+
+This creates duplication.
+
+---
+
+# Proposed Model
+
+Introduce three layers:
+
+Competition Template
+→ Event
+→ Tournament Instance
+
+---
+
+# Layer 1 - Competition Templates
+
+Competition Templates are reusable definitions.
+
+Examples:
 
 Badminton
 
-Men's Singles
-Women's Singles
-Doubles
+* Junior Singles
+* Junior Doubles
+* Senior Boys
+* Senior Girls
+* Senior Doubles
+* Adults Singles
+* Adults Doubles
 
 Table Tennis
 
-Open Singles
+* Open Singles
+* Open Doubles
 
 Chess
 
-Open
+* Open Category
 
-Benefits
+These templates are created once and reused forever.
 
-Supports multiple sports naturally.
+---
 
-Sports Roadmap
+## Competition Template Example
+
+```json
+{
+  "id": "junior_singles",
+  "name": "Junior Singles",
+  "sport": "badminton",
+  "type": "singles"
+}
+```
+
+Another example:
+
+```json
+{
+  "id": "tt_open",
+  "name": "Open Singles",
+  "sport": "tableTennis",
+  "type": "singles"
+}
+```
+
+---
+
+# Layer 2 - Events
+
+Events represent actual tournaments being organized.
+
+Examples:
+
+* BREN AVALON SPORTS MEET 2026
+* Summer Games 2027
+* Winter Games 2027
+
+Events do not define categories.
+
+Events only reference templates.
+
+---
+
+## Event Example
+
+```json
+{
+  "id": "sports_meet_2026",
+  "name": "BREN AVALON SPORTS MEET 2026",
+
+  "competitionIds": [
+    "junior_singles",
+    "junior_doubles",
+    "senior_boys",
+    "senior_girls"
+  ]
+}
+```
+
+---
+
+# Layer 3 - Tournament Instance
+
+Tournament Instance contains actual runtime data.
+
+Examples:
+
+* Players
+* Fixtures
+* Standings
+* Knockout
+* Champion
+
+This is what changes during tournament execution.
+
+---
+
+## Tournament Instance Example
+
+```json
+{
+  "eventId": "sports_meet_2026",
+  "competitionId": "junior_singles",
+
+  "state": {
+    "players": [],
+    "groups": [],
+    "fixtures": [],
+    "knockout": {}
+  }
+}
+```
+
+---
+
+# Benefits
+
+## Reusability
+
+Create category once.
+
+Reuse across multiple events.
+
+Example:
+
+Junior Singles
+
+can be used in:
+
+* Sports Meet 2026
+* Sports Meet 2027
+* Summer Games 2027
+
+without recreation.
+
+---
+
+## Easier Maintenance
+
+Rules exist in one place.
+
+If format changes:
+
+Example:
+
+Junior Singles
+
+changes from:
+
+Top 2 qualify
+
+to:
+
+Top 4 qualify
+
+Only template changes.
+
+---
+
+## Multi-Sport Ready
+
+Supports:
+
+* Badminton
+* Table Tennis
+* Chess
+* Carrom
+
+without architecture changes.
+
+---
+
+# Proposed Manage Screen
+
+## Current
+
+Manage
+
+* Import
+* Export
+* Cloud Sync
+* Categories
+
+---
+
+## Proposed
+
+Manage
+
+### Events
+
+* Create Event
+* Edit Event
+* Select Active Event
+* Delete Event
+
+---
+
+### Competition Templates
+
+* Create Template
+* Edit Template
+* Delete Template
+
+Examples:
+
+* Junior Singles
+* Senior Boys
+* Adults Doubles
+* TT Open Singles
+
+---
+
+### Import / Export
+
+* Export Event
+* Export Templates
+* Import Event
+* Import Templates
+
+---
+
+### Cloud Sync
+
+* Sync Now
+* View Sync Status
+
+---
+
+### Settings
+
+* Theme
+* Retention Period
+* Application Settings
+
+---
+
+# Event Configuration Screen
+
+When creating an event:
+
+Example:
+
+BREN AVALON SPORTS MEET 2027
+
+Select Competitions:
+
+☑ Junior Singles
+
+☑ Junior Doubles
+
+☑ Senior Boys
+
+☑ Senior Girls
+
+☐ Adults Singles
+
+☐ Adults Doubles
+
+☐ TT Open Singles
+
+Save
+
+---
+
+# Navigation Model
+
+Home
+
+↓
+
+Event
+
+↓
+
+Sport
+
+↓
+
+Competition
+
+↓
+
+Tournament
+
+---
+
+## Example
+
+Home
+
+↓
+
+BREN AVALON SPORTS MEET 2026
+
+↓
+
+🏸 Badminton
+
+↓
+
+Senior Doubles
+
+↓
+
+Groups / Fixtures / Knockout / Champion
+
+---
+
+# Database Design
+
+## competition_templates
+
+```json
+{
+  "id": "",
+  "name": "",
+  "sport": "",
+  "type": ""
+}
+```
+
+---
+
+## events
+
+```json
+{
+  "id": "",
+  "name": "",
+  "competitionIds": []
+}
+```
+
+---
+
+## tournament_state
+
+```json
+{
+  "eventId": "",
+  "competitionId": "",
+  "data": {}
+}
+```
+
+Key:
+
+eventId + competitionId
+
+---
+
+# Migration Strategy
+
 Phase 1
 
-Complete
+Keep existing categories.
 
-Badminton Singles
-Badminton Doubles
+Internally rename:
+
+Category
+
+to
+
+Competition Template
+
+No UI change.
+
+---
+
 Phase 2
 
-Add
+Add Event Management.
 
-Table Tennis Singles
-Tennis Singles
+Allow event to reference templates.
 
-Expected effort:
+---
 
-Low
-
-Reuse:
-
-Groups
-Standings
-Knockout
 Phase 3
 
-Add
+Update navigation:
 
-Chess
-Carrom
+Event
+→ Sport
+→ Competition
 
-Expected effort:
-
-Low
-
-Mostly scoring differences.
+---
 
 Phase 4
 
-Add Team Sports
+Add additional sports:
 
-Football
-Volleyball
-Basketball
+* Table Tennis
+* Chess
+* Carrom
 
-Expected effort:
+---
 
-Medium
+# Recommendation
 
-Requires:
-
-Team model
-Team standings
-Phase 5
-
-Cricket
-
-Recommendation:
-
-Separate module.
-
-Do not force cricket into the same scoring engine.
-
-Architecture Improvements
-Introduce AppState
+Do not make Event a property of Category.
 
 Current:
 
-Global variables
-
-state
-currentCategory
-currentSport
-currentEvent
-currentView
+Category
+{
+event
+}
 
 Future:
 
-AppState
-
+Event
 {
-user,
-currentEvent,
-currentSport,
-currentCategory,
-currentView,
-tournament
+competitionIds
 }
 
-Benefits:
+This keeps categories reusable and prevents duplication.
 
-Easier debugging
-Easier testing
-Easier future React migration
-Features To Avoid For Now
+The platform should treat Events as organizers of competitions, while Competition Templates define the reusable rules and structure.
 
-Do NOT add:
-
-Notifications
-WhatsApp integration
-Historical analytics
-Player rankings
-Advanced statistics
-
-until UX and navigation are stable.
-
-Recommended Next Sprint
-
-Priority 1
-
-Fix navigation completely.
-
-Priority 2
-
-Fix category visibility issue.
-
-Priority 3
-
-Introduce Event → Sport → Category hierarchy.
-
-Priority 4
-
-Add Table Tennis.
-
-Priority 5
-
-Add Chess.
-
-Only after those are complete should larger enhancements be considered.
-
-Final Recommendation
-
-The platform is no longer a prototype.
-
-It is approaching a reusable tournament management product.
-
-The next major gains will come from:
-
-UX simplification
-Navigation improvements
-Better hierarchy
-
-not from adding more tournament logic.
