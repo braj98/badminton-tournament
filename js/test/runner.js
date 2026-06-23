@@ -125,6 +125,20 @@ function makePlayers(n) {
   return Array.from({ length: n }, (_, i) => 'P' + String(i + 1));
 }
 
+function fillGroupScores(groups, fixtures) {
+  for (const f of fixtures) {
+    f.s1 = 13;
+    f.s2 = Math.floor(Math.random() * 11);
+    f.done = true;
+  }
+  for (const f of fixtures) {
+    if (f.s1 === f.s2) {
+      f.s1 = 13;
+      f.s2 = 10;
+    }
+  }
+}
+
 function testPlayerCount(n) {
   console.log('\n=== Testing ' + n + ' players ===');
 
@@ -173,6 +187,91 @@ function testPlayerCount(n) {
     pairSet.add(key);
   }
   assert(pairsComplete, 'All head-to-head pairs covered');
+
+  // 4. Fill scores & calculateStandings (Qualification)
+  fillGroupScores(groups, fixtures);
+  const result = context.calculateStandings(groups, fixtures);
+  const standingsKeys = Object.keys(result.standings);
+  assert(standingsKeys.length === groupCount, 'Standings computed for ' + standingsKeys.length + ' groups');
+
+  for (const k of standingsKeys) {
+    const st = result.standings[k];
+    assert(st.length === groups[k].length, 'Group ' + k + ' standings has ' + st.length + ' entries (expected ' + groups[k].length + ')');
+    for (let i = 0; i < st.length; i++) {
+      assert(st[i].rank === i + 1, 'Group ' + k + ' player ' + st[i].name + ' rank=' + st[i].rank);
+    }
+    for (let i = 0; i < st.length - 1; i++) {
+      if (st[i].won < st[i + 1].won) {
+        assert(false, 'Group ' + k + ' sorting error: rank ' + (i + 1) + ' won=' + st[i].won + ' < rank ' + (i + 2) + ' won=' + st[i + 1].won);
+      } else if (st[i].won === st[i + 1].won && st[i].pd < st[i + 1].pd) {
+        assert(false, 'Group ' + k + ' sorting error: same wins but pd ' + st[i].pd + ' < ' + st[i + 1].pd);
+      }
+    }
+  }
+
+  // 5. Qualifiers
+  const qualifiers = result.qualifiers;
+  assert(qualifiers.length === groupCount * 2, 'Qualifiers count = ' + qualifiers.length + ' (expected ' + (groupCount * 2) + ')');
+
+  for (const k of groupKeys) {
+    const qInGroup = qualifiers.filter(q => q.group === k);
+    assert(qInGroup.length === 2, 'Group ' + k + ' has ' + qInGroup.length + ' qualifiers (expected 2)');
+    const rank1 = qInGroup.find(q => q.rank === 1);
+    const rank2 = qInGroup.find(q => q.rank === 2);
+    assert(!!rank1 && !!rank2, 'Group ' + k + ' qualifiers include rank 1 and 2');
+  }
+
+  // 6. generateKnockout
+  const knockout = context.generateKnockout(qualifiers);
+  if (n <= 1) {
+    assert(knockout.length === 0, 'Empty knockout for ' + n + ' players');
+  } else {
+    let totalExpected = 0;
+    let m = qualifiers.length;
+    while (m >= 2) {
+      totalExpected += m / 2;
+      m = m / 2;
+    }
+    assert(knockout.length === totalExpected, 'Knockout has ' + knockout.length + ' matches (expected ' + totalExpected + ')');
+
+    const rounds = [...new Set(knockout.map(m => m.round))];
+    if (totalExpected === 1) {
+      assert(rounds[0] === 'Final', 'Knockout round = ' + rounds[0] + ' (expected Final)');
+    } else if (totalExpected === 3) {
+      assert(rounds.includes('SF') && rounds.includes('Final'), 'Knockout has SF and Final rounds');
+    } else if (totalExpected === 7) {
+      assert(rounds.includes('QF') && rounds.includes('SF') && rounds.includes('Final'), 'Knockout has QF, SF, Final rounds');
+    }
+
+    // 7. advanceKnockout - simulate full tournament progression
+    let ko = knockout.map(m => ({ ...m }));
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const m of ko) {
+        if (m.p1 && m.p2 && !m.done) {
+          m.s1 = 11;
+          m.s2 = Math.floor(Math.random() * 9);
+          m.done = true;
+          m.winner = m.s1 > m.s2 ? m.p1 : m.p2;
+          changed = true;
+        }
+      }
+      if (changed) ko = context.advanceKnockout(ko);
+    }
+    assert(ko.length === knockout.length, 'Advanced knockout length unchanged');
+
+    const finalMatch = ko.find(m => m.round === 'Final');
+    assert(finalMatch.p1 !== null && finalMatch.p2 !== null,
+      'Final has both participants (p1=' + finalMatch.p1 + ', p2=' + finalMatch.p2 + ')');
+
+    // 8. Determine champion
+    const champion = finalMatch.winner;
+    assert(champion !== null, 'Champion determined: ' + champion);
+    const runnerUp = champion === finalMatch.p1 ? finalMatch.p2 : finalMatch.p1;
+    assert(runnerUp !== null, 'Runner-up determined: ' + runnerUp);
+    assert(champion !== runnerUp, 'Champion and runner-up are different');
+  }
 }
 
 // Run tests for different player counts

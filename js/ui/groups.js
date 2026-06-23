@@ -7,7 +7,7 @@ function renderGroups() {
   container.innerHTML = '';
   const tm = AppState.tournament.teamMembers || [];
   const groupKeys = Object.keys(AppState.tournament.groups);
-  if (!AppState.isAdmin) _editMode = false;
+  if (!isAdmin()) _editMode = false;
   for (const key of groupKeys) {
     const card = document.createElement('div');
     card.className = 'group-card';
@@ -37,7 +37,7 @@ function renderGroups() {
 }
 
 function movePlayerToGroup(playerIdx, targetGroup) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const playerId = AppState.tournament.participants ? AppState.tournament.participants[playerIdx].id : AppState.tournament.players[playerIdx];
   if (!playerId) return;
   let currentGroup = null;
@@ -71,7 +71,7 @@ function movePlayerToGroup(playerIdx, targetGroup) {
 }
 
 function toggleEditMode() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   _editMode = !_editMode;
   const btn = document.getElementById('editToggleBtn');
   if (_editMode) {
@@ -87,7 +87,7 @@ function toggleEditMode() {
 }
 
 function promptRename(playerIdx) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const oldName = AppState.tournament.participants ? AppState.tournament.participants[playerIdx].name : AppState.tournament.players[playerIdx];
   const newName = prompt('Rename "' + oldName + '":', oldName);
   if (newName && newName.trim() && newName.trim() !== oldName) {
@@ -102,7 +102,7 @@ function promptRename(playerIdx) {
 }
 
 function renamePlayer(playerIdx, newName) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   if (AppState.tournament.participants) {
     AppState.tournament.participants[playerIdx].name = newName;
     AppState.tournament.players[playerIdx] = newName;

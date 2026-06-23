@@ -12,7 +12,7 @@ function viewChampion() {
 }
 
 function showResults() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const final = AppState.tournament.knockout.find(m => m.id === 'final');
   if (!final || !final.done) return;
   AppState.tournament.champion = final.winner;
@@ -24,7 +24,7 @@ function showResults() {
 }
 
 function showNewTournamentConfirm() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const box = document.getElementById('newTournamentConfirmBox');
   box.classList.toggle('hidden');
   document.getElementById('newTournamentConfirmInput').value = '';
@@ -32,7 +32,7 @@ function showNewTournamentConfirm() {
 }
 
 function confirmNewTournament() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('newTournamentConfirmInput');
   if (input.value !== 'RESET') {
     document.getElementById('newTournamentConfirmError').textContent = 'Please type RESET to confirm.';
@@ -43,10 +43,10 @@ function confirmNewTournament() {
 }
 
 function newTournament() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   localClear(AppState.category);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', 'btm_state_' + AppState.category).then().catch(() => {});
+    _supabase.from('state').delete().eq('key', getStateKey(AppState.category)).then().catch(() => {});
   }
   AppState.tournament = defaultState();
   AppState.view = AppState.tournament.phase;
@@ -80,13 +80,13 @@ function showPhoto(which, dataUrl) {
 }
 
 function pickPhoto(which) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   photoTarget = which;
   document.getElementById('photoInput').click();
 }
 
 function onPhotoPicked(event) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();

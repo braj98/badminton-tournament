@@ -21,7 +21,7 @@ function migrateCategorySports() {
 function updateBanners() {
   const ab = document.getElementById('adminBanner');
   if (ab) {
-    if (AppState.isAdmin) ab.classList.remove('hidden');
+    if (isAdmin()) ab.classList.remove('hidden');
     else ab.classList.add('hidden');
   }
 }
@@ -148,7 +148,7 @@ function renderCategoryBar() {
 
 // ===================== RESET =====================
 function showResetConfirm() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const box = document.getElementById('resetConfirmBox');
   if (!box) return;
   box.style.display = '';
@@ -158,7 +158,7 @@ function showResetConfirm() {
 }
 
 function executeReset() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('resetConfirmInput');
   if (input.value !== 'RESET') {
     document.getElementById('resetError').textContent = 'Please type RESET to confirm.';
@@ -169,10 +169,10 @@ function executeReset() {
 }
 
 function resetCategory(catId) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   localClear(catId);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', 'btm_state_' + catId).then().catch(() => {});
+    _supabase.from('state').delete().eq('key', getStateKey(catId)).then().catch(() => {});
   }
   if (AppState.category === catId) {
     AppState.tournament = defaultState();
@@ -187,7 +187,7 @@ function resetCategory(catId) {
 
 // ===================== MANAGE PANEL =====================
 function toggleManagePanel() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const panel = document.getElementById('managePanel');
   panel.classList.toggle('hidden');
   if (!panel.classList.contains('hidden')) renderManagePanel();
@@ -242,7 +242,7 @@ function toggleManageReset(catId) {
 }
 
 function executeManageReset(catId) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('manageResetInput_' + catId);
   if (!input || input.value !== 'RESET') return;
   resetCategory(catId);
@@ -257,14 +257,14 @@ function toggleDeleteConfirm(catId) {
 }
 
 function executeDeleteConfirm(catId) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('manageDeleteInput_' + catId);
   if (!input || input.value !== 'DELETE') return;
   deleteCategory(catId);
 }
 
 function addCategoryFromUI() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const nameInput = document.getElementById('newCatName');
   const typeSelect = document.getElementById('newCatType');
   const sportSelect = document.getElementById('newCatSport');
@@ -285,7 +285,7 @@ function addCategoryFromUI() {
 }
 
 function addCategory(label, type, sport, eventName) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const cats = getCategories();
   const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'cat';
   let id = baseId;
@@ -307,7 +307,7 @@ function addCategory(label, type, sport, eventName) {
 }
 
 function deleteCategory(id) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const cats = getCategories();
   if (cats.length <= 1) return;
   const saved = localLoad(id);
@@ -316,7 +316,7 @@ function deleteCategory(id) {
   saveCategories(filtered);
   localClear(id);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', 'btm_state_' + id).then().catch(() => {});
+    _supabase.from('state').delete().eq('key', getStateKey(id)).then().catch(() => {});
     upsertCategories(filtered);
   }
   if (AppState.category === id) {
@@ -363,14 +363,14 @@ function exportAll() {
 }
 
 async function pushAllToCloud() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   if (!_supabase) { alert('Supabase not connected.'); return; }
   const cats = getCategories();
   let pushed = 0, failed = 0;
   for (const c of cats) {
     const s = localLoad(c.id);
     if (!s) continue;
-    const { error } = await _supabase.from('state').upsert({ key: 'btm_state_' + c.id, data: s }, { onConflict: 'key' });
+    const { error } = await _supabase.from('state').upsert({ key: getStateKey(c.id), data: s }, { onConflict: 'key' });
     if (error) { failed++; console.warn('Failed to push ' + c.label + ':', error.message); }
     else pushed++;
   }
@@ -420,7 +420,7 @@ function cancelImport() {
 }
 
 function confirmImport() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('importConfirmInput');
   const errEl = document.getElementById('importConfirmError');
   if (input.value !== 'IMPORT') { errEl.textContent = 'Please type IMPORT to confirm.'; return; }
@@ -432,7 +432,7 @@ function confirmImport() {
   saveCategories(data.categories);
   if (_supabase) upsertCategories(data.categories);
   for (const id of Object.keys(data.states)) {
-    try { localStorage.setItem('btm_state_' + id, JSON.stringify(data.states[id])); } catch(e) {}
+    try { localStorage.setItem(getStateKey(id), JSON.stringify(data.states[id])); } catch(e) {}
     if (_supabase) upsertState(id, data.states[id]);
   }
   const saved = localLoad(AppState.category);

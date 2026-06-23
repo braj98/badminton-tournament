@@ -7,7 +7,7 @@ function getEvents() {
 }
 
 function deleteEvent(eventName) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const cats = getCategories();
   const eventCats = cats.filter(c => (c.event || APP_CONFIG.defaultEvent) === eventName);
   for (const c of eventCats) {
@@ -20,7 +20,7 @@ function deleteEvent(eventName) {
   saveCategories(remaining);
   if (_supabase) {
     for (const c of eventCats) {
-      _supabase.from('state').delete().eq('key', 'btm_state_' + c.id).then().catch(() => {});
+      _supabase.from('state').delete().eq('key', getStateKey(c.id)).then().catch(() => {});
     }
     upsertCategories(remaining);
   }
@@ -38,7 +38,7 @@ function deleteEvent(eventName) {
 }
 
 function renameEvent(oldName, newName) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const cats = getCategories();
   let changed = false;
   for (const c of cats) {

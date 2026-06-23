@@ -5,7 +5,6 @@ const AppState = {
   category: null,
   view: null,
   tournament: null,
-  isAdmin: false,
   ui: {
     showingResults: false,
     managePanelOpen: false

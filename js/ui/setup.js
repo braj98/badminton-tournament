@@ -59,7 +59,7 @@ function rebuildPlayerInputs(count) {
 }
 
 function onPlayerCountChange() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const cfg = _setupConfig();
   const newCount = parseInt(document.getElementById('playerCount').value) || cfg.minPlayers;
   const clamped = Math.max(cfg.minPlayers, Math.min(cfg.maxPlayers, newCount));
@@ -99,7 +99,7 @@ function showReduceConfirm(newCount, oldCount) {
 }
 
 function confirmReduce() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('reduceConfirmInput');
   if (input.value !== 'REMOVE') {
     document.getElementById('reduceConfirmError').textContent = 'Please type REMOVE to confirm.';
@@ -126,7 +126,7 @@ function showStartConfirm() {
 }
 
 function confirmStart() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const input = document.getElementById('startConfirmInput');
   if (input.value !== 'START') {
     document.getElementById('startConfirmError').textContent = 'Please type START to confirm.';
@@ -137,7 +137,7 @@ function confirmStart() {
 }
 
 function startTournament() {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   if (!AppState.category) { alert('No category selected.'); return; }
   const cat = getCategories().find(c => c.id === AppState.category);
   if (!cat) { alert('Category not found.'); return; }

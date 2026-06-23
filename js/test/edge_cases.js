@@ -653,9 +653,9 @@ function testNavigationFlow() {
   AppState.view = _svView;
 
   // 7. closeResults
-  AppState.showingResults = true;
+  AppState.ui.showingResults = true;
   closeResults();
-  pass &= assert(!AppState.showingResults, 'closeResults() → AppState.showingResults=false');
+  pass &= assert(!AppState.ui.showingResults, 'closeResults() → AppState.ui.showingResults=false');
 
   // 8. goToFixturesFromKnockout
   AppState.view = 'knockout';
@@ -688,9 +688,15 @@ function testBreadcrumb() {
   const _origEvent = AppState.event;
   const _origSport = AppState.sport;
 
-  // Home — breadcrumb hidden
+  // Home — breadcrumb shows "Home" (always visible)
   goHome();
-  pass &= assert(bc.classList.contains('hidden'), 'Home: breadcrumb hidden');
+  pass &= assert(!bc.classList.contains('hidden'), 'Home: breadcrumb visible');
+  if (!bc.classList.contains('hidden')) {
+    var homeHtml = bc.innerHTML;
+    pass &= assert(homeHtml.indexOf('Home') >= 0, 'Home breadcrumb contains Home');
+    pass &= assert(homeHtml.indexOf('bc-item bc-current') >= 0, 'Home breadcrumb has bc-current on Home');
+    pass &= assert(homeHtml.indexOf('›') < 0, 'Home breadcrumb has no separator');
+  }
 
   // Event page — shows "Home › Event"
   goToEventPage('Test Event');

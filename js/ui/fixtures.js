@@ -22,7 +22,7 @@ function renderFixtures() {
       html += '<div class="match-row' + (done ? ' match-done' : '') + '">'
         + '<span class="p-avatar">' + escapeHtml(i1) + '</span>'
         + '<span class="pname' + (done && winner === f.p1 ? ' winner' : '') + '">' + escapeHtml(n1) + '</span>';
-      if (AppState.isAdmin) {
+      if (isAdmin()) {
         var _max = getCurrentConfig().maxScoreInput;
         html += '<input class="score-input" type="number" min="0" max="' + _max + '" value="' + (f.s1 ?? '') + '" '
           + 'onchange="enterFixtureScore(' + f.id + ',this.value,this.parentElement.querySelector(\'.s2\').value)" '
@@ -72,7 +72,7 @@ function renderFixtures() {
 }
 
 function enterFixtureScore(id, s1, s2) {
-  if (!AppState.isAdmin) return;
+  if (!isAdmin()) return;
   const f = AppState.tournament.fixtures.find(m => m.id === id);
   if (!f) return;
   f.s1 = parseInt(s1) || 0;
