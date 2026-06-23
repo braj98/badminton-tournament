@@ -168,9 +168,21 @@ function addTemplateToCurrentEvent() {
   renderEventPage();
 }
 
+function toggleConfirmRemoveFromEvent(templateId) {
+  const div = document.getElementById('confirmRemoveFromEvent_' + templateId);
+  div.classList.toggle('hidden');
+  const input = document.getElementById('confirmRemoveFromEventInput_' + templateId);
+  if (input) input.value = '';
+}
+
+function executeRemoveFromEvent(templateId) {
+  const input = document.getElementById('confirmRemoveFromEventInput_' + templateId);
+  if (!input || input.value !== 'REMOVE') return;
+  removeTemplateFromCurrentEvent(templateId);
+}
+
 function removeTemplateFromCurrentEvent(templateId) {
   if (!isAdmin()) return;
-  if (!confirm('Remove this competition from the event?')) return;
   const events = getEvents();
   const ev = events.find(function(e) { return e.name === AppState.event; });
   if (!ev) return;
