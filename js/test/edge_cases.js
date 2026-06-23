@@ -1125,9 +1125,9 @@ function testHeaderContent() {
   console.log('\n=== Header Content ===');
   let pass = true;
 
-  var badge = document.getElementById('eventBadge');
+  var badge = document.getElementById('eventSubtitle');
   var tag = document.getElementById('sportTag');
-  pass &= assert(!!badge, 'eventBadge exists');
+  pass &= assert(!!badge, 'eventSubtitle exists');
   pass &= assert(!!tag, 'sportTag exists');
 
   if (badge && tag) {
@@ -1137,7 +1137,7 @@ function testHeaderContent() {
     AppState.event = 'Test Event XYZ';
     AppState.sport = 'chess';
     updateHeader();
-    pass &= assert(badge.textContent === 'Test Event XYZ', 'Header badge = "Test Event XYZ" (got "' + badge.textContent + '")');
+    pass &= assert(badge.textContent === 'Test Event XYZ', 'Header subtitle = "Test Event XYZ" (got "' + badge.textContent + '")');
     pass &= assert(tag.textContent === 'Chess', 'Header tag = "Chess" (got "' + tag.textContent + '")');
 
     AppState.event = _origEvent;

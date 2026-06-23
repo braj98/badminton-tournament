@@ -3,22 +3,22 @@
 
 // ===================== HEADER + ACTION BAR =====================
 function updateHeader() {
-  var badge = document.getElementById('eventBadge');
+  var sub = document.getElementById('eventSubtitle');
   var tag = document.getElementById('sportTag');
   
   if (AppState.view === 'home' || AppState.ui.showingResults) {
-    if (badge) badge.classList.add('hidden');
+    if (sub) sub.classList.add('hidden');
     if (tag) tag.classList.add('hidden');
   } else if (AppState.view === 'event') {
-    if (badge) {
-      badge.textContent = AppState.event;
-      badge.classList.remove('hidden');
+    if (sub) {
+      sub.textContent = AppState.event;
+      sub.classList.remove('hidden');
     }
     if (tag) tag.classList.add('hidden');
   } else {
-    if (badge) {
-      badge.textContent = AppState.event;
-      badge.classList.remove('hidden');
+    if (sub) {
+      sub.textContent = AppState.event;
+      sub.classList.remove('hidden');
     }
     if (tag) {
       tag.textContent = getSportLabel(AppState.sport);
@@ -114,7 +114,11 @@ function renderBreadcrumb() {
   var bc = document.getElementById('breadcrumb');
   if (!bc) return;
   bc.classList.remove('hidden');
-  var parts = ['<span class="bc-item' + (AppState.view === 'home' ? ' bc-current' : '') + '" onclick="goHome()">Home</span>'];
+  if (AppState.view === 'home') {
+    bc.innerHTML = '<span class="bc-item bc-current" onclick="goHome()">Home</span>';
+    return;
+  }
+  var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current">' + escapeHtml(AppState.event) + '</span>');

@@ -34,6 +34,9 @@ body {
 
 /* ===== HEADER ===== */
 .header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -41,9 +44,9 @@ body {
   gap: 12px;
 }
 
-.title-group h1 {
+.brand h1 {
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -52,29 +55,32 @@ body {
   background: none;
   text-align: left;
   padding: 0;
-  letter-spacing: normal;
+  letter-spacing: -0.02em;
   border-radius: 0;
   margin: 0;
 }
 
-.tournament-badge {
-  background: #f1f5f9;
+.brand .subtitle {
   color: var(--text-muted);
-  padding: 0.2rem 0.7rem;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  display: inline-block;
-  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.1rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sport-tag {
   background: var(--primary-light);
   color: var(--primary);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -84,15 +90,29 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
-  flex-wrap: wrap;
 }
 
-.header-actions .btn-xs {
-  padding: 4px 10px;
-  font-size: 0.72rem;
-  border-radius: 6px;
+.btn-header {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
 }
+.btn-header:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.btn-header.accent {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: transparent;
+}
+.btn-header.accent:hover { background: #dbeafe; }
 
 .admin-tag {
   background: var(--success-light);
