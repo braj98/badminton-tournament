@@ -27,7 +27,7 @@ function renderGroups() {
         + (m ? '<br><span class="text-muted" style="font-size:.75rem;">' + escapeHtml(m.a) + ' & ' + escapeHtml(m.b) + '</span>' : '') + '</div>'
         + '<span style="position:relative;">'
         + '<button class="btn admin-only btn-secondary" style="padding:2px 6px;font-size:.7rem;" onclick="event.stopPropagation();document.getElementById(\'' + pid + '\').classList.toggle(\'hidden\')">↔</button>'
-        + '<div id="' + pid + '" class="hidden" style="position:absolute;right:0;top:100%;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:10;padding:4px;display:flex;flex-direction:column;gap:2px;">'
+        + '<div id="' + pid + '" class="hidden" style="position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:10;padding:4px;display:flex;flex-direction:column;gap:2px;">'
         + moveBtns
         + '</div></span></div></li>';
     }

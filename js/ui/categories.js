@@ -360,8 +360,14 @@ function renderManagePanel() {
         + '<span style="font-size:.7rem;color:var(--text-muted);margin-left:8px;">' + ev.templateIds.length + ' competitions</span></div>'
         + '<div style="display:flex;gap:6px;">'
         + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" onclick="renameEventFromManage(\'' + escapeHtml(ev.name) + '\')">✏️</button>'
-        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" ' + (hasRunning ? 'disabled title="Has running tournaments"' : '') + ' onclick="deleteEventFromManage(\'' + ev.id + '\')">✕</button>'
-        + '</div></div>';
+        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" ' + (hasRunning ? 'disabled title="Has running tournaments"' : '') + ' onclick="toggleEventDeleteConfirm(\'' + ev.id + '\')">✕</button>'
+        + '</div></div>'
+        + '<div id="manageDeleteEventConfirm_' + ev.id + '" class="hidden" style="margin-top:6px;background:var(--danger-light);border:1px solid var(--danger);border-radius:6px;padding:6px 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
+        + '<span style="font-size:.7rem;color:var(--danger);font-weight:500;">Type DELETE:</span>'
+        + '<input type="text" id="manageDeleteEventInput_' + ev.id + '" style="flex:1;min-width:60px;padding:3px 6px;border:2px solid var(--danger);border-radius:6px;font-size:.75rem;" placeholder="DELETE">'
+        + '<button class="btn" style="padding:3px 8px;font-size:.7rem;background:var(--danger);" onclick="executeEventDelete(\'' + ev.id + '\')">Go</button>'
+        + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" onclick="toggleEventDeleteConfirm(\'' + ev.id + '\')">Cancel</button>'
+        + '</div>';
     }
     evHtml += '<div style="margin-top:8px;"><button class="btn btn-sm btn-secondary" onclick="createEventFromHome()" style="font-size:.75rem;">➕ New Event</button></div>';
     evContainer.innerHTML = evHtml;
@@ -545,15 +551,29 @@ function renameEventFromManage(oldName) {
   renderAll();
 }
 
-function deleteEventFromManage(eventId) {
+function toggleEventDeleteConfirm(eventId) {
+  const div = document.getElementById('manageDeleteEventConfirm_' + eventId);
+  if (!div) return;
+  div.classList.toggle('hidden');
+  const input = document.getElementById('manageDeleteEventInput_' + eventId);
+  if (input) input.value = '';
+}
+
+function executeEventDelete(eventId) {
   if (!isAdmin()) return;
-  const ev = getEvents().find(e => e.id === eventId);
-  if (!ev) return;
-  if (!confirm('Delete event "' + ev.name + '" and all its competitions?')) return;
+  const input = document.getElementById('manageDeleteEventInput_' + eventId);
+  if (!input || input.value !== 'DELETE') return;
   const result = deleteEvent(eventId);
   if (result === false) { alert('Cannot delete: has running tournaments or only event.'); }
   renderManagePanel();
   renderAll();
+}
+
+function deleteEventFromManage(eventId) {
+  if (!isAdmin()) return;
+  const ev = getEvents().find(e => e.id === eventId);
+  if (!ev) return;
+  toggleEventDeleteConfirm(eventId);
 }
 
 function populateEventDropdown(selectId, selectedEvent) {
