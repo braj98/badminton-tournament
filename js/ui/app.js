@@ -201,7 +201,7 @@ function renderEventPage() {
     const templates = getTemplates();
     const evTemplates = templates.filter(function(t) { return ev && ev.templateIds.indexOf(t.id) !== -1; });
     html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">'
-      + '<h3 style="font-size:.9rem;margin-bottom:8px;">Manage Competitions</h3>'
+      + '<h3 style="font-size:.9rem;margin-bottom:8px;">Competitions in this Event</h3>'
       + '<div id="eventTemplateList" style="margin-bottom:8px;">';
     for (var ti = 0; ti < evTemplates.length; ti++) {
       var t = evTemplates[ti];

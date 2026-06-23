@@ -391,6 +391,8 @@ function renderManagePanel() {
       + '    <div style="font-size:.7rem;color:var(--text-muted);">' + getSportLabel(tmpl.sport) + (evBadges ? ' • ' + evBadges : '') + '</div>'
       + '  </div>'
       + '  <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">'
+      + (AppState.view === 'event' && events.find(function(ev) { return ev.name === AppState.event && ev.templateIds.indexOf(tmpl.id) === -1; })
+        ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.65rem;" onclick="linkTemplateToEvent(\'' + tmpl.id + '\')">➕ Link</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 6px;font-size:.7rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">✏️</button>'
       + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteTemplateConfirm(\'' + tmpl.id + '\')">✕</button>'
@@ -487,6 +489,18 @@ function saveTemplateEdit(tmplId) {
   tmpl.type = document.getElementById('editTmplType_' + tmplId).value;
   tmpl.sport = document.getElementById('editTmplSport_' + tmplId).value;
   saveTemplates(templates);
+  if (_supabase) syncMetadataToCloud();
+  renderManagePanel();
+}
+
+function linkTemplateToEvent(tmplId) {
+  if (!isAdmin()) return;
+  const events = getEvents();
+  const ev = events.find(function(e) { return e.name === AppState.event; });
+  if (!ev) return;
+  if (ev.templateIds.indexOf(tmplId) >= 0) return;
+  ev.templateIds.push(tmplId);
+  saveEvents(events);
   if (_supabase) syncMetadataToCloud();
   renderManagePanel();
 }
