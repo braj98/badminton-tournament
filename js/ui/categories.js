@@ -145,18 +145,14 @@ function addTemplateToCurrentEvent() {
   const events = getEvents();
   const ev = events.find(function(e) { return e.id === AppState.eventId; });
   if (!ev) return;
-  const templates = getTemplates();
+    const templates = getTemplates();
   const key = label.toLowerCase() + '|' + sport + '|' + type;
   const existing = templates.find(function(t) { return (t.name.toLowerCase() + '|' + t.sport + '|' + t.type) === key; });
   let tmpl;
   if (existing) {
     tmpl = existing;
   } else {
-    const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 't';
-    let id = baseId;
-    let counter = 1;
-    while (templates.find(function(t) { return t.id === id; })) { id = baseId + '_' + counter++; }
-    tmpl = { id: id, name: label, sport: sport, type: type };
+    tmpl = { id: createTemplateId(label), name: label, sport: sport, type: type };
     templates.push(tmpl);
     saveTemplates(templates);
   }
