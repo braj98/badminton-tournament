@@ -31,7 +31,7 @@ function getCategories() {
       for (const tmplId of ev.templateIds) {
         const tmpl = templates.find(t => t.id === tmplId);
         if (tmpl) {
-          result.push({ id: tmpl.id, label: tmpl.name, type: tmpl.type, sport: tmpl.sport, event: ev.name });
+          result.push({ id: tmpl.id, label: tmpl.name, type: tmpl.type, sport: tmpl.sport, event: ev.name, eventId: ev.id });
         }
       }
     }

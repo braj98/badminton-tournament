@@ -1,5 +1,11 @@
 const EVENTS_KEY = 'btm_events';
 
+function setCurrentEvent(eventName) {
+  AppState.event = eventName;
+  const ev = getEvents().find(function(e) { return e.name === eventName; });
+  AppState.eventId = ev ? ev.id : null;
+}
+
 function getEvents() {
   try {
     const raw = localStorage.getItem(EVENTS_KEY);
@@ -40,11 +46,11 @@ function removeTemplateFromEvent(eventId, templateId) {
   saveEvents(events);
 }
 
-function deleteEvent(eventName) {
+function deleteEvent(eventId) {
   if (!isAdmin()) return;
   const events = getEvents();
   if (events.length <= 1) return false;
-  const ev = events.find(e => e.name === eventName);
+  const ev = events.find(e => e.id === eventId);
   if (!ev) return false;
   for (const tmplId of ev.templateIds) {
     const saved = localLoad(tmplId);
@@ -58,9 +64,9 @@ function deleteEvent(eventName) {
       _supabase.from('state').delete().eq('key', getStateKey(tmplId)).then().catch(() => {});
     }
   }
-  if (AppState.event === eventName) {
+  if (AppState.eventId === eventId) {
     if (remaining.length > 0) {
-      AppState.event = remaining[0].name;
+      setCurrentEvent(remaining[0].name);
       AppState.sport = 'badminton';
     }
     AppState.category = null;
@@ -79,6 +85,6 @@ function renameEvent(oldName, newName) {
   }
   if (changed) {
     saveEvents(events);
-    if (AppState.event === oldName) AppState.event = newName;
+    if (AppState.event === oldName) setCurrentEvent(newName);
   }
 }

@@ -157,12 +157,12 @@ function getCategoryLabel() {
 
 // ===================== EVENT / SPORT PAGES =====================
 function goToEventPage(ev) {
-  if (ev) AppState.event = ev;
+  if (ev) setCurrentEvent(ev);
   navigateTo('event');
 }
 
 function goToSportPage(ev, sport) {
-  if (ev) AppState.event = ev;
+  if (ev) setCurrentEvent(ev);
   if (sport) AppState.sport = sport;
   navigateTo('sport');
 }
@@ -171,7 +171,7 @@ function renderEventPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('eventContent');
-  var cats = getCategories().filter(function(c) { return c.event === AppState.event; });
+  var cats = getCategories().filter(function(c) { return c.eventId === AppState.eventId; });
   var html = '<h2 class="page-title">' + escapeHtml(AppState.event) + '</h2>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this event.</p>';
@@ -197,7 +197,7 @@ function renderEventPage() {
   }
   // Template management (admin only)
   if (isAdmin()) {
-    const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+    const ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
     const templates = getTemplates();
     const evTemplates = templates.filter(function(t) { return ev && ev.templateIds.indexOf(t.id) !== -1; });
     html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">'
@@ -242,7 +242,7 @@ function renderSportPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('sportContent');
-  var ev = getEvents().find(function(e) { return e.name === AppState.event; });
+  var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
   var templates = getTemplates();
   var evTemplates = ev ? templates.filter(function(t) { return ev.templateIds.indexOf(t.id) !== -1 && t.sport === AppState.sport; }) : [];
   var html = '<h2 class="page-title">' + sportLabel(AppState.sport) + '</h2>';
@@ -293,7 +293,7 @@ function switchTab(tab) {
 }
 
 function navigateToSport(ev, sport) {
-  AppState.event = ev;
+  setCurrentEvent(ev);
   AppState.sport = sport;
   goToSportPage(ev, sport);
 }
@@ -335,7 +335,7 @@ function renderAll() {
   }
 
   if (!isAdmin() && AppState.tournament && AppState.tournament.phase === 'setup') {
-    const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+    const ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
     const templates = getTemplates();
     let foundTmpl = null;
     if (ev) {
@@ -678,7 +678,7 @@ async function init() {
   const firstCat = getCategories()[0];
   if (firstCat) {
     if (firstCat.sport) AppState.sport = firstCat.sport;
-    if (firstCat.event) AppState.event = firstCat.event;
+    if (firstCat.event) setCurrentEvent(firstCat.event);
   }
   AppState.category = startCat || (firstCat ? firstCat.id : null);
   const saved = localLoad(AppState.category);

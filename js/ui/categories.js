@@ -1,10 +1,12 @@
 // ===================== CATEGORY DEFINITIONS =====================
+const DEFAULT_EVENT_ID = APP_CONFIG.defaultEvent.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+
 const FACTORY_CATEGORIES = [
-  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
-  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
-  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
-  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
-  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent },
+  { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
 ];
 
 function migrateCategorySports() {
@@ -47,7 +49,7 @@ function renderSportBar() {
     return;
   }
   const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-  const ev = getEvents().find(e => e.name === AppState.event);
+  const ev = getEvents().find(e => e.id === AppState.eventId);
   const templates = getTemplates();
   const sportSet = new Set();
   if (ev) {
@@ -82,7 +84,7 @@ function renderEventBar() {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;align-items:center;gap:2px;';
     const btn = document.createElement('button');
-    btn.className = 'event-btn' + (ev.name === AppState.event ? ' active' : '');
+    btn.className = 'event-btn' + (ev.id === AppState.eventId ? ' active' : '');
     btn.textContent = ev.name;
     btn.onclick = function() { switchEvent(ev.name); };
     wrap.appendChild(btn);
@@ -112,7 +114,7 @@ function renameEvent(oldName) {
   if (!changed) return;
   saveEvents(events);
   if (_supabase) syncMetadataToCloud();
-  if (AppState.event === oldName) AppState.event = newName;
+  if (AppState.event === oldName) setCurrentEvent(newName);
   renderEventBar();
   var panel = document.getElementById('managePanel');
   if (panel && !panel.classList.contains('hidden')) {
@@ -141,7 +143,7 @@ function addTemplateToCurrentEvent() {
   const sport = document.getElementById('newTemplateSport').value;
   const type = document.getElementById('newTemplateType').value;
   const events = getEvents();
-  const ev = events.find(function(e) { return e.name === AppState.event; });
+  const ev = events.find(function(e) { return e.id === AppState.eventId; });
   if (!ev) return;
   const templates = getTemplates();
   const key = label.toLowerCase() + '|' + sport + '|' + type;
@@ -184,7 +186,7 @@ function executeRemoveFromEvent(templateId) {
 function removeTemplateFromCurrentEvent(templateId) {
   if (!isAdmin()) return;
   const events = getEvents();
-  const ev = events.find(function(e) { return e.name === AppState.event; });
+  const ev = events.find(function(e) { return e.id === AppState.eventId; });
   if (!ev) return;
   ev.templateIds = ev.templateIds.filter(function(id) { return id !== templateId; });
   saveEvents(events);
@@ -199,7 +201,7 @@ function createEventFromHome() {
   const ev = createEvent(name.trim());
   if (!ev) { alert('Event already exists.'); return; }
   if (_supabase) syncMetadataToCloud();
-  AppState.event = ev.name;
+  setCurrentEvent(ev.name);
   renderHomePage();
   goToEventPage(AppState.event);
 }
@@ -214,7 +216,7 @@ async function switchCategory(catId) {
   const tmpl = getTemplates().find(t => t.id === catId);
   if (tmpl) { AppState.sport = tmpl.sport; }
   const cat = getCategories().find(c => c.id === catId);
-  if (cat) { AppState.event = cat.event || APP_CONFIG.defaultEvent; }
+  if (cat) { setCurrentEvent(cat.event || APP_CONFIG.defaultEvent); }
   let serverState = null;
   if (_supabase) {
     serverState = await fetchState(catId).catch(() => null);
@@ -241,7 +243,7 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  const ev = getEvents().find(e => e.name === AppState.event);
+  const ev = getEvents().find(e => e.id === AppState.eventId);
   if (!ev) return;
   const templates = getTemplates();
   for (const tmplId of ev.templateIds) {
@@ -362,7 +364,7 @@ function renderManagePanel() {
         + '<span style="font-size:.7rem;color:var(--text-muted);margin-left:8px;">' + ev.templateIds.length + ' competitions</span></div>'
         + '<div style="display:flex;gap:6px;">'
         + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" onclick="renameEventFromManage(\'' + escapeHtml(ev.name) + '\')">✏️</button>'
-        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" ' + (hasRunning ? 'disabled title="Has running tournaments"' : '') + ' onclick="deleteEventFromManage(\'' + escapeHtml(ev.name) + '\')">✕</button>'
+        + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.7rem;" ' + (hasRunning ? 'disabled title="Has running tournaments"' : '') + ' onclick="deleteEventFromManage(\'' + ev.id + '\')">✕</button>'
         + '</div></div>';
     }
     evHtml += '<div style="margin-top:8px;"><button class="btn btn-sm btn-secondary" onclick="createEventFromHome()" style="font-size:.75rem;">➕ New Event</button></div>';
@@ -404,7 +406,7 @@ function renderManagePanel() {
       + '    <div style="font-size:.7rem;color:var(--text-muted);">' + getSportLabel(tmpl.sport) + (evBadges ? ' • ' + evBadges : '') + '</div>'
       + '  </div>'
       + '  <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">'
-      + (AppState.view === 'event' && events.find(function(ev) { return ev.name === AppState.event && ev.templateIds.indexOf(tmpl.id) === -1; })
+      + (AppState.view === 'event' && events.find(function(ev) { return ev.id === AppState.eventId && ev.templateIds.indexOf(tmpl.id) === -1; })
         ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.65rem;" onclick="linkTemplateToEvent(\'' + tmpl.id + '\')">➕ Link</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 6px;font-size:.7rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">✏️</button>'
       + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:var(--danger);color:var(--danger);" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
@@ -494,7 +496,7 @@ function saveTemplateEdit(tmplId) {
 function linkTemplateToEvent(tmplId) {
   if (!isAdmin()) return;
   const events = getEvents();
-  const ev = events.find(function(e) { return e.name === AppState.event; });
+  const ev = events.find(function(e) { return e.id === AppState.eventId; });
   if (!ev) return;
   if (ev.templateIds.indexOf(tmplId) >= 0) return;
   ev.templateIds.push(tmplId);
@@ -547,10 +549,12 @@ function renameEventFromManage(oldName) {
   renderAll();
 }
 
-function deleteEventFromManage(eventName) {
+function deleteEventFromManage(eventId) {
   if (!isAdmin()) return;
-  if (!confirm('Delete event "' + eventName + '" and all its competitions?')) return;
-  const result = deleteEvent(eventName);
+  const ev = getEvents().find(e => e.id === eventId);
+  if (!ev) return;
+  if (!confirm('Delete event "' + ev.name + '" and all its competitions?')) return;
+  const result = deleteEvent(eventId);
   if (result === false) { alert('Cannot delete: has running tournaments or only event.'); }
   renderManagePanel();
   renderAll();
