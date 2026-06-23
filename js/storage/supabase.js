@@ -90,7 +90,7 @@ function flushCloudSave() {
 
 async function fetchState(catId) {
   if (!_supabase) return null;
-  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_state_' + catId).single();
+  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_state_' + catId).maybeSingle();
   if (error && error.code !== 'PGRST116') { console.warn('Supabase fetch failed:', error.message); return null; }
   return data ? data.data : null;
 }
@@ -114,7 +114,7 @@ async function upsertCategories(data) {
 
 async function fetchCategoriesFromCloud() {
   if (!_supabase) return null;
-  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_categories').single();
+  const { data, error } = await _supabase.from('state').select('data').eq('key', 'btm_categories').maybeSingle();
   if (error && error.code !== 'PGRST116') { console.warn('Supabase categories fetch failed:', error.message); return null; }
   return data ? data.data : null;
 }

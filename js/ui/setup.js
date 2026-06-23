@@ -75,6 +75,7 @@ function onPlayerCountChange() {
 
 function showReduceConfirm(newCount, oldCount) {
   const box = document.getElementById('reduceConfirmBox');
+  if (!box) return;
   const list = document.getElementById('reduceConfirmList');
   const container = document.getElementById('playerInputs');
   let names = '';
@@ -116,6 +117,9 @@ function cancelReduce() {
 
 function showStartConfirm() {
   const box = document.getElementById('startConfirmBox');
+  if (!box) { alert('Confirmation box not found in DOM'); return; }
+  // Remove any inline display:none that might override the hidden class
+  box.style.display = '';
   box.classList.toggle('hidden');
   document.getElementById('startConfirmInput').value = '';
   document.getElementById('startConfirmError').textContent = '';

@@ -429,7 +429,7 @@ function showResultsPage() {
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
   renderResults();
   applyViewerMode();
-  document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
 }
 
 function closeResults() {
@@ -530,7 +530,7 @@ async function init() {
   migrateCategorySports();
 
   // Sync migrated categories back to cloud so login() gets the correct format
-  if (_supabase) {
+  if (_supabase && AppState.isAdmin) {
     const cats = getCategories();
     if (cats.length) upsertCategories(cats);
   }

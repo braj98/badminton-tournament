@@ -458,7 +458,7 @@ function testCategoryEventLinking() {
 
   // Factory defaults should have event field
   for (const cat of FACTORY_CATEGORIES) {
-    pass &= assert(cat.event === DEFAULT_EVENT, 'Factory cat "' + cat.label + '" has event="' + DEFAULT_EVENT + '"');
+    pass &= assert(cat.event === APP_CONFIG.defaultEvent, 'Factory cat "' + cat.label + '" has event="' + APP_CONFIG.defaultEvent + '"');
   }
 
   // Simulate legacy categories without event
@@ -471,7 +471,7 @@ function testCategoryEventLinking() {
   let savedCats = null;
   window.saveCategories = function(cats) { savedCats = cats; };
   migrateCategorySports();
-  pass &= assert(savedCats[0].event === DEFAULT_EVENT, 'Legacy cat gained event="' + DEFAULT_EVENT + '"');
+  pass &= assert(savedCats[0].event === APP_CONFIG.defaultEvent, 'Legacy cat gained event="' + APP_CONFIG.defaultEvent + '"');
   // Idempotent
   savedCats = null;
   migrateCategorySports();
@@ -989,10 +989,10 @@ function testCategoryBarFiltering() {
   // Category bar should only show categories matching AppState.event + AppState.sport
   // Navigate to a specific event+sport and check
   var cats = getCategories();
-  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
-  var testEvent = events[0] || DEFAULT_EVENT;
+  var events = [...new Set(cats.map(function(c) { return c.event || APP_CONFIG.defaultEvent; }))];
+  var testEvent = events[0] || APP_CONFIG.defaultEvent;
   var testSport = 'badminton';
-  var expectedCount = cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent && c.sport === testSport; }).length;
+  var expectedCount = cats.filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === testEvent && c.sport === testSport; }).length;
 
   AppState.event = testEvent;
   AppState.sport = testSport;
@@ -1008,7 +1008,7 @@ function testCategoryBarFiltering() {
   }
 
   // Switch sport, verify count changes
-  var ttCats = cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent && c.sport === 'tableTennis'; });
+  var ttCats = cats.filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === testEvent && c.sport === 'tableTennis'; });
   if (ttCats.length > 0) {
     AppState.sport = 'tableTennis';
     renderCategoryBar();
@@ -1045,11 +1045,11 @@ function testSportBarRendering() {
 
   // Sport bar should only show sports that have categories in the current event
   var cats = getCategories();
-  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
+  var events = [...new Set(cats.map(function(c) { return c.event || APP_CONFIG.defaultEvent; }))];
 
   if (events.length > 0) {
     var testEvent = events[0];
-    var eventSports = new Set(cats.filter(function(c) { return (c.event || DEFAULT_EVENT) === testEvent; }).map(function(c) { return c.sport; }));
+    var eventSports = new Set(cats.filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === testEvent; }).map(function(c) { return c.sport; }));
     AppState.event = testEvent;
     renderSportBar();
     var btns = bar.querySelectorAll('.sport-btn');
@@ -1064,7 +1064,7 @@ function testSportBarRendering() {
   }
 
   // Current sport button should have .active class
-  AppState.event = _origEvent || DEFAULT_EVENT;
+  AppState.event = _origEvent || APP_CONFIG.defaultEvent;
   AppState.sport = 'badminton';
   renderSportBar();
   var activeBtns = bar.querySelectorAll('.sport-btn.active');
@@ -1092,7 +1092,7 @@ function testEventBarRendering() {
   const _origEvent = AppState.event;
 
   var cats = getCategories();
-  var events = [...new Set(cats.map(function(c) { return c.event || DEFAULT_EVENT; }))];
+  var events = [...new Set(cats.map(function(c) { return c.event || APP_CONFIG.defaultEvent; }))];
 
   renderEventBar();
   var btns = bar.querySelectorAll('.event-btn');
@@ -1100,7 +1100,7 @@ function testEventBarRendering() {
     'Event bar shows ' + btns.length + ' events (expected ' + events.length + ')');
 
   // Current event should have .active
-  AppState.event = events[0] || DEFAULT_EVENT;
+  AppState.event = events[0] || APP_CONFIG.defaultEvent;
   renderEventBar();
   var activeBtns = bar.querySelectorAll('.event-btn.active');
   pass &= assert(activeBtns.length === 1, 'Exactly 1 active event button');

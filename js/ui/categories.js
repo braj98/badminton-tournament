@@ -150,6 +150,8 @@ function renderCategoryBar() {
 function showResetConfirm() {
   if (!AppState.isAdmin) return;
   const box = document.getElementById('resetConfirmBox');
+  if (!box) return;
+  box.style.display = '';
   box.classList.toggle('hidden');
   document.getElementById('resetConfirmInput').value = '';
   document.getElementById('resetError').textContent = '';
