@@ -65,30 +65,35 @@ function renderHomePage() {
   clearDisabled();
   updateHeader();
   updateNavigationVisibility();
-  const cats = getCategories();
-  const events = [...new Set(cats.map(c => c.event || APP_CONFIG.defaultEvent))];
+  const events = getEvents();
   const container = document.getElementById('homeContent');
-  let html = '<h2 class="page-title">Events</h2><div class="home-events-list">';
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<h2 class="page-title" style="margin:0;">Events</h2>'
+    + (isAdmin() ? '<button class="btn btn-sm btn-secondary" onclick="createEventFromHome()">➕ New Event</button>' : '')
+    + '</div>'
+    + '<div class="home-events-list">';
   for (const ev of events) {
-    const eventCats = cats.filter(c => (c.event || APP_CONFIG.defaultEvent) === ev);
+    const cats = getCategories().filter(c => c.event === ev.name);
     let active = 0;
-    for (const c of eventCats) {
+    for (const c of cats) {
       const st = localLoad(c.id);
       if (st && st.phase !== 'setup') active++;
     }
-    const total = eventCats.length;
-    html += '<div class="event-card" onclick="goToEventPage(\'' + escapeHtml(ev) + '\')">'
+    const total = cats.length;
+    html += '<div class="event-card" onclick="goToEventPage(\'' + escapeHtml(ev.name) + '\')">'
       + '<div class="event-icon">🏆</div>'
       + '<div class="event-info">'
-      + '<div class="name">' + escapeHtml(ev) + '</div>'
-      + '<div class="count">' + active + ' active / ' + total + ' total categories</div>'
+      + '<div class="name">' + escapeHtml(ev.name) + '</div>'
+      + '<div class="count">' + active + ' active / ' + total + ' categories</div>'
       + '</div>'
       + '<div class="arrow">›</div>'
       + '</div>';
   }
   html += '</div>';
   if (events.length === 0) {
-    html = '<p class="text-muted text-center" style="padding:48px 0;">No events configured yet. Admins can add categories via Manage.</p>';
+    html = '<p class="text-muted text-center" style="padding:48px 0;">No events yet.'
+      + (isAdmin() ? ' <button class="btn btn-sm btn-secondary" onclick="createEventFromHome()">Create your first event</button>' : '')
+      + '</p>';
   }
   if (container) container.innerHTML = html;
   showScreen('screen-home', true);
@@ -146,9 +151,8 @@ function updateNavigationVisibility() {
 }
 
 function getCategoryLabel() {
-  var cats = getCategories();
-  for (var i = 0; i < cats.length; i++) { if (cats[i].id === AppState.category) return cats[i].label; }
-  return AppState.category || 'Tournament';
+  var tmpl = getTemplates().find(function(t) { return t.id === AppState.category; });
+  return tmpl ? tmpl.name : (AppState.category || 'Tournament');
 }
 
 // ===================== EVENT / SPORT PAGES =====================
@@ -167,7 +171,7 @@ function renderEventPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('eventContent');
-  var cats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === AppState.event; });
+  var cats = getCategories().filter(function(c) { return c.event === AppState.event; });
   var sportCats = {};
   for (var i = 0; i < cats.length; i++) {
     var c = cats[i];
@@ -184,14 +188,41 @@ function renderEventPage() {
       var st = localLoad(sportCats[s][j].id);
       if (st && st.phase !== 'setup') active++;
     }
-    html += '<div class="home-sport-card" onclick="goToSportPage(\'' + AppState.event + '\',\'' + s + '\')">'
+    html += '<div class="home-sport-card" onclick="goToSportPage(\'' + escapeHtml(AppState.event) + '\',\'' + s + '\')">'
       + '<div class="home-sport-icon">' + getSportIcon(s) + '</div>'
       + '<div class="home-sport-info"><div class="name">' + getSportLabel(s) + '</div>'
       + '<div class="count">' + active + ' active / ' + sportCats[s].length + ' total</div></div>'
       + '<div class="arrow">›</div></div>';
   }
   html += '</div>';
-  if (!html) html = '<p class="text-muted text-center" style="padding:48px 0;">No sports in this event.</p>';
+  if (!sports.some(function(s) { return sportCats[s]; })) {
+    html = '<p class="text-muted text-center" style="padding:48px 0;">No categories in this event.</p>';
+  }
+  // Template management (admin only)
+  if (isAdmin()) {
+    const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+    const templates = getTemplates();
+    const evTemplates = templates.filter(function(t) { return ev && ev.templateIds.indexOf(t.id) !== -1; });
+    html += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">'
+      + '<h3 style="font-size:.9rem;margin-bottom:8px;">Manage Categories</h3>'
+      + '<div id="eventTemplateList" style="margin-bottom:8px;">';
+    for (var ti = 0; ti < evTemplates.length; ti++) {
+      var t = evTemplates[ti];
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:.85rem;">'
+        + '<span>' + escapeHtml(t.name) + ' <span style="font-size:.7rem;color:var(--text-muted);">(' + getSportLabel(t.sport) + ', ' + t.type + ')</span></span>'
+        + '<button class="btn btn-outline btn-sm" style="font-size:.7rem;padding:2px 8px;border-color:#dc2626;color:#dc2626;" onclick="removeTemplateFromCurrentEvent(\'' + t.id + '\')">✕</button>'
+        + '</div>';
+    }
+    html += '</div>'
+      + '<div class="form-row" style="margin-top:8px;">'
+      + '<div class="form-field"><label class="form-label">Label</label><input type="text" id="newTemplateLabel" class="form-input" placeholder="e.g. Junior" style="font-size:.8rem;"></div>'
+      + '<div class="form-field"><label class="form-label">Sport</label><select id="newTemplateSport" class="form-input" style="font-size:.8rem;"><option value="badminton">Badminton</option><option value="tableTennis">Table Tennis</option><option value="chess">Chess</option></select></div>'
+      + '<div class="form-field"><label class="form-label">Format</label><select id="newTemplateType" class="form-input" style="font-size:.8rem;"><option value="singles">Singles</option><option value="doubles">Doubles</option></select></div>'
+      + '<div style="display:flex;align-items:flex-end;"><button class="btn btn-sm" onclick="addTemplateToCurrentEvent()" style="font-size:.8rem;">Add</button></div>'
+      + '</div>'
+      + '<span id="eventTemplateError" style="font-size:.75rem;color:#dc2626;display:block;margin-top:4px;"></span>'
+      + '</div>';
+  }
   if (container) container.innerHTML = html;
   showScreen('screen-event', true);
   showScreen('screen-sport', false);
@@ -210,27 +241,29 @@ function renderSportPage() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('sportContent');
-  var cats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === AppState.event && c.sport === AppState.sport; });
+  var ev = getEvents().find(function(e) { return e.name === AppState.event; });
+  var templates = getTemplates();
+  var evTemplates = ev ? templates.filter(function(t) { return ev.templateIds.indexOf(t.id) !== -1 && t.sport === AppState.sport; }) : [];
   var html = '<h2 class="page-title">' + sportLabel(AppState.sport) + '</h2>';
-  if (cats.length === 0) {
+  if (evTemplates.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No categories in this sport.</p>';
   } else {
-    for (var i = 0; i < cats.length; i++) {
-      var cat = cats[i];
-      var s = localLoad(cat.id);
+    for (var i = 0; i < evTemplates.length; i++) {
+      var t = evTemplates[i];
+      var s = localLoad(t.id);
       var dot = 'setup';
       var statusText = '⚪ Not Started';
       if (s) {
         if (s.phase === 'champion') { dot = 'done'; statusText = '🏆 Complete'; }
         else if (s.phase !== 'setup') { dot = 'playing'; statusText = '🟢 In Progress'; }
       }
-      var fmt = cat.format || 'singles';
+      var fmt = t.type || 'singles';
       var isDoubles = fmt === 'doubles';
       var countLabel = isDoubles ? ' Teams' : ' Players';
       var participantCount = (s && s.participants) ? s.participants.length : 0;
-      html += '<div class="category-card" onclick="switchCategory(\'' + cat.id + '\')">'
+      html += '<div class="category-card" onclick="switchCategory(\'' + t.id + '\')">'
         + '<div class="cat-card-left"><span class="dot ' + dot + '"></span>'
-        + '<span class="cat-card-name">' + escapeHtml(cat.label) + '</span></div>'
+        + '<span class="cat-card-name">' + escapeHtml(t.name) + '</span></div>'
         + '<div class="cat-card-right"><span class="cat-card-count">' + participantCount + countLabel + '</span>'
         + '<span class="cat-card-format">' + fmt + '</span>'
         + '<span class="cat-card-status ' + dot + '">' + statusText + '</span></div></div>';
@@ -301,16 +334,21 @@ function renderAll() {
   }
 
   if (!isAdmin() && AppState.tournament && AppState.tournament.phase === 'setup') {
-    const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-    let foundCat = null;
-    for (const cat of cats) {
-      if (cat.id === AppState.category) continue;
-      const s = localLoad(cat.id);
-      if (s && s.phase !== 'setup') { foundCat = cat.id; break; }
+    const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+    const templates = getTemplates();
+    let foundTmpl = null;
+    if (ev) {
+      for (const tmplId of ev.templateIds) {
+        const tmpl = templates.find(function(t) { return t.id === tmplId && t.sport === AppState.sport; });
+        if (!tmpl) continue;
+        if (tmpl.id === AppState.category) continue;
+        const s = localLoad(tmpl.id);
+        if (s && s.phase !== 'setup') { foundTmpl = tmpl.id; break; }
+      }
     }
-    if (foundCat) {
-      AppState.category = foundCat;
-      AppState.tournament = localLoad(foundCat) || defaultState();
+    if (foundTmpl) {
+      AppState.category = foundTmpl;
+      AppState.tournament = localLoad(foundTmpl) || defaultState();
       navigateTo(AppState.tournament.phase);
       return;
     }
@@ -445,80 +483,93 @@ function closeResults() {
 
 function renderResults() {
   clearDisabled();
-  const cats = getCategories();
-  const matches = [];
-  const champions = [];
-  for (const cat of cats) {
-    const s = localLoad(cat.id);
-    if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
-    const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
-    for (const m of s.knockout) {
-    const _participants = s.participants;
-    const resolve = function(id) { return _participants ? participantName(_participants, id) || id || 'TBD' : id || 'TBD'; };
-    const p1 = resolve(m.p1);
-    const p2 = resolve(m.p2);
-    const winnerName = resolve(m.winner);
-      let score = '';
-      if (m.round === 'Final' && m.sets) {
-        const parts = [];
-        for (const set of m.sets) {
-          if (set.s1 !== null && set.s2 !== null) parts.push(set.s1 + '-' + set.s2);
-        }
-        score = parts.join(' / ');
-      } else if (m.s1 !== null && m.s2 !== null) {
-        score = m.s1 + '-' + m.s2;
-      }
-      matches.push({
-        cat: cat,
-        round: roundLabel[m.round] || m.round,
-        p1: p1, p2: p2,
-        score: score || '—',
-        done: m.done,
-        winner: winnerName,
-        updatedAt: m.updatedAt || 0
-      });
-    }
-    const _final = s.knockout.find(m => m.id === 'final');
-    if (_final && _final.done && _final.winner) {
-      const chId = _final.winner;
-      const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
-      const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
-      const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
-      champions.push({ cat: cat, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto, completedAt: s.completedAt || _final.updatedAt });
-    }
-  }
-  matches.sort((a, b) => b.updatedAt - a.updatedAt);
+  const templates = getTemplates();
+  const events = getEvents();
+  const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
   const container = document.getElementById('resultsList');
   let html = '';
-  if (champions.length > 0) {
-    html += '<h2 style="margin-bottom:8px;">🏆 Champions</h2>';
-    for (const c of champions) {
-      html += '<div class="champion-card" style="margin-bottom:12px;padding:16px;">'
-        + '<div class="crown">' + escapeHtml(c.cat.label) + '</div>'
-        + '<div class="name" style="font-size:1.2rem;">' + escapeHtml(c.champion) + '</div>'
-        + (c.championPhoto ? '<img src="' + c.championPhoto + '" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius);margin:6px auto;display:block;">' : '')
-        + '<div class="runner-up" style="border:none;padding-top:8px;font-size:.8rem;">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
-        + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius);margin:4px auto;display:block;">' : '')
-        + '</div>';
+  let hasContent = false;
+  for (const ev of events) {
+    const evMatchData = [];
+    const evChampions = [];
+    for (const tmplId of ev.templateIds) {
+      const tmpl = templates.find(t => t.id === tmplId);
+      if (!tmpl) continue;
+      const s = localLoad(tmpl.id);
+      if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
+      hasContent = true;
+      for (const m of s.knockout) {
+        const _participants = s.participants;
+        const resolve = function(id) { return _participants ? participantName(_participants, id) || id || 'TBD' : id || 'TBD'; };
+        const p1 = resolve(m.p1);
+        const p2 = resolve(m.p2);
+        const winnerName = resolve(m.winner);
+        let score = '';
+        if (m.round === 'Final' && m.sets) {
+          const parts = [];
+          for (const set of m.sets) {
+            if (set.s1 !== null && set.s2 !== null) parts.push(set.s1 + '-' + set.s2);
+          }
+          score = parts.join(' / ');
+        } else if (m.s1 !== null && m.s2 !== null) {
+          score = m.s1 + '-' + m.s2;
+        }
+        evMatchData.push({
+          catLabel: tmpl.name,
+          round: roundLabel[m.round] || m.round,
+          p1: p1, p2: p2,
+          score: score || '—',
+          done: m.done,
+          winner: winnerName,
+          updatedAt: m.updatedAt || 0
+        });
+      }
+      const _final = s.knockout.find(m => m.id === 'final');
+      if (_final && _final.done && _final.winner) {
+        const chId = _final.winner;
+        const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
+        const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
+        const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
+        evChampions.push({ catLabel: tmpl.name, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto });
+      }
     }
-  }
-  if (matches.length === 0) {
-    html += '<p class="text-muted text-center" style="padding:32px 0;">No knockout matches yet.</p>';
-  } else {
-    html += '<h2 class="mt-20">Knockout Matches</h2><div class="results-cards">';
-    for (const m of matches) {
-      const status = m.done ? '<span class="match-status-done">✓ ' + escapeHtml(m.winner) + '</span>' : '<span class="match-status-pending">⏳ Upcoming</span>';
-      html += '<div class="result-card' + (m.done ? ' result-done' : '') + '">'
-        + '<div class="result-card-header">'
-        + '<span class="result-cat">' + escapeHtml(m.cat.label) + '</span>'
-        + '<span class="result-round">' + m.round + '</span>'
-        + '</div>'
-        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
-        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
-        + '<div class="result-status">' + status + '</div>'
-        + '</div>';
+    if (evChampions.length === 0 && evMatchData.length === 0) continue;
+    html += '<div class="home-event"><h2>' + escapeHtml(ev.name) + '</h2>';
+    if (evChampions.length > 0) {
+      html += '<div class="results-cards">';
+      for (const c of evChampions) {
+        html += '<div class="champion-card">'
+          + '<div class="trophy">🏆</div>'
+          + '<div class="crown">' + escapeHtml(c.catLabel) + '</div>'
+          + '<div class="name">' + escapeHtml(c.champion) + '</div>'
+          + (c.championPhoto ? '<img src="' + c.championPhoto + '" class="champion-photo">' : '')
+          + '<div class="runner-up">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
+          + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" class="runnerup-photo">' : '')
+          + '</div>';
+      }
+      html += '</div>';
+    }
+    if (evMatchData.length > 0) {
+      evMatchData.sort((a, b) => b.updatedAt - a.updatedAt);
+      html += '<div class="results-cards">';
+      for (const m of evMatchData) {
+        const status = m.done ? '<span class="match-status-done">\u2713 ' + escapeHtml(m.winner) + '</span>' : '<span class="match-status-pending">\u23F3 Upcoming</span>';
+        html += '<div class="result-card' + (m.done ? ' result-done' : '') + '">'
+          + '<div class="result-card-header">'
+          + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
+          + '<span class="result-round">' + m.round + '</span>'
+          + '</div>'
+          + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
+          + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
+          + '<div class="result-status">' + status + '</div>'
+          + '</div>';
+      }
+      html += '</div>';
     }
     html += '</div>';
+  }
+  if (!hasContent) {
+    html += '<p class="text-muted text-center" style="padding:32px 0;">No knockout matches yet.</p>';
   }
   container.innerHTML = html;
 }
@@ -530,22 +581,25 @@ async function init() {
 
   initSupabase();
 
-  // Categories from Supabase first, fallback to localStorage
+  // Metadata (templates + events) from Supabase first, fallback to localStorage
   if (_supabase) {
     await checkSession();
-    const cloudCats = await fetchCategoriesFromCloud().catch(() => null);
-    if (cloudCats && cloudCats.length) {
-      saveCategories(cloudCats);
+    const meta = await fetchMetadataFromCloud().catch(() => null);
+    if (meta) {
+      if (meta.templates && meta.events) {
+        saveTemplates(meta.templates);
+        saveEvents(meta.events);
+      } else if (meta.categories) {
+        saveCategories(meta.categories);
+      }
     }
   }
 
-  migrateCategorySports();
   runMigration();
 
-  // Sync migrated categories back to cloud so login() gets the correct format
+  // Sync metadata to cloud
   if (_supabase && isAdmin()) {
-    const cats = getCategories();
-    if (cats.length) upsertCategories(cats);
+    syncMetadataToCloud();
   }
 
   try {
@@ -611,6 +665,7 @@ async function init() {
       }
     }
     subscribeToChanges();
+    subscribeToMetadataChanges();
     updateBanners();
   }
 
@@ -631,7 +686,6 @@ async function init() {
   } else {
     AppState.tournament = defaultState();
   }
-  AppState.view = AppState.tournament.phase;
 
   // Supabase-first for current category state
   if (_supabase) {
@@ -639,7 +693,6 @@ async function init() {
     if (serverState && serverState._lastSave > (AppState.tournament._lastSave || 0)) {
       AppState.tournament = serverState;
       localSave(AppState.category, AppState.tournament);
-      AppState.view = AppState.tournament.phase;
     }
   }
 
@@ -648,7 +701,7 @@ async function init() {
     if (link) link.classList.remove('hidden');
   }
 
-  showResultsPage();
+  navigateTo('home');
 }
 
 document.addEventListener('DOMContentLoaded', function() { init(); });

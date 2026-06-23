@@ -42,9 +42,20 @@ function updateBanners() {
 function renderSportBar() {
   const bar = document.getElementById('sportBar');
   if (!bar) return;
+  if (AppState.view === 'home' || AppState.view === 'results' || AppState.ui.showingResults) {
+    bar.innerHTML = '';
+    return;
+  }
   const labels = { badminton: 'Badminton', tableTennis: 'Table Tennis', chess: 'Chess' };
-  const cats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-  const sportSet = new Set(cats.map(c => c.sport));
+  const ev = getEvents().find(e => e.name === AppState.event);
+  const templates = getTemplates();
+  const sportSet = new Set();
+  if (ev) {
+    for (const tmplId of ev.templateIds) {
+      const t = templates.find(tm => tm.id === tmplId);
+      if (t) sportSet.add(t.sport);
+    }
+  }
   bar.innerHTML = '';
   for (const s of ['badminton', 'tableTennis', 'chess']) {
     if (!sportSet.has(s)) continue;
@@ -58,41 +69,31 @@ function renderSportBar() {
 
 function switchSport(sport) {
   if (sport === AppState.sport) return;
-  AppState.sport = sport;
-  renderSportBar();
-  const cats = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-  if (cats.length > 0) {
-    switchCategory(cats[0].id);
-    return;
-  } else {
-    AppState.category = null;
-    AppState.tournament = defaultState();
-    navigateTo('setup');
-  }
+  goToSportPage(AppState.event, sport);
 }
 
 // ===================== EVENT BAR =====================
 function renderEventBar() {
   const bar = document.getElementById('eventBar');
   if (!bar) return;
-  const events = [...new Set(getCategories().map(c => c.event || APP_CONFIG.defaultEvent))];
+  const events = getEvents();
   bar.innerHTML = '';
   for (const ev of events) {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;align-items:center;gap:2px;';
     const btn = document.createElement('button');
-    btn.className = 'event-btn' + (ev === AppState.event ? ' active' : '');
-    btn.textContent = ev;
-    btn.onclick = function() { switchEvent(ev); };
+    btn.className = 'event-btn' + (ev.name === AppState.event ? ' active' : '');
+    btn.textContent = ev.name;
+    btn.onclick = function() { switchEvent(ev.name); };
     wrap.appendChild(btn);
     if (isAdmin()) {
       const rmBtn = document.createElement('button');
       rmBtn.textContent = '✏️';
-      rmBtn.title = 'Rename "' + ev + '"';
+      rmBtn.title = 'Rename "' + ev.name + '"';
       rmBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px;line-height:1;opacity:0.5;';
       rmBtn.onmouseover = function() { this.style.opacity = '1'; };
       rmBtn.onmouseout = function() { this.style.opacity = '0.5'; };
-      rmBtn.onclick = function(e) { e.stopPropagation(); renameEvent(ev); };
+      rmBtn.onclick = function(e) { e.stopPropagation(); renameEvent(ev.name); };
       wrap.appendChild(rmBtn);
     }
     bar.appendChild(wrap);
@@ -103,17 +104,14 @@ function renameEvent(oldName) {
   if (!isAdmin()) return;
   const newName = prompt('Rename "' + oldName + '" to:', oldName);
   if (!newName || newName === oldName) return;
-  const cats = getCategories();
+  const events = getEvents();
   let changed = false;
-  for (const c of cats) {
-    if ((c.event || APP_CONFIG.defaultEvent) === oldName) {
-      c.event = newName;
-      changed = true;
-    }
+  for (const ev of events) {
+    if (ev.name === oldName) { ev.name = newName; changed = true; break; }
   }
   if (!changed) return;
-  saveCategories(cats);
-  if (_supabase) upsertCategories(cats);
+  saveEvents(events);
+  if (_supabase) syncMetadataToCloud();
   if (AppState.event === oldName) AppState.event = newName;
   renderEventBar();
   var panel = document.getElementById('managePanel');
@@ -133,23 +131,61 @@ function renameEvent(oldName) {
 
 function switchEvent(ev) {
   if (ev === AppState.event) return;
-  AppState.event = ev;
-  renderEventBar();
-  const cats = getCategories().filter(c => (c.event || APP_CONFIG.defaultEvent) === AppState.event);
-  if (cats.length > 0) {
-    const sportCats = cats.filter(c => c.sport === AppState.sport);
-    if (sportCats.length > 0) {
-      switchCategory(sportCats[0].id);
-    } else {
-      AppState.sport = cats[0].sport;
-      renderSportBar();
-      switchCategory(cats[0].id);
-    }
-    return;
+  goToEventPage(ev);
+}
+
+// ===================== TEMPLATE MANAGEMENT =====================
+function addTemplateToCurrentEvent() {
+  if (!isAdmin()) return;
+  const label = document.getElementById('newTemplateLabel').value.trim();
+  if (!label) { document.getElementById('eventTemplateError').textContent = 'Label is required.'; return; }
+  const sport = document.getElementById('newTemplateSport').value;
+  const type = document.getElementById('newTemplateType').value;
+  const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+  if (!ev) return;
+  const templates = getTemplates();
+  const key = label.toLowerCase() + '|' + sport + '|' + type;
+  const existing = templates.find(function(t) { return (t.name.toLowerCase() + '|' + t.sport + '|' + t.type) === key; });
+  let tmpl;
+  if (existing) {
+    tmpl = existing;
+  } else {
+    const baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 't';
+    let id = baseId;
+    let counter = 1;
+    while (templates.find(function(t) { return t.id === id; })) { id = baseId + '_' + counter++; }
+    tmpl = { id: id, name: label, sport: sport, type: type };
+    templates.push(tmpl);
+    saveTemplates(templates);
   }
-  AppState.category = null;
-  AppState.tournament = defaultState();
-  navigateTo('setup');
+  if (ev.templateIds.indexOf(tmpl.id) === -1) {
+    ev.templateIds.push(tmpl.id);
+    saveEvents(getEvents());
+  }
+  document.getElementById('newTemplateLabel').value = '';
+  document.getElementById('eventTemplateError').textContent = '';
+  renderEventPage();
+}
+
+function removeTemplateFromCurrentEvent(templateId) {
+  if (!isAdmin()) return;
+  const events = getEvents();
+  const ev = events.find(function(e) { return e.name === AppState.event; });
+  if (!ev) return;
+  ev.templateIds = ev.templateIds.filter(function(id) { return id !== templateId; });
+  saveEvents(events);
+  renderEventPage();
+}
+
+function createEventFromHome() {
+  if (!isAdmin()) return;
+  const name = prompt('Event name:');
+  if (!name || !name.trim()) return;
+  const ev = createEvent(name.trim());
+  if (!ev) { alert('Event already exists.'); return; }
+  AppState.event = ev.name;
+  renderHomePage();
+  goToEventPage(AppState.event);
 }
 
 // ===================== CATEGORY SWITCHING =====================
@@ -159,8 +195,10 @@ async function switchCategory(catId) {
   if (AppState.category && AppState.tournament && AppState.tournament.phase !== 'setup') { saveState(); await flushCloudSave(); }
   if (AppState.loadingCategory !== catId) return;
   AppState.category = catId;
+  const tmpl = getTemplates().find(t => t.id === catId);
+  if (tmpl) { AppState.sport = tmpl.sport; }
   const cat = getCategories().find(c => c.id === catId);
-  if (cat) { AppState.sport = cat.sport; AppState.event = cat.event || APP_CONFIG.defaultEvent; }
+  if (cat) { AppState.event = cat.event || APP_CONFIG.defaultEvent; }
   let serverState = null;
   if (_supabase) {
     serverState = await fetchState(catId).catch(() => null);
@@ -175,9 +213,8 @@ async function switchCategory(catId) {
       AppState.tournament = saved;
     } else {
       AppState.tournament = defaultState();
-      const cat = getCategories().find(c => c.id === catId);
-      if (cat && cat.sport) AppState.tournament.sport = cat.sport;
-      if (cat && cat.type) AppState.tournament.format = cat.type;
+      if (tmpl) AppState.tournament.sport = tmpl.sport;
+      if (tmpl) AppState.tournament.format = tmpl.type;
     }
   }
   AppState.view = AppState.tournament.phase;
@@ -188,17 +225,22 @@ async function switchCategory(catId) {
 function renderCategoryBar() {
   const bar = document.getElementById('catBar');
   bar.innerHTML = '';
-  for (const cat of getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event)) {
+  const ev = getEvents().find(e => e.name === AppState.event);
+  if (!ev) return;
+  const templates = getTemplates();
+  for (const tmplId of ev.templateIds) {
+    const tmpl = templates.find(t => t.id === tmplId);
+    if (!tmpl || tmpl.sport !== AppState.sport) continue;
     const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat.id === AppState.category ? ' active' : '');
-    const s = localLoad(cat.id);
+    btn.className = 'cat-btn' + (tmpl.id === AppState.category ? ' active' : '');
+    const s = localLoad(tmpl.id);
     let dotClass = 'setup';
     if (s) {
       if (s.phase === 'champion') dotClass = 'done';
       else if (s.phase !== 'setup') dotClass = 'playing';
     }
-    btn.innerHTML = '<span class="dot ' + dotClass + '"></span>' + escapeHtml(cat.label);
-    btn.onclick = function() { switchCategory(cat.id); };
+    btn.innerHTML = '<span class="dot ' + dotClass + '"></span>' + escapeHtml(tmpl.name);
+    btn.onclick = function() { switchCategory(tmpl.id); };
     bar.appendChild(btn);
   }
 }
@@ -373,7 +415,7 @@ function saveCategoryEdit(catId) {
   cat.sport = document.getElementById('editSport_' + catId).value;
   cat.event = ev;
   saveCategories(cats);
-  if (_supabase) upsertCategories(cats);
+  if (_supabase) syncMetadataToCloud();
   var panel = document.getElementById('managePanel');
   if (!panel.classList.contains('hidden')) renderManagePanel();
   if (catId === AppState.category) {
@@ -399,7 +441,7 @@ function saveCategoryEdit(catId) {
 function populateEventDropdown(selectId, selectedEvent) {
   var el = document.getElementById(selectId);
   if (!el) return;
-  var events = [...new Set(getCategories().map(function(c) { return c.event || APP_CONFIG.defaultEvent; }))];
+  var events = getEvents().map(function(e) { return e.name; });
   events.sort();
   el.innerHTML = '';
   for (var i = 0; i < events.length; i++) {
@@ -458,7 +500,7 @@ function addCategory(label, type, sport, eventName) {
   const ev = eventName || APP_CONFIG.defaultEvent;
   cats.push({ id, label, type, sport: sport || 'badminton', event: ev });
   saveCategories(cats);
-  if (_supabase) upsertCategories(cats);
+  if (_supabase) syncMetadataToCloud();
   const panel = document.getElementById('managePanel');
   if (!panel.classList.contains('hidden')) renderManagePanel();
   if (ev !== AppState.event) {
@@ -479,7 +521,7 @@ function deleteCategory(id) {
   localClear(id);
   if (_supabase) {
     _supabase.from('state').delete().eq('key', getStateKey(id)).then().catch(() => {});
-    upsertCategories(filtered);
+    syncMetadataToCloud();
   }
   if (AppState.category === id) {
     const remaining = getCategories().filter(c => c.sport === AppState.sport && (c.event || APP_CONFIG.defaultEvent) === AppState.event);
@@ -591,7 +633,7 @@ function confirmImport() {
   const data = _pendingImportData;
   _pendingImportData = null;
   saveCategories(data.categories);
-  if (_supabase) upsertCategories(data.categories);
+  if (_supabase) syncMetadataToCloud();
   for (const id of Object.keys(data.states)) {
     try { localStorage.setItem(getStateKey(id), JSON.stringify(data.states[id])); } catch(e) {}
     if (_supabase) upsertState(id, data.states[id]);

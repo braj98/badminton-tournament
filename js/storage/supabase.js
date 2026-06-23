@@ -1,5 +1,6 @@
 let _supabase = null;
 let _realtimeChannel = null;
+let _metadataChannel = null;
 let _saveDebounceTimer = null;
 let _pendingSave = null;
 
@@ -57,22 +58,46 @@ function scheduleCloudSave(catId, data) {
   }, 500);
 }
 
-async function upsertCategories(data) {
+// --- Metadata (templates + events) cloud sync ---
+
+async function syncMetadataToCloud() {
   if (!_supabase) return;
+  const templates = getTemplates();
+  const events = getEvents();
+  await Promise.all([
+    _upsertByKey('btm_templates', templates),
+    _upsertByKey('btm_events', events),
+    _upsertByKey('btm_categories', getCategories())
+  ]);
+}
+
+async function _upsertByKey(key, data) {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const { error } = await _supabase.from('state').upsert({ key: getCategoriesKey(), data: data }, { onConflict: 'key' });
+    const { error } = await _supabase.from('state').upsert({ key: key, data: data }, { onConflict: 'key' });
     if (!error) return;
     if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-    else console.warn('Supabase categories upsert failed after 3 attempts:', error.message);
+    else console.warn('Supabase upsert failed for key ' + key + ' after 3 attempts:', error.message);
   }
 }
 
-async function fetchCategoriesFromCloud() {
+async function _fetchByKey(key) {
   if (!_supabase) return null;
-  const { data, error } = await _supabase.from('state').select('data').eq('key', getCategoriesKey()).maybeSingle();
-  if (error && error.code !== 'PGRST116') { console.warn('Supabase categories fetch failed:', error.message); return null; }
+  const { data, error } = await _supabase.from('state').select('data').eq('key', key).maybeSingle();
+  if (error && error.code !== 'PGRST116') { console.warn('Supabase fetch failed for key ' + key + ':', error.message); return null; }
   return data ? data.data : null;
 }
+
+async function fetchMetadataFromCloud() {
+  if (!_supabase) return null;
+  const templates = await _fetchByKey('btm_templates');
+  const events = await _fetchByKey('btm_events');
+  if (templates && events) return { templates: templates, events: events };
+  const cats = await _fetchByKey('btm_categories');
+  if (cats) return { categories: cats };
+  return null;
+}
+
+// --- Realtime subscriptions ---
 
 function subscribeToChanges() {
   if (!_supabase || _realtimeChannel) return;
@@ -96,4 +121,35 @@ function subscribeToChanges() {
     .subscribe();
 }
 
+function subscribeToMetadataChanges() {
+  if (!_supabase || _metadataChannel) return;
+  _metadataChannel = _supabase.channel('btm-metadata-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'state' }, payload => {
+      const key = payload.new ? payload.new.key : null;
+      if (key === 'btm_templates' || key === 'btm_events') {
+        fetchMetadataFromCloud().then(function(meta) {
+          if (!meta) return;
+          if (meta.templates && meta.events) {
+            saveTemplates(meta.templates);
+            saveEvents(meta.events);
+          } else if (meta.categories) {
+            saveCategories(meta.categories);
+          }
+          const currentCat = AppState.category;
+          if (!getCategories().find(c => c.id === currentCat)) {
+            navigateTo('home');
+          } else {
+            renderAll();
+          }
+        });
+      }
+    })
+    .subscribe();
+}
 
+function unsubscribeMetadata() {
+  if (_metadataChannel) {
+    _supabase.removeChannel(_metadataChannel);
+    _metadataChannel = null;
+  }
+}

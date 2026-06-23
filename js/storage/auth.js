@@ -42,10 +42,15 @@ async function login() {
   closeLogin();
   const serverState = await fetchState(AppState.category);
   if (serverState) { AppState.tournament = serverState; localSave(AppState.category, AppState.tournament); }
-  const cloudCats = await fetchCategoriesFromCloud();
-  if (cloudCats && cloudCats.length) {
-    saveCategories(cloudCats);
-    migrateCategorySports();
+  const meta = await fetchMetadataFromCloud();
+  if (meta) {
+    if (meta.templates && meta.events) {
+      saveTemplates(meta.templates);
+      saveEvents(meta.events);
+    } else if (meta.categories) {
+      saveCategories(meta.categories);
+      migrateCategorySports();
+    }
   }
   hideLoading();
   emit('userLoggedIn');
