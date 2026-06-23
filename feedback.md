@@ -1,183 +1,66 @@
-# Tournament Manager — Current Assessment & Next Steps
+# Feedback Implementation
 
-## Overall Status
+Tracking all items from `feedback.txt`. Will work through one at a time.
 
-The project has successfully evolved from a badminton application into a reusable tournament platform.
+## Bugs / Risks
 
-| Area | Completion | Status |
-|------|-----------|--------|
-| Core Tournament Engine | 85% | ✅ Groups, Fixtures, Standings, Qualification, Knockout, Champion |
-| Architecture | 80% | ✅ Models, Engine, Storage, UI separation, Sport configuration |
-| | | ⏳ Event model, AppState cleanup, Removal of global variables |
-| User Experience | 65% | ⏳ Biggest remaining improvement area — navigation works but feels technical |
+- [x] **Bug 1 (High): `updateNavigationVisibility()`** — Renamed from `updateGlobalNavigation()`, now sole source of truth for catBar/actionBar/tournamentTabs visibility. Purged all duplicate `style.display` calls from `renderHomePage()`, `renderEventPage()`, `renderSportPage()`, `renderActionBar()`, `showResultsPage()`, `renderAll()`. One edge-case override remains (viewer "no active" screen).
+- [x] **Bug 2 (Med): Login Duplicate State** — Both `onAuthStateChange()` and `login()` update `AppState.user`. Make `onAuthStateChange()` the sole source.
+- [x] **Bug 3 (Med): Category Switch Race Condition** — Added `AppState.loadingCategory` guard. Set at start of `switchCategory()`, checked after `await flushCloudSave()` and `await fetchState()` to discard stale async responses on rapid switching.
+- [x] **Bug 4 (Low): Viewer Role** — `AppState.user` defaults to `{ role: 'viewer' }` instead of `null`. `onAuthStateChange()` sets `{ role: 'viewer' }` when no session. `isAdmin()` still works correctly (checks `role === 'admin'`).
 
----
+## Architecture
 
-## High Priority Bugs
+- [x] **`navigateTo(view)` (High)** — Central function setting `AppState.view + renderAll()`. Replaces repeated pattern in `goHome()`, `goToEventPage()`, `goToSportPage()`, `goToGroups()`, `goToFixtures()`, `goToKnockout()`, `viewKnockout()`, `goToFixturesFromKnockout()`, `goBackFromChampion()`, `viewChampion()`, `switchCategory()`, `resetCategory()`, `switchSport()`, `switchEvent()`, `newTournament()`, `startTournament()`, `logout()`, and viewer redirect path.
+- [x] **Session Service (Med)** — Extract auth (login/logout/session/role) from `supabase.js` into `storage/auth.js`.
+- [x] **App Events (Low)** — Introduce `emit('categoryChanged')`, `emit('userLoggedIn')`, etc. instead of direct function calls. `events.js` defines `on/off/emit`. `auth.js` emits `userLoggedIn`/`userLoggedOut`. `app.js` subscribes and handles rendering/banners/navigation.
 
-### Bug 1: Category Tabs Not Visible
+## UX
 
-**Status: ✅ Fixed**
+- [x] **Category Status Badges (High)** — ⚪🟢🏆 on sport page cards (done)
+- [x] **Participant Counts (High)** — "X Teams" / "X Players" on sport page cards (done)
+- [x] **Clickable Breadcrumbs (Med)** — Every level clickable (Home › Event › Sport › Category). Added `onclick` to `bc-current` items, removed `cursor: default` CSS restriction.
+- [x] **Admin/Viewer Mode Banner (Med)** — 👁 Viewer Mode / 🔧 Admin Mode banner (done)
 
-Root cause: `login()` in `supabase.js:48-51` fetched cloud categories (old format, no `sport`/`event` fields) and overwrote locally-migrated categories without calling `migrateCategorySports()`. `renderCategoryBar()` filtered by `c.sport === currentSport` → zero matches → empty bar.
+## Testing
 
-**Fixes applied:**
-- `supabase.js:50` — Added `migrateCategorySports()` after `saveCategories(cloudCats)` in `login()`
-- `app.js:363-366` — Added `upsertCategories(cats)` after `migrateCategorySports()` in `init()` to sync migrated categories to cloud
-- `renderAll()` already sets `catBar.style.display = ''` at line 129 on every non-home render
+- [x] **Player Count Validation (High)** — 275 tests covering 2/3/5/6/10/11/20 players (done)
 
-### Bug 2: Navigation State
+## Summary
 
-**Status: ✅ Verified**
+| Area | Total | Done | Remaining |
+|------|-------|------|-----------|
+| Bugs/Risks | 4 | 4 | 0 |
+| Architecture | 3 | 3 | 0 |
+| UX | 4 | 4 | 0 |
+| Testing | 1 | 1 | 0 |
+| **Total** | **12** | **12** | **0** |
 
-- `state.phase` tracks tournament progress (setup → groups → fixtures → knockout → champion)
-- `currentView` tracks displayed screen (independent of phase)
-- Navigation functions (`goToGroups`, `viewKnockout`, `goBackFromChampion`) only change `currentView`
-- Only `goToKnockout()` and `showResults()` advance `state.phase` — both admin-guarded
-- Score entry, group moves, and all mutations are admin-guarded with `if (!_isAdmin) return`
+## Post-Feedback Enhancements
 
-### Bug 3: Results / Champion Navigation
-
-**Status: ✅ Verified**
-
-Groups → Fixtures → Knockout → Champion can be viewed by both Admin and Viewer without modifying tournament progress:
-- `goToGroups()` — sets `currentView = 'groups'`, calls `renderAll()`, safe for both
-- `viewKnockout()` — sets `currentView = 'knockout'`, calls `renderAll()`, safe for both
-- `viewChampion()` — sets `currentView = 'champion'`, calls `renderAll()`, safe for both
-- `showResults()` — admin-guarded, advances phase if needed
+- [x] **Event Dropdown + Category Editing (Med)** — Replace free-text event input in Add Category form with a dropdown of existing events + "New Event…" option. Add inline edit button per category to change label, event, sport, or format without delete+recreate.
+- [x] **Global Event Rename (Low)** — ✏️ button next to each event in the event bar (admin only). Updates all categories with that event name in one shot via `prompt()`.
 
 ---
 
-## UX Improvement Roadmap
+## Phase 1: Event → Template → Competition (dev branch)
 
-**Status: ⏳ Structure exists, refinement needed**
+### Goal
+Restructure from flat categories to three-layer model: Event contains Templates, Templates are reusable competition definitions (sport + type) with no event field, Competition is an Event–Template pair with its own tournament state.
 
-### Current UX (what we have)
+### Steps
 
-```
-Event Bar       → [Summer Games 2026]
-Sport Bar       → [Badminton] [Table Tennis] [Chess]
-Category Tabs   → [Junior] [Sr Boys] [Sr Girls] [Jr Dbls] [Sr Dbls]
-Tournament      → Groups / Fixtures / Knockout / Champion (action bar + content)
-```
+| Step | File | What |
+|------|------|------|
+| ✅ 1 | `js/models/template.js` | `getTemplates()`, `saveTemplates()`, `createTemplateId()` |
+| ✅ 2 | `js/models/event.js` | Upgrade: `getEvents()` reads `btm_events`, `saveEvents()`, `createEvent()`, `addTemplateToEvent()`, `removeTemplateFromEvent()` |
+| ✅ 3 | `js/storage/local.js` | `runMigration()` — dedup categories → templates, group by event → create events, migrate state keys. Old data preserved. |
+| ✅ 4 | `js/ui/app.js` | Call `runMigration()` from `init()` after `migrateCategorySports()` |
+| ✅ 5 | `js/test/edge_cases.js` | `testMigration()` — verify templates, events, state migration, dedup, idempotency |
 
-### Recommended UX (feedback target)
-
-```
-Home            → 🏆 Tournament Manager
-                    Events: Summer Games 2026, Winter Games 2026
-
-Event Page      → Summer Games 2026
-                    Sports: 🏸 Badminton, 🏓 Table Tennis, ♟ Chess
-
-Sport Page      → Badminton
-                    Categories: Junior Singles, Senior Singles, Senior Doubles
-
-Tournament Page → Tabs: Groups | Fixtures | Knockout | Champion
-```
-
-### What's done ✅
-- Home page with event sections and sport cards
-- Event → Sport → Category hierarchy in navigation bars
-- Tournament content renders per view
-
-### What's pending ⏳
-- Separate "Event Page" as a distinct screen (currently event is just a bar label)
-- Separate "Sport Page" as a distinct screen (currently sport is just a bar label)
-- More intuitive page-like transitions instead of bar-based navigation
-- Breadcrumb or "You are here" indicator
-
----
-
-## Data Model Improvements
-
-**Status: ✅ Implemented**
-
-| Level | Implementation |
-|-------|---------------|
-| Event | `event` field on each category. Event bar derived from `[...new Set(categories.map(c => c.event))]` |
-| Sport | `sport` field on each category. Sport bar filters by sport. `sportConfig.js` has sport-specific settings |
-| Category | Factory defaults + dynamic add/delete. `event` + `sport` fields |
-| Tournament | Per-category state object with phase, groups, fixtures, standings, knockout, champion |
-
----
-
-## Sports Roadmap
-
-| Phase | Sport | Status |
-|-------|-------|--------|
-| 1 | Badminton Singles / Doubles | ✅ Complete — stable and production-ready |
-| 2 | Table Tennis Singles / Tennis Singles | ⏳ Config exists in `sportConfig.js`, untested |
-| 3 | Chess / Carrom | ⏳ Chess config exists (`sportConfig.js:27-40`), Carrom not configured |
-| 4 | Football / Volleyball / Basketball | ⏳ Deferred — needs team model + team standings engine |
-| 5 | Cricket | ⏳ Deferred — recommended as separate module |
-
----
-
-## Architecture Improvements
-
-### AppState (Remove Global Variables)
-
-**Status: ⏳ Deferred**
-
-Current globals:
-- `state`, `currentCategory`, `currentSport`, `currentEvent`, `currentView`
-
-Recommended:
-```js
-AppState = {
-  user,
-  currentEvent,
-  currentSport,
-  currentCategory,
-  currentView,
-  tournament
-}
-```
-
-Not urgent for V1 — current globals work and are manageable at this scale. Would be needed before React migration.
-
-### Event Model (`event.js`)
-
-**Status: ⏳ Deferred — partially done**
-
-Events exist as a field on categories and are rendered in the event bar + home page. A standalone `event.js` model with `{id, name, year, sports:[]}` would be needed for data retention enforcement (archive/delete old events).
-
-### Sport Model (`sport.js`)
-
-**Status: ⏳ Deferred — partially done**
-
-`SPORT_CONFIG` in `sportConfig.js` centralizes per-sport settings. A standalone `sport.js` model with `{id, name, categories:[]}` is not yet needed.
-
----
-
-## Features To Avoid For Now
-
-**Status: ✅ Agreed — not adding**
-
-- Notifications
-- WhatsApp integration
-- Historical analytics
-- Player rankings
-- Advanced statistics
-
-Focus remains on UX and navigation stability.
-
----
-
-## Recommended Next Sprint
-
-| Priority | Item | Status |
-|----------|------|--------|
-| 1 | Fix navigation UX (intuitive pages vs bars) | ⏳ Structure done, refinement needed |
-| 2 | Fix category visibility issue | ✅ Fixed in login() + init() |
-| 3 | Event → Sport → Category hierarchy | ✅ Implemented |
-| 4 | Add Table Tennis | ⏡ Not started |
-| 5 | Add Chess | ⏡ Not started |
-
----
-
-## Final Recommendation
-
-> The platform is no longer a prototype. It is approaching a reusable tournament management product.
-> The next major gains will come from **UX simplification**, **navigation improvements**, and **better hierarchy** — not from adding more tournament logic.
+### Notes
+- Old data (`btm_categories`, `btm_state_{catId}`) is **never deleted** — preserved for rollback
+- `runMigration()` is idempotent (checks `btm_migrated` flag)
+- `getCategories()` still reads `btm_categories` (compatibility shim deferred to later phase)
+- Rollback: remove `btm_migrated`, delete `btm_templates` and `btm_events`
+- All 275 engine tests continue to pass

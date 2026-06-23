@@ -540,6 +540,7 @@ async function init() {
   }
 
   migrateCategorySports();
+  runMigration();
 
   // Sync migrated categories back to cloud so login() gets the correct format
   if (_supabase && isAdmin()) {

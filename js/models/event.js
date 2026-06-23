@@ -1,9 +1,42 @@
-function createEvent(name, year) {
-  return { id: name.toLowerCase().replace(/[^a-z0-9]+/g, '_'), name: name, year: year || new Date().getFullYear(), createdAt: Date.now() };
-}
+const EVENTS_KEY = 'btm_events';
 
 function getEvents() {
+  const migrated = localStorage.getItem('btm_migrated');
+  if (migrated) {
+    try {
+      const raw = localStorage.getItem(EVENTS_KEY);
+      if (raw) { const e = JSON.parse(raw); if (e.length) return e; }
+    } catch(e) {}
+    return [];
+  }
   return [...new Set(getCategories().map(c => c.event || APP_CONFIG.defaultEvent))];
+}
+
+function saveEvents(events) {
+  try { localStorage.setItem(EVENTS_KEY, JSON.stringify(events)); } catch(e) {}
+}
+
+function createEvent(name) {
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  return { id, name, templateIds: [], createdAt: Date.now() };
+}
+
+function addTemplateToEvent(eventId, templateId) {
+  const events = getEvents();
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  if (!ev.templateIds.includes(templateId)) {
+    ev.templateIds.push(templateId);
+    saveEvents(events);
+  }
+}
+
+function removeTemplateFromEvent(eventId, templateId) {
+  const events = getEvents();
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  ev.templateIds = ev.templateIds.filter(id => id !== templateId);
+  saveEvents(events);
 }
 
 function deleteEvent(eventName) {

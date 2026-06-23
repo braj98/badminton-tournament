@@ -502,6 +502,167 @@ function testCategoryEventLinking() {
   return pass;
 }
 
+function testTemplateModel() {
+  console.log('\n=== Template Model ===');
+  let pass = true;
+
+  const origTemplates = getTemplates();
+  const origKey = TEMPLATES_KEY;
+
+  // Empty state
+  saveTemplates([]);
+  pass &= assert(getTemplates().length === 0, 'Empty templates array');
+
+  // Create and save
+  const t1 = { id: 'test_one', name: 'Test One', sport: 'badminton', type: 'singles' };
+  const t2 = { id: 'test_two', name: 'Test Two', sport: 'badminton', type: 'doubles' };
+  saveTemplates([t1, t2]);
+  const loaded = getTemplates();
+  pass &= assert(loaded.length === 2, 'Saved and loaded 2 templates');
+  pass &= assert(loaded[0].id === 'test_one' && loaded[0].name === 'Test One', 'Template 1 data preserved');
+  pass &= assert(loaded[1].id === 'test_two' && loaded[1].name === 'Test Two', 'Template 2 data preserved');
+
+  // createTemplateId
+  const newId = createTemplateId('New Template');
+  pass &= assert(newId === 'new_template', 'createTemplateId("New Template") = "new_template"');
+
+  // Duplicate ID generation
+  const dupId = createTemplateId('Test One');
+  pass &= assert(dupId !== 'test_one', 'createTemplateId for existing label generates unique id (got "' + dupId + '")');
+
+  // Empty label fallback
+  const emptyId = createTemplateId('');
+  pass &= assert(emptyId === 't' || emptyId.startsWith('t'), 'createTemplateId("") falls back to "t"');
+
+  // Restore
+  saveTemplates(origTemplates);
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
+function testMigration() {
+  console.log('\n=== Migration ===');
+  let pass = true;
+
+  // Save mock old-format categories
+  const testCats = [
+    { id: 'cat_a', label: 'Cat A', type: 'singles', sport: 'badminton', event: 'Event 1' },
+    { id: 'cat_b', label: 'Cat B', type: 'doubles', sport: 'badminton', event: 'Event 1' },
+    { id: 'cat_c', label: 'Cat C', type: 'singles', sport: 'tableTennis', event: 'Event 2' },
+  ];
+  saveCategories(testCats);
+
+  // Save mock state for each
+  const mockState1 = { phase: 'setup', participants: [] };
+  const mockState2 = { phase: 'champion', participants: [{ id: 'p1', name: 'Team 1' }] };
+  const mockState3 = { phase: 'groups', participants: [] };
+  localStorage.setItem('btm_state_cat_a', JSON.stringify(mockState1));
+  localStorage.setItem('btm_state_cat_b', JSON.stringify(mockState2));
+  localStorage.setItem('btm_state_cat_c', JSON.stringify(mockState3));
+
+  // Ensure no migrated flag
+  localStorage.removeItem('btm_migrated');
+  localStorage.removeItem('btm_templates');
+  localStorage.removeItem('btm_events');
+
+  // Run migration
+  runMigration();
+  const migrated = localStorage.getItem('btm_migrated');
+  pass &= assert(!!migrated, 'Migration set btm_migrated flag');
+
+  // Check templates
+  const templates = getTemplates();
+  pass &= assert(templates.length === 3, 'Migration created 3 templates (got ' + templates.length + ')');
+
+  const tmplA = templates.find(t => t.id === 'cat_a');
+  pass &= assert(!!tmplA, 'Template cat_a exists');
+  pass &= assert(tmplA.name === 'Cat A' && tmplA.sport === 'badminton' && tmplA.type === 'singles', 'Template cat_a data correct');
+
+  // Cat B and Cat C
+  pass &= assert(!!templates.find(t => t.id === 'cat_b'), 'Template cat_b exists');
+  pass &= assert(!!templates.find(t => t.id === 'cat_c'), 'Template cat_c exists');
+
+  // Check events
+  const events = getEvents();
+  pass &= assert(events.length === 2, 'Migration created 2 events (got ' + events.length + ')');
+
+  const ev1 = events.find(e => e.name === 'Event 1');
+  pass &= assert(!!ev1, 'Event 1 exists');
+  pass &= assert(ev1.templateIds.length === 2, 'Event 1 has 2 templates');
+  pass &= assert(ev1.templateIds.includes('cat_a') && ev1.templateIds.includes('cat_b'), 'Event 1 has cat_a and cat_b');
+
+  const ev2 = events.find(e => e.name === 'Event 2');
+  pass &= assert(!!ev2, 'Event 2 exists');
+  pass &= assert(ev2.templateIds.length === 1 && ev2.templateIds[0] === 'cat_c', 'Event 2 has cat_c');
+
+  // Check state migration
+  const ev1Id = 'event_1';
+  const ev2Id = 'event_2';
+  const stateA = localStorage.getItem('btm_state_' + ev1Id + '_cat_a');
+  const stateB = localStorage.getItem('btm_state_' + ev1Id + '_cat_b');
+  const stateC = localStorage.getItem('btm_state_' + ev2Id + '_cat_c');
+  pass &= assert(!!stateA, 'State migrated for cat_a');
+  pass &= assert(!!stateB, 'State migrated for cat_b');
+  pass &= assert(!!stateC, 'State migrated for cat_c');
+  if (stateA) {
+    const parsed = JSON.parse(stateA);
+    pass &= assert(parsed.phase === 'setup', 'cat_a state phase preserved');
+  }
+  if (stateB) {
+    const parsed = JSON.parse(stateB);
+    pass &= assert(parsed.phase === 'champion', 'cat_b state phase preserved');
+    pass &= assert(parsed.participants[0].name === 'Team 1', 'cat_b state data preserved');
+  }
+
+  // Old state keys still exist (no delete)
+  pass &= assert(!!localStorage.getItem('btm_state_cat_a'), 'Old state key preserved for rollback');
+
+  // Idempotent
+  const eventCountBefore = getEvents().length;
+  runMigration();
+  const migratedAgain = localStorage.getItem('btm_migrated');
+  pass &= assert(!!migratedAgain, 'btm_migrated still set after second call');
+  pass &= assert(getEvents().length === eventCountBefore, 'Second migration did not duplicate events');
+
+  // Cleanup
+  localStorage.removeItem('btm_state_cat_a');
+  localStorage.removeItem('btm_state_cat_b');
+  localStorage.removeItem('btm_state_cat_c');
+  localStorage.removeItem('btm_state_' + ev1Id + '_cat_a');
+  localStorage.removeItem('btm_state_' + ev1Id + '_cat_b');
+  localStorage.removeItem('btm_state_' + ev2Id + '_cat_c');
+  localStorage.removeItem('btm_migrated');
+  localStorage.removeItem('btm_templates');
+  localStorage.removeItem('btm_events');
+  saveCategories([]);
+
+  // Also test deduplication: same label+sport+type should collapse
+  const dupCats = [
+    { id: 'dup_1', label: 'Dup', type: 'singles', sport: 'badminton', event: 'Event X' },
+    { id: 'dup_2', label: 'Dup', type: 'singles', sport: 'badminton', event: 'Event Y' },
+  ];
+  saveCategories(dupCats);
+  runMigration();
+  const dedupTemplates = getTemplates();
+  pass &= assert(dedupTemplates.length === 1, 'Deduplication: 1 template for 2 identical categories');
+  const dedupEvents = getEvents();
+  pass &= assert(dedupEvents.length === 2, 'Deduplication: 2 events still created');
+  // Both events should reference the same template
+  for (const ev of dedupEvents) {
+    pass &= assert(ev.templateIds.length === 1 && ev.templateIds[0] === 'dup_1', 'Event "' + ev.name + '" references deduped template');
+  }
+
+  // Cleanup
+  localStorage.removeItem('btm_migrated');
+  localStorage.removeItem('btm_templates');
+  localStorage.removeItem('btm_events');
+  saveCategories([]);
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function testTournamentEngineAPI() {
   console.log('\n=== Tournament Engine API ===');
   let pass = true;
@@ -579,6 +740,8 @@ function runAllEdgeCaseTests() {
   let sportFilterPass = testCategorySportFiltering();
   let sportFromCatPass = testSportConfigFromCategory();
   let eventLinkingPass = testCategoryEventLinking();
+  let templatePass = testTemplateModel();
+  let migrationPass = testMigration();
 
   const counts = [2, 3, 4, 5, 6, 10, 11, 20];
   let totalPass = 0;
@@ -601,7 +764,9 @@ function runAllEdgeCaseTests() {
   console.log('   Category Sport Migration tests: ' + (sportMigratePass ? 'PASS' : 'FAIL'));
   console.log('   Category Sport Filtering tests: ' + (sportFilterPass ? 'PASS' : 'FAIL'));
   console.log('   Sport Config From Category tests: ' + (sportFromCatPass ? 'PASS' : 'FAIL'));
-  console.log('   Category Event Linking tests: ' + (eventLinkingPass ? 'PASS' : 'FAIL'));
+   console.log('   Category Event Linking tests: ' + (eventLinkingPass ? 'PASS' : 'FAIL'));
+   console.log('   Template Model tests: ' + (templatePass ? 'PASS' : 'FAIL'));
+   console.log('   Migration tests: ' + (migrationPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }
 

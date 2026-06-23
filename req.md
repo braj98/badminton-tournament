@@ -252,9 +252,15 @@ Persist:
 
 ### Cloud Storage (Optional)
 - Supabase integration for cross-device sync
-- Per-category state stored in `state` table
+- Per-category state stored in `state` table with key `btm_state_{catId}`
 - Categories stored in `state` table with key `btm_categories`
-- Real-time updates via Supabase Realtime
+- Real-time updates via Supabase Realtime (guarded by `_lastSave` timestamp)
+- Session auto-refresh via `onAuthStateChange()` listener keeps `AppState.user` in sync
+- 500ms debounce on cloud upsert to prevent save storms
+- 3 retries with exponential backoff (1s/2s) on upsert failure
+- `.maybeSingle()` used instead of `.single()` to prevent PGRST116 errors (no rows found)
+- `flushCloudSave()` cancels pending debounce and writes immediately
+- `init()` fetches from Supabase BEFORE first render (Supabase-first)
 
 ### Export
 Future enhancement:
@@ -268,28 +274,39 @@ Future enhancement:
 ### Four-Layer Separation
 ```
 js/
-  engine/     — Pure business logic. No DOM, no storage.
-  models/     — Domain types + sport configuration.
-  storage/    — Persistence. localStorage + Supabase.
-  ui/         — DOM rendering + event handling. Calls only tournamentEngine API.
+  engine/     — Pure business logic. No DOM, no storage. Functions take
+  │             data in, return data out.
+  │
+  models/     — Domain types + sport configuration. Single source of truth
+  │             for data structures.
+  │
+  storage/    — Persistence. No DOM, no business logic. localStorage +
+  │             Supabase.
+  │
+  ui/         — DOM rendering + event handling. Calls only tournamentEngine
+  │             API.
 ```
+
+- `engine/tournamentEngine.js` is the **public API** — UI never calls engine internals directly
+- Data migration in `init()` auto-converts old localStorage state (names-as-IDs) to new format (participant IDs + participants array)
 
 ### AppState Structure
 ```js
 AppState = {
-  user,           // User info (future use)
+  user,           // { role: 'admin' } or null (single source of truth)
   event,          // Current event name
   sport,          // Current sport (badminton/tableTennis/chess)
   category,       // Current category ID
   view,           // Current view (home/event/sport/setup/groups/fixtures/knockout/champion)
   tournament,     // Current tournament state
-  isAdmin,        // Admin mode flag
   ui: {
     showingResults,     // Results overlay visibility
     managePanelOpen     // Manage panel visibility
   }
 }
 ```
+
+Admin status is checked via `isAdmin()` helper (`AppState.user && AppState.user.role === 'admin'`). No duplicate `isAdmin` flag.
 
 ### Sport Configuration
 Each sport configured in `SPORT_CONFIG`:
@@ -311,6 +328,64 @@ badminton: {
   groupCounts: [1, 2, 4]
 }
 ```
+
+### Tournament State Shape
+```js
+{
+  phase: 'setup',           // setup → groups → fixtures → knockout → champion
+  sport: 'badminton',
+  format: 'singles',
+  createdAt: 1740000000000,  // Set once on creation (Date.now())
+  updatedAt: 1740000000000,  // Updated on every saveState() via _lastSave
+  participants: [],          // Array of participant objects
+  players: [],               // Legacy player names (migrated)
+  groups: {},
+  fixtures: [],
+  standings: {},
+  qualifiers: [],
+  knockout: [],
+  champion: null,
+  runnerUp: null,
+  championPhoto: null,
+  runnerUpPhoto: null,
+  teamMembers: [],
+  completedAt: null,
+  _lastSave: null            // Used for Supabase conflict resolution
+}
+```
+
+### Navigation Hierarchy
+```
+Home → Event → Sport → Category (breadcrumb always visible)
+```
+
+- **Breadcrumb** always rendered (never hidden), shows full path: Home › Event › Sport › Category
+- **Category bar** hidden on Home/Event/Sport pages, visible in tournament views
+- **Tournament tabs** shown during tournament (Groups, Fixtures, Knockout, Champion)
+- **Action bar** hidden on Home/Event/Sport/Results, shown in tournament views
+- Navigation and UI visibility centralized in `updateGlobalNavigation()`
+
+### Category Status Badges (on Sport page)
+- ⚪ Not Started — phase is `setup`
+- 🟢 In Progress — phase is groups/fixtures/knockout
+- 🏆 Complete — phase is `champion`
+
+### Results Dashboard
+- Card-based layout (not HTML tables)
+- Shows Champions with optional photos
+- Shows all knockout matches sorted by recency
+- Viewer-safe (admin-only nav hidden)
+
+### Key Security Patterns
+- `isAdmin()` function is single source of truth for admin status
+- Viewer controls use `display: none` via CSS class (not `disabled` attr)
+- Viewer setup redirects to first active tournament
+- All user data HTML-escaped via `escapeHtml()`
+
+### Testing
+- Node.js test runner at `js/test/runner.js`
+- 275 tests covering full tournament flow: groups, fixtures, qualification, knockout, champion
+- Run via `node js/test/runner.js`
 
 ### App Configuration
 ```js

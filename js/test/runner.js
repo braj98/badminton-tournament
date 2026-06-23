@@ -12,7 +12,8 @@ const models = [
   'js/models/match.js',
   'js/models/tournament.js',
   'js/models/sportConfig.js',
-  'js/models/appState.js'
+  'js/models/appState.js',
+  'js/models/template.js'
 ];
 
 // Load engine scripts
