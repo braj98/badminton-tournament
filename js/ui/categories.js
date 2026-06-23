@@ -170,6 +170,7 @@ function addTemplateToCurrentEvent() {
 
 function removeTemplateFromCurrentEvent(templateId) {
   if (!isAdmin()) return;
+  if (!confirm('Remove this competition from the event?')) return;
   const events = getEvents();
   const ev = events.find(function(e) { return e.name === AppState.event; });
   if (!ev) return;
