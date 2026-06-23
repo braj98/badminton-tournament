@@ -140,7 +140,8 @@ function addTemplateToCurrentEvent() {
   if (!label) { document.getElementById('eventTemplateError').textContent = 'Label is required.'; return; }
   const sport = document.getElementById('newTemplateSport').value;
   const type = document.getElementById('newTemplateType').value;
-  const ev = getEvents().find(function(e) { return e.name === AppState.event; });
+  const events = getEvents();
+  const ev = events.find(function(e) { return e.name === AppState.event; });
   if (!ev) return;
   const templates = getTemplates();
   const key = label.toLowerCase() + '|' + sport + '|' + type;
@@ -159,7 +160,7 @@ function addTemplateToCurrentEvent() {
   }
   if (ev.templateIds.indexOf(tmpl.id) === -1) {
     ev.templateIds.push(tmpl.id);
-    saveEvents(getEvents());
+    saveEvents(events);
   }
   if (_supabase) syncMetadataToCloud();
   document.getElementById('newTemplateLabel').value = '';
