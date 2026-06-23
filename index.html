@@ -69,7 +69,8 @@
             </div>
             <div class="form-field">
               <label class="form-label">Event Name</label>
-              <input type="text" id="newCatEvent" class="form-input" placeholder="e.g. Summer Games 2026">
+              <select id="newCatEvent" class="form-input"></select>
+              <input type="text" id="newCatEventCustom" class="form-input hidden" style="margin-top:4px;" placeholder="New event name">
             </div>
           </div>
 
@@ -290,7 +291,9 @@
 <script src="js/engine/tournamentEngine.js"></script>
 <!-- Layer 2: Storage (persistence, no DOM, no business logic) -->
 <script src="js/storage/local.js"></script>
+<script src="js/storage/events.js"></script>
 <script src="js/storage/supabase.js"></script>
+<script src="js/storage/auth.js"></script>
 <!-- Layer 3: UI (orchestrates engine + storage, DOM rendering) -->
 <script src="js/ui/utils.js"></script>
 <script src="js/ui/app.js"></script>

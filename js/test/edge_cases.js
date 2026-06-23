@@ -1197,6 +1197,162 @@ function testActionBarKnockoutButtons() {
   return pass;
 }
 
+// ===================== CATEGORY MANAGEMENT TESTS =====================
+
+function testCategoryManagement() {
+  console.log('\n=== Category Management (Event Dropdown + Edit) ===');
+  var pass = true;
+
+  // Save original state
+  var origCats = getCategories();
+  var origUser = AppState.user;
+  AppState.user = { role: 'admin' };
+
+  // Ensure we have base categories with known events
+  var testEvent = 'Test Event ' + Date.now();
+  saveCategories([
+    { id: 'test_cat_1', label: 'Test Cat 1', type: 'singles', sport: 'badminton', event: testEvent },
+    { id: 'test_cat_2', label: 'Test Cat 2', type: 'doubles', sport: 'badminton', event: testEvent }
+  ]);
+
+  // Test 1: populateEventDropdown
+  var select = document.getElementById('newCatEvent');
+  pass &= assert(!!select, 'newCatEvent select exists in DOM');
+  if (select) {
+    populateEventDropdown('newCatEvent', testEvent);
+    var options = select.options;
+    pass &= assert(options.length >= 3, 'Event dropdown has existing events + New Event (got ' + options.length + ')');
+    var hasTestEvent = false;
+    var hasNewEvent = false;
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === testEvent) hasTestEvent = true;
+      if (options[i].value === '__new__') hasNewEvent = true;
+    }
+    pass &= assert(hasTestEvent, 'Event dropdown contains test event');
+    pass &= assert(hasNewEvent, 'Event dropdown contains New Event option');
+    pass &= assert(select.value === testEvent, 'Event dropdown selected value matches');
+  }
+
+  // Test 2: populateEventDropdown with custom event selects correct event
+  var customEvent = 'Custom Event';
+  populateEventDropdown('newCatEvent', customEvent);
+  pass &= assert(select.value === customEvent, 'Event dropdown selects custom event');
+
+  // Reset to testEvent
+  populateEventDropdown('newCatEvent', testEvent);
+
+  // Test 3: Add category with existing event
+  var countBefore = getCategories().length;
+  addCategory('New Test Cat', 'singles', 'badminton', testEvent);
+  var cats = getCategories();
+  var added = cats.find(function(c) { return c.label === 'New Test Cat'; });
+  pass &= assert(!!added, 'addCategory created new category');
+  if (added) {
+    pass &= assert(added.event === testEvent, 'New category has correct event');
+    pass &= assert(added.sport === 'badminton', 'New category has correct sport');
+    pass &= assert(added.type === 'singles', 'New category has correct format');
+    pass &= assert(cats.length === countBefore + 1, 'Category count increased by 1');
+  }
+
+  // Test 4: Edit category (change label, event, sport)
+  var editId = 'test_cat_1';
+  // First, render manage panel to create edit form elements
+  renderManagePanel();
+  var editLabelInput = document.getElementById('editLabel_' + editId);
+  pass &= assert(!!editLabelInput, 'Edit label input exists after renderManagePanel');
+  if (editLabelInput) {
+    editLabelInput.value = 'Edited Cat';
+    // Change event
+    var editEventSelect = document.getElementById('editEvent_' + editId);
+    if (editEventSelect) {
+      editEventSelect.value = '__new__';
+      var editEventCustom = document.getElementById('editEvent_' + editId + 'Custom');
+      if (editEventCustom) {
+        editEventCustom.value = 'Edited Event';
+        editEventCustom.classList.remove('hidden');
+      }
+    }
+    // Change sport
+    var editSportSelect = document.getElementById('editSport_' + editId);
+    if (editSportSelect) editSportSelect.value = 'tableTennis';
+    // Change format
+    var editTypeSelect = document.getElementById('editType_' + editId);
+    if (editTypeSelect) editTypeSelect.value = 'doubles';
+
+    saveCategoryEdit(editId);
+    var editedCat = getCategories().find(function(c) { return c.id === editId; });
+    pass &= assert(!!editedCat, 'Edited category still exists');
+    if (editedCat) {
+      pass &= assert(editedCat.label === 'Edited Cat', 'Category label changed to "Edited Cat" (got "' + editedCat.label + '")');
+      pass &= assert(editedCat.event === 'Edited Event', 'Category event changed to "Edited Event" (got "' + editedCat.event + '")');
+      pass &= assert(editedCat.sport === 'tableTennis', 'Category sport changed to tableTennis (got "' + editedCat.sport + '")');
+      pass &= assert(editedCat.type === 'doubles', 'Category format changed to doubles (got "' + editedCat.type + '")');
+      pass &= assert(editedCat.id === editId, 'Category ID preserved after edit (got "' + editedCat.id + '")');
+    }
+  }
+
+  // Test 5: Edit form Cancel (toggleEditCategory hides the form)
+  toggleEditCategory(editId);
+  var editDiv = document.getElementById('manageEdit_' + editId);
+  pass &= assert(!!editDiv, 'Edit div exists');
+  if (editDiv) {
+    pass &= assert(editDiv.classList.contains('hidden'), 'Edit form hidden after Cancel');
+  }
+
+  // Cleanup: restore original categories
+  saveCategories(origCats);
+  AppState.user = origUser;
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+  console.log('\n=== Action Bar (Knockout Results Buttons) ===');
+  let pass = true;
+
+  var bar = document.getElementById('actionBar');
+  pass &= assert(!!bar, 'actionBar element exists');
+  if (!bar) return false;
+
+  const _origView = AppState.view;
+
+  // Action bar hidden on event/sport/home
+  AppState.view = 'home';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on home');
+
+  AppState.view = 'event';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on event');
+
+  AppState.view = 'sport';
+  renderActionBar();
+  pass &= assert(bar.style.display === 'none' || bar.classList.contains('hidden'), 'ActionBar hidden on sport');
+
+  // ActionBar visible on tournament views
+  AppState.view = 'setup';
+  renderActionBar();
+  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on setup');
+
+  AppState.view = 'groups';
+  renderActionBar();
+  pass &= assert(bar.style.display !== 'none', 'ActionBar visible on groups');
+
+  // Knockout: should have Results buttons in right area
+  AppState.view = 'knockout';
+  renderActionBar();
+  var right = document.getElementById('actionBarRight');
+  if (right) {
+    var btns = right.querySelectorAll('button');
+    pass &= assert(btns.length >= 2, 'Knockout actionBar has 2+ buttons (got ' + btns.length + ')');
+  }
+
+  AppState.view = _origView;
+  renderActionBar();
+
+  console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');
+  return pass;
+}
+
 function runAllNavigationTests() {
   console.log('\n========================================');
   console.log('   NAVIGATION / UI TEST SUITE');
@@ -1212,6 +1368,7 @@ function runAllNavigationTests() {
   var eventBarPass = testEventBarRendering();
   var headerPass = testHeaderContent();
   var actionBarPass = testActionBarKnockoutButtons();
+  var catMgmtPass = testCategoryManagement();
 
   console.log('\n========================================');
   console.log('   NAVIGATION/UI RESULTS');
@@ -1225,5 +1382,6 @@ function runAllNavigationTests() {
   console.log('   Event bar:           ' + (eventBarPass ? 'PASS' : 'FAIL'));
   console.log('   Header content:      ' + (headerPass ? 'PASS' : 'FAIL'));
   console.log('   Action bar:          ' + (actionBarPass ? 'PASS' : 'FAIL'));
+  console.log('   Category mgmt:       ' + (catMgmtPass ? 'PASS' : 'FAIL'));
   console.log('========================================');
 }

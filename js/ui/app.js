@@ -34,11 +34,6 @@ function renderActionBar() {
   var title = document.getElementById('stageTitle');
   var right = document.getElementById('actionBarRight');
   if (!title || !right) return;
-  if (AppState.view === 'home' || AppState.view === 'event' || AppState.view === 'sport' || AppState.view === 'results' || AppState.ui.showingResults) {
-    bar.style.display = 'none';
-    return;
-  }
-  bar.style.display = '';
   var titles = { setup: 'Setup', groups: 'Group Allocation', fixtures: 'Group Stage Matches', knockout: 'Knockout Stage', champion: '🏆 Champion' };
   title.textContent = titles[AppState.view] || 'Tournament';
   right.innerHTML = '';
@@ -61,8 +56,7 @@ function saveState() {
 // ===================== RENDER CYCLE =====================
 // ===================== HOME PAGE =====================
 function goHome() {
-  AppState.view = 'home';
-  renderAll();
+  navigateTo('home');
 }
 
 function sportLabel(s) { return getSportLabel(s); }
@@ -70,8 +64,7 @@ function sportLabel(s) { return getSportLabel(s); }
 function renderHomePage() {
   clearDisabled();
   updateHeader();
-  var _ab = document.getElementById('actionBar'); if (_ab) _ab.style.display = 'none';
-  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
+  updateNavigationVisibility();
   const cats = getCategories();
   const events = [...new Set(cats.map(c => c.event || APP_CONFIG.defaultEvent))];
   const container = document.getElementById('homeContent');
@@ -121,43 +114,35 @@ function renderBreadcrumb() {
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">' + escapeHtml(AppState.event) + '</span>');
+    parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
   } else if (AppState.view === 'sport') {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">' + sportLabel(AppState.sport) + '</span>');
+    parts.push('<span class="bc-item bc-current" onclick="goToSportPage()">' + sportLabel(AppState.sport) + '</span>');
   } else {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item" onclick="goToSportPage()">' + sportLabel(AppState.sport) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">' + escapeHtml(getCategoryLabel()) + '</span>');
+    parts.push('<span class="bc-item bc-current" onclick="renderAll()">' + escapeHtml(getCategoryLabel()) + '</span>');
   }
   bc.innerHTML = parts.join('');
 }
 
-function updateGlobalNavigation() {
-  const view = AppState.view;
-  const showingResults = AppState.ui.showingResults;
+function updateNavigationVisibility() {
+  var catBar = document.getElementById('catBar');
+  var tournamentTabs = document.getElementById('tournamentTabs');
+  var actionBar = document.getElementById('actionBar');
+  var view = AppState.view;
+  var showingResults = AppState.ui.showingResults;
+  var isOverview = view === 'home' || view === 'event' || view === 'sport' || view === 'results' || showingResults;
+  var isTournamentView = !isOverview;
 
-  const catBar = document.getElementById('catBar');
-  const tournamentTabs = document.getElementById('tournamentTabs');
-  const actionBar = document.getElementById('actionBar');
-
-  if (catBar) {
-    const showCatBar = view !== 'home' && view !== 'event' && view !== 'sport';
-    catBar.style.display = showCatBar ? '' : 'none';
-  }
-
-  if (tournamentTabs) {
-    tournamentTabs.classList.toggle('hidden', view === 'home' || view === 'event' || view === 'sport' || view === 'results' || showingResults);
-  }
-
-  if (actionBar) {
-    actionBar.style.display = (view === 'home' || view === 'event' || view === 'sport' || view === 'results' || showingResults) ? 'none' : '';
-  }
+  if (catBar) catBar.style.display = isTournamentView ? '' : 'none';
+  if (actionBar) actionBar.style.display = isTournamentView ? '' : 'none';
+  if (tournamentTabs) tournamentTabs.classList.toggle('hidden', isOverview || view === 'setup');
 }
 
 function getCategoryLabel() {
@@ -169,15 +154,13 @@ function getCategoryLabel() {
 // ===================== EVENT / SPORT PAGES =====================
 function goToEventPage(ev) {
   if (ev) AppState.event = ev;
-  AppState.view = 'event';
-  renderAll();
+  navigateTo('event');
 }
 
 function goToSportPage(ev, sport) {
   if (ev) AppState.event = ev;
   if (sport) AppState.sport = sport;
-  AppState.view = 'sport';
-  renderAll();
+  navigateTo('sport');
 }
 
 function renderEventPage() {
@@ -219,8 +202,7 @@ function renderEventPage() {
   showScreen('screen-knockout', false);
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
-  var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
-  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
+  updateNavigationVisibility();
   if (!isAdmin()) applyViewerMode();
 }
 
@@ -264,8 +246,7 @@ function renderSportPage() {
   showScreen('screen-knockout', false);
   showScreen('screen-champion', false);
   showScreen('screen-results', false);
-  var _tb = document.getElementById('tournamentTabs'); if (_tb) _tb.classList.add('hidden');
-  var cb = document.getElementById('catBar'); if (cb) cb.style.display = 'none';
+  updateNavigationVisibility();
   if (!isAdmin()) applyViewerMode();
 }
 
@@ -289,6 +270,8 @@ function renderAll() {
   clearDisabled();
 
   renderBreadcrumb();
+  renderSportBar();
+  renderEventBar();
 
   if (AppState.view === 'home') {
     renderHomePage();
@@ -300,25 +283,21 @@ function renderAll() {
   if (AppState.view === 'sport') { renderSportPage(); return; }
 
   // Tournament view
-  updateGlobalNavigation();
+  updateNavigationVisibility();
 
   // Tournament tabs
+  // Tab button visibility (overall tabs visibility handled by updateNavigationVisibility)
   var _tb = document.getElementById('tournamentTabs');
-  if (_tb) {
-    if (AppState.view === 'setup' || !AppState.tournament) {
-      _tb.classList.add('hidden');
-    } else {
-      _tb.classList.remove('hidden');
-      document.querySelectorAll('.tab-btn').forEach(function(b) {
-        b.classList.toggle('active', b.dataset.tab === AppState.view);
-        var tab = b.dataset.tab;
-        if (tab === 'groups' || tab === 'fixtures') {
-          b.classList.toggle('hidden', !AppState.tournament || AppState.tournament.phase === 'setup');
-        } else {
-          b.classList.toggle('hidden', !AppState.tournament || (AppState.tournament.phase !== 'knockout' && AppState.tournament.phase !== 'champion'));
-        }
-      });
-    }
+  if (_tb && AppState.tournament) {
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.tab === AppState.view);
+      var tab = b.dataset.tab;
+      if (tab === 'groups' || tab === 'fixtures') {
+        b.classList.toggle('hidden', AppState.tournament.phase === 'setup');
+      } else {
+        b.classList.toggle('hidden', AppState.tournament.phase !== 'knockout' && AppState.tournament.phase !== 'champion');
+      }
+    });
   }
 
   if (!isAdmin() && AppState.tournament && AppState.tournament.phase === 'setup') {
@@ -332,8 +311,7 @@ function renderAll() {
     if (foundCat) {
       AppState.category = foundCat;
       AppState.tournament = localLoad(foundCat) || defaultState();
-      AppState.view = AppState.tournament.phase;
-      renderAll();
+      navigateTo(AppState.tournament.phase);
       return;
     }
     renderCategoryBar();
@@ -405,51 +383,50 @@ function showScreen(id, show) {
 }
 
 // ===================== NAVIGATION =====================
-function viewKnockout() {
-  AppState.view = 'knockout';
+function navigateTo(view) {
+  AppState.view = view;
   renderAll();
+}
+
+function viewKnockout() {
+  navigateTo('knockout');
 }
 
 function goToGroups() {
-  AppState.view = 'groups';
-  renderAll();
+  navigateTo('groups');
 }
 
 function goToFixtures() {
-  AppState.view = 'fixtures';
   const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;
-  renderAll();
+  navigateTo('fixtures');
 }
 
 function goToKnockout() {
   if (!isAdmin()) return;
   AppState.tournament.phase = 'knockout';
-  AppState.view = 'knockout';
   AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
   saveState();
-  renderAll();
+  navigateTo('knockout');
 }
 
 function goToFixturesFromKnockout() {
-  AppState.view = 'fixtures';
   const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;
-  renderAll();
+  navigateTo('fixtures');
 }
 
 function goBackFromChampion() {
-  AppState.view = 'knockout';
-  renderAll();
+  navigateTo('knockout');
 }
 
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
   AppState.ui.showingResults = true;
   renderBreadcrumb();
-  updateGlobalNavigation();
+  updateNavigationVisibility();
   renderCategoryBar();
   updateHeader();
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
@@ -548,6 +525,9 @@ function renderResults() {
 
 // ===================== INIT =====================
 async function init() {
+  on('userLoggedIn', function() { updateBanners(); renderAll(); });
+  on('userLoggedOut', function() { navigateTo(AppState.tournament.phase); });
+
   initSupabase();
 
   // Categories from Supabase first, fallback to localStorage

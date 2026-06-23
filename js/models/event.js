@@ -30,9 +30,8 @@ function deleteEvent(eventName) {
       AppState.sport = remaining[0].sport;
     }
     AppState.category = null;
-    AppState.tournament = defaultState();
-    AppState.view = 'setup';
-    renderAll();
+      AppState.tournament = defaultState();
+      navigateTo('setup');
   }
   return true;
 }

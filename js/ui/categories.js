@@ -67,8 +67,7 @@ function switchSport(sport) {
   } else {
     AppState.category = null;
     AppState.tournament = defaultState();
-    AppState.view = 'setup';
-    renderAll();
+    navigateTo('setup');
   }
 }
 
@@ -79,12 +78,57 @@ function renderEventBar() {
   const events = [...new Set(getCategories().map(c => c.event || APP_CONFIG.defaultEvent))];
   bar.innerHTML = '';
   for (const ev of events) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;gap:2px;';
     const btn = document.createElement('button');
     btn.className = 'event-btn' + (ev === AppState.event ? ' active' : '');
     btn.textContent = ev;
     btn.onclick = function() { switchEvent(ev); };
-    bar.appendChild(btn);
+    wrap.appendChild(btn);
+    if (isAdmin()) {
+      const rmBtn = document.createElement('button');
+      rmBtn.textContent = '✏️';
+      rmBtn.title = 'Rename "' + ev + '"';
+      rmBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px;line-height:1;opacity:0.5;';
+      rmBtn.onmouseover = function() { this.style.opacity = '1'; };
+      rmBtn.onmouseout = function() { this.style.opacity = '0.5'; };
+      rmBtn.onclick = function(e) { e.stopPropagation(); renameEvent(ev); };
+      wrap.appendChild(rmBtn);
+    }
+    bar.appendChild(wrap);
   }
+}
+
+function renameEvent(oldName) {
+  if (!isAdmin()) return;
+  const newName = prompt('Rename "' + oldName + '" to:', oldName);
+  if (!newName || newName === oldName) return;
+  const cats = getCategories();
+  let changed = false;
+  for (const c of cats) {
+    if ((c.event || APP_CONFIG.defaultEvent) === oldName) {
+      c.event = newName;
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  saveCategories(cats);
+  if (_supabase) upsertCategories(cats);
+  if (AppState.event === oldName) AppState.event = newName;
+  renderEventBar();
+  var panel = document.getElementById('managePanel');
+  if (panel && !panel.classList.contains('hidden')) {
+    renderManagePanel();
+    populateEventDropdown('newCatEvent', AppState.event);
+  }
+  if (AppState.category) {
+    const s = localLoad(AppState.category);
+    if (s) {
+      AppState.tournament = s;
+      AppState.view = s.phase;
+    }
+  }
+  renderAll();
 }
 
 function switchEvent(ev) {
@@ -105,14 +149,15 @@ function switchEvent(ev) {
   }
   AppState.category = null;
   AppState.tournament = defaultState();
-  AppState.view = 'setup';
-  renderAll();
+  navigateTo('setup');
 }
 
 // ===================== CATEGORY SWITCHING =====================
 async function switchCategory(catId) {
   if (catId === AppState.category) return;
+  AppState.loadingCategory = catId;
   if (AppState.category && AppState.tournament && AppState.tournament.phase !== 'setup') { saveState(); await flushCloudSave(); }
+  if (AppState.loadingCategory !== catId) return;
   AppState.category = catId;
   const cat = getCategories().find(c => c.id === catId);
   if (cat) { AppState.sport = cat.sport; AppState.event = cat.event || APP_CONFIG.defaultEvent; }
@@ -120,7 +165,7 @@ async function switchCategory(catId) {
   if (_supabase) {
     serverState = await fetchState(catId).catch(() => null);
   }
-  if (AppState.category !== catId) return;
+  if (AppState.loadingCategory !== catId) return;
   if (serverState) {
     AppState.tournament = serverState;
     localSave(catId, AppState.tournament);
@@ -136,7 +181,7 @@ async function switchCategory(catId) {
     }
   }
   AppState.view = AppState.tournament.phase;
-  renderAll();
+  navigateTo(AppState.tournament.phase);
 }
 
 // ===================== CATEGORY BAR =====================
@@ -188,8 +233,7 @@ function resetCategory(catId) {
   }
   if (AppState.category === catId) {
     AppState.tournament = defaultState();
-    AppState.view = AppState.tournament.phase;
-    renderAll();
+    navigateTo(AppState.tournament.phase);
   } else {
     renderCategoryBar();
   }
@@ -202,7 +246,10 @@ function toggleManagePanel() {
   if (!isAdmin()) return;
   const panel = document.getElementById('managePanel');
   panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) renderManagePanel();
+  if (!panel.classList.contains('hidden')) {
+    renderManagePanel();
+    populateEventDropdown('newCatEvent', AppState.event);
+  }
 }
 
 function renderManagePanel() {
@@ -217,7 +264,7 @@ function renderManagePanel() {
     const sportIcon = getSportIcon(c.sport);
     const eventName = c.event || APP_CONFIG.defaultEvent;
     
-    html += '<div style="padding:10px 0;border-bottom:1px solid var(--border);">'
+    html += '<div id="manageRow_' + c.id + '" style="padding:10px 0;border-bottom:1px solid var(--border);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">'
       + '  <div style="display:flex;flex-direction:column;gap:2px;">'
       + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
@@ -228,8 +275,25 @@ function renderManagePanel() {
       + '    <span style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(eventName) + ' • ' + sportName + '</span>'
       + '  </div>'
       + '  <div style="display:flex;gap:6px;align-items:center;">'
+      + '<button class="btn btn-secondary" style="padding:4px 8px;font-size:.75rem;" onclick="toggleEditCategory(\'' + c.id + '\')">✏️</button>'
       + (running ? '<button class="btn btn-outline" style="padding:4px 8px;font-size:.75rem;border-color:#dc2626;color:#dc2626;" onclick="toggleManageReset(\'' + c.id + '\')">Reset</button>' : '')
       + '<button class="btn btn-secondary" style="padding:4px 10px;font-size:.8rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteConfirm(\'' + c.id + '\')">✕</button>'
+      + '  </div>'
+      + '</div>'
+      + '<div id="manageEdit_' + c.id + '" class="hidden" style="margin-top:8px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:10px;">'
+      + '  <div style="display:flex;flex-direction:column;gap:8px;">'
+      + '    <div class="form-row">'
+      + '      <div class="form-field"><label class="form-label">Label</label><input type="text" id="editLabel_' + c.id + '" class="form-input" value="' + escapeHtml(c.label) + '"></div>'
+      + '      <div class="form-field"><label class="form-label">Format</label><select id="editType_' + c.id + '" class="form-input"><option value="singles"' + (c.type === 'singles' ? ' selected' : '') + '>Singles</option><option value="doubles"' + (c.type === 'doubles' ? ' selected' : '') + '>Doubles</option></select></div>'
+      + '    </div>'
+      + '    <div class="form-row">'
+      + '      <div class="form-field"><label class="form-label">Sport</label><select id="editSport_' + c.id + '" class="form-input"><option value="badminton"' + (c.sport === 'badminton' ? ' selected' : '') + '>Badminton</option><option value="tableTennis"' + (c.sport === 'tableTennis' ? ' selected' : '') + '>Table Tennis</option><option value="chess"' + (c.sport === 'chess' ? ' selected' : '') + '>Chess</option></select></div>'
+      + '      <div class="form-field"><label class="form-label">Event</label><select id="editEvent_' + c.id + '" class="form-input edit-event-select"></select><input type="text" id="editEvent_' + c.id + 'Custom" class="form-input hidden" style="margin-top:4px;" placeholder="New event name"></div>'
+      + '    </div>'
+      + '  </div>'
+      + '  <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px;">'
+      + '    <button class="btn" style="padding:4px 12px;font-size:.8rem;" onclick="saveCategoryEdit(\'' + c.id + '\')">Save</button>'
+      + '    <button class="btn btn-secondary" style="padding:4px 12px;font-size:.8rem;" onclick="toggleEditCategory(\'' + c.id + '\')">Cancel</button>'
       + '  </div>'
       + '</div>'
       + (running ? '<div id="manageReset_' + c.id + '" class="hidden" style="margin-top:6px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'
@@ -243,6 +307,11 @@ function renderManagePanel() {
       + '</div>';
   }
   container.innerHTML = html;
+  // Populate event dropdowns for edit forms
+  for (const c of cats) {
+    var sel = document.getElementById('editEvent_' + c.id);
+    if (sel) populateEventDropdown('editEvent_' + c.id, c.event || APP_CONFIG.defaultEvent);
+  }
 }
 
 
@@ -275,12 +344,87 @@ function executeDeleteConfirm(catId) {
   deleteCategory(catId);
 }
 
+function toggleEditCategory(catId) {
+  var div = document.getElementById('manageEdit_' + catId);
+  if (!div) return;
+  div.classList.toggle('hidden');
+  if (!div.classList.contains('hidden')) {
+    populateEventDropdown('editEvent_' + catId, getCategories().find(function(c) { return c.id === catId; }).event || APP_CONFIG.defaultEvent);
+  }
+}
+
+function saveCategoryEdit(catId) {
+  if (!isAdmin()) return;
+  var cats = getCategories();
+  var idx = cats.findIndex(function(c) { return c.id === catId; });
+  if (idx === -1) return;
+  var cat = cats[idx];
+  var newLabel = document.getElementById('editLabel_' + catId).value.trim();
+  if (!newLabel) return;
+  var ev = document.getElementById('editEvent_' + catId).value;
+  if (ev === '__new__') {
+    ev = document.getElementById('editEvent_' + catId + 'Custom').value.trim();
+    if (!ev) return;
+  }
+  var oldEvent = cat.event || APP_CONFIG.defaultEvent;
+  var oldSport = cat.sport;
+  cat.label = newLabel;
+  cat.type = document.getElementById('editType_' + catId).value;
+  cat.sport = document.getElementById('editSport_' + catId).value;
+  cat.event = ev;
+  saveCategories(cats);
+  if (_supabase) upsertCategories(cats);
+  var panel = document.getElementById('managePanel');
+  if (!panel.classList.contains('hidden')) renderManagePanel();
+  if (catId === AppState.category) {
+    if (ev !== oldEvent || cat.sport !== oldSport) {
+      AppState.event = ev;
+      AppState.sport = cat.sport;
+      var eventCats = getCategories().filter(function(c) { return (c.event || APP_CONFIG.defaultEvent) === ev && c.sport === cat.sport; });
+      if (eventCats.length > 0) {
+        switchCategory(eventCats[0].id);
+      } else {
+        AppState.category = null;
+        AppState.tournament = defaultState();
+        renderEventBar();
+        renderSportBar();
+        navigateTo('setup');
+      }
+    } else {
+      renderCategoryBar();
+    }
+  }
+}
+
+function populateEventDropdown(selectId, selectedEvent) {
+  var el = document.getElementById(selectId);
+  if (!el) return;
+  var events = [...new Set(getCategories().map(function(c) { return c.event || APP_CONFIG.defaultEvent; }))];
+  events.sort();
+  el.innerHTML = '';
+  for (var i = 0; i < events.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = events[i];
+    opt.textContent = events[i];
+    if (events[i] === selectedEvent) opt.selected = true;
+    el.appendChild(opt);
+  }
+  var newOpt = document.createElement('option');
+  newOpt.value = '__new__';
+  newOpt.textContent = 'New Event…';
+  el.appendChild(newOpt);
+  el.onchange = function() {
+    var custom = document.getElementById(selectId + 'Custom');
+    if (custom) custom.classList.toggle('hidden', el.value !== '__new__');
+  };
+}
+
 function addCategoryFromUI() {
   if (!isAdmin()) return;
   const nameInput = document.getElementById('newCatName');
   const typeSelect = document.getElementById('newCatType');
   const sportSelect = document.getElementById('newCatSport');
-  const eventInput = document.getElementById('newCatEvent');
+  const eventSelect = document.getElementById('newCatEvent');
   const errSpan = document.getElementById('manageError');
   const label = nameInput.value.trim();
   if (!label) { errSpan.textContent = 'Name is required.'; return; }
@@ -290,10 +434,16 @@ function addCategoryFromUI() {
     return;
   }
   errSpan.textContent = '';
-  const ev = (eventInput ? eventInput.value.trim() : '') || AppState.event;
+  var ev = eventSelect.value;
+  if (ev === '__new__') {
+    ev = document.getElementById('newCatEventCustom').value.trim();
+    if (!ev) { errSpan.textContent = 'Enter a name for the new event.'; return; }
+  }
   addCategory(label, typeSelect.value, sportSelect ? sportSelect.value : 'badminton', ev);
   nameInput.value = '';
-  if (eventInput) eventInput.value = '';
+  document.getElementById('newCatEventCustom').value = '';
+  document.getElementById('newCatEventCustom').classList.add('hidden');
+  eventSelect.value = AppState.event;
 }
 
 function addCategory(label, type, sport, eventName) {
@@ -350,8 +500,7 @@ function resumeTournament() {
   const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
     AppState.tournament = saved;
-    AppState.view = AppState.tournament.phase;
-    renderAll();
+    navigateTo(AppState.tournament.phase);
   }
 }
 
@@ -454,6 +603,6 @@ function confirmImport() {
     AppState.tournament = defaultState();
   }
   AppState.view = AppState.tournament.phase;
-  renderAll();
+  navigateTo(AppState.tournament.phase);
   if (!document.getElementById('managePanel').classList.contains('hidden')) renderManagePanel();
 }

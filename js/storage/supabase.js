@@ -3,10 +3,6 @@ let _realtimeChannel = null;
 let _saveDebounceTimer = null;
 let _pendingSave = null;
 
-function isAdmin() {
-  return !!(AppState.user && AppState.user.role === 'admin');
-}
-
 const _SUPABASE_URL = 'https://cnotgqvcippfzhsqnnzb.supabase.co';
 const _SUPABASE_ANON_KEY = 'sb_publishable_pDEbo-ttaBTBTTH8dcJbHA_RC-Q0KAy';
 
@@ -14,78 +10,11 @@ function initSupabase() {
   if (typeof supabase === 'undefined') { return; }
   try {
     _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
-    checkSession();
     _supabase.auth.onAuthStateChange(function(event, session) {
-      AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : null;
+      AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : { role: 'viewer' };
       updateBanners();
     });
   } catch(e) { }
-}
-
-async function checkSession() {
-  if (!_supabase) { AppState.user = null; return; }
-  try {
-    const { data: { session } } = await _supabase.auth.getSession();
-    AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : null;
-  } catch(e) { AppState.user = null; }
-}
-
-function showLogin() {
-  document.getElementById('loginOverlay').classList.remove('hidden');
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginError').textContent = '';
-  setTimeout(() => document.getElementById('loginEmail').focus(), 100);
-}
-
-function closeLogin() {
-  document.getElementById('loginOverlay').classList.add('hidden');
-}
-
-function showLoading() {
-  var el = document.getElementById('loadingOverlay');
-  if (el) el.classList.remove('hidden');
-}
-function hideLoading() {
-  var el = document.getElementById('loadingOverlay');
-  if (el) el.classList.add('hidden');
-}
-
-async function login() {
-  if (!_supabase) return;
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  if (!email || !password) { document.getElementById('loginError').textContent = 'Enter email and password.'; return; }
-  showLoading();
-  const { error } = await _supabase.auth.signInWithPassword({ email, password });
-  if (error) { hideLoading(); document.getElementById('loginError').textContent = error.message; return; }
-  closeLogin();
-  AppState.user = { role: 'admin', email: email, loggedInAt: Date.now() };
-  const serverState = await fetchState(AppState.category);
-  if (serverState) { AppState.tournament = serverState; localSave(AppState.category, AppState.tournament); }
-  const cloudCats = await fetchCategoriesFromCloud();
-  if (cloudCats && cloudCats.length) {
-    saveCategories(cloudCats);
-    migrateCategorySports();
-  }
-  hideLoading();
-  updateBanners();
-  renderAll();
-}
-
-async function logout() {
-  if (!_supabase) return;
-  await _supabase.auth.signOut();
-  AppState.user = null;
-  updateBanners();
-  const saved = localLoad(AppState.category);
-  if (saved && saved.phase !== 'setup') {
-    AppState.tournament = saved;
-  } else {
-    AppState.tournament = defaultState();
-  }
-  AppState.view = AppState.tournament.phase;
-  renderAll();
 }
 
 async function upsertState(catId, data) {

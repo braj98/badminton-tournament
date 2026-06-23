@@ -746,8 +746,8 @@ select:focus { outline: none; border-color: var(--primary); }
   font-weight: 500;
 }
 .bc-item:hover { text-decoration: underline; }
-.bc-item.bc-current { color: var(--text-main); cursor: default; }
-.bc-item.bc-current:hover { text-decoration: none; }
+.bc-item.bc-current { color: var(--text-main); }
+.bc-item.bc-current:hover { text-decoration: underline; }
 .bc-sep { color: #cbd5e1; font-size: 1rem; }
 
 /* ===== MODAL ===== */

@@ -172,9 +172,8 @@ function startTournament() {
     AppState.tournament.groups = createGroups(pDbl, determineGroupCount(pDbl.length, cfg.groupThresholds, cfg.groupCounts));
     AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
     AppState.tournament.phase = 'groups';
-    AppState.view = AppState.tournament.phase;
     saveState();
-    renderAll();
+    navigateTo('groups');
   } else {
     const inputs = document.querySelectorAll('#playerInputs input');
     const names = [];
@@ -197,9 +196,8 @@ function startTournament() {
     AppState.tournament.groups = createGroups(pSingles, determineGroupCount(pSingles.length, cfg.groupThresholds, cfg.groupCounts));
     AppState.tournament.fixtures = createFixtures(AppState.tournament.groups);
     AppState.tournament.phase = 'groups';
-    AppState.view = AppState.tournament.phase;
     saveState();
-    renderAll();
+    navigateTo('groups');
   }
 }
 

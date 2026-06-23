@@ -7,8 +7,7 @@ function viewChampion() {
     AppState.tournament.champion = final.winner;
     AppState.tournament.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
   }
-  AppState.view = 'champion';
-  renderAll();
+  navigateTo('champion');
 }
 
 function showResults() {
@@ -49,8 +48,7 @@ function newTournament() {
     _supabase.from('state').delete().eq('key', getStateKey(AppState.category)).then().catch(() => {});
   }
   AppState.tournament = defaultState();
-  AppState.view = AppState.tournament.phase;
-  renderAll();
+  navigateTo(AppState.tournament.phase);
 }
 
 function renderChampion() {

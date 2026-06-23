@@ -15,7 +15,8 @@ js/
   │             for data structures.
   │
   storage/    — Persistence. No DOM, no business logic. localStorage +
-  │             Supabase.
+  │             Supabase. (auth.js extracts auth concerns, events.js
+  │             decouples modules)
   │
   ui/         — DOM rendering + event handling. Calls only tournamentEngine API.
 ```
@@ -32,7 +33,9 @@ js/
 - `models/sportConfig.js` — `SPORT_CONFIG` object with badminton/tableTennis/chess, `getSportConfig(sport, format)`, `getCurrentConfig()`
 - `models/appState.js` — `AppState` single state container: `{category, sport, event, view, tournament, showingResults, isAdmin}`
 - `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()`
-- `storage/supabase.js` — `initSupabase()`, auth, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`
+- `storage/events.js` — `on()`, `off()`, `emit()` simple event bus
+- `storage/supabase.js` — `initSupabase()`, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`
+- `storage/auth.js` — `isAdmin()`, `login()`, `logout()`, `checkSession()`, `showLogin()`, `closeLogin()`, `showLoading()`, `hideLoading()`
 - `ui/utils.js` — `escapeHtml()`, `isDoubles()`, `pName(id)` (resolves participant ID to display name)
 - `ui/app.js` — `saveState()`, `renderAll()`, navigation, async `init()` (Supabase-first). Uses `AppState.*` for all state.
 - `ui/categories.js` — `switchCategory()`, category bar, manage panel, export/import
@@ -42,7 +45,7 @@ js/
 - `ui/knockout.js` — `renderKnockout()`, `enterKnockoutScore()`, `enterFinalSet()`
 - `ui/champion.js` — `renderChampion()`, `viewChampion()`, `showResults()`, photos
 
-Script load order: Engine (5) → Models (4) → appState.js → tournamentEngine → Storage (2) → UI (8) → Test (1) = 21 scripts total.
+Script load order: Engine (5) → Models (4) → appState.js → tournamentEngine → Storage (4: local, events, supabase, auth) → UI (8) → Test (1) = 22 scripts total.
 
 ## Source of truth
 
