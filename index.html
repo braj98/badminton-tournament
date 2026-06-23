@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Badminton Tournament Manager</title>
+<title>Tournament Manager</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,64 +25,65 @@
     <button class="btn btn-xs admin-only" onclick="toggleManagePanel()">⚙️ Manage</button>
     <button class="btn btn-xs" data-public="1" onclick="showResultsPage()">📊 Results</button>
     <span id="adminBanner" class="hidden admin-tag">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></span>
+    <span id="modeBanner" class="mode-tag"></span>
   </div>
 
   <!-- ============ MANAGE PANEL (MODAL OVERLAY) ============ -->
-  <div id="managePanel" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,0.35);backdrop-filter:blur(6px);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;">
-    <div class="card" style="margin:0;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;position:relative;padding:24px;border:1px solid rgba(255,255,255,0.8);">
-      <button onclick="toggleManagePanel()" style="position:absolute;top:20px;right:20px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);transition:color .15s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+  <div id="managePanel" class="hidden modal-overlay">
+    <div class="card modal-card">
+      <button onclick="toggleManagePanel()" class="modal-close">✕</button>
       
       <h2 style="margin-top:0;margin-bottom:20px;font-size:1.3rem;display:flex;align-items:center;gap:8px;">⚙️ Tournament Control Panel</h2>
       
       <!-- Toolbar -->
-      <div style="display:flex;gap:8px;margin-bottom:20px;background:#f8fafc;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div class="modal-toolbar">
         <button class="btn btn-secondary admin-only" style="flex:1;padding:6px 12px;font-size:.8rem;" onclick="exportAll()">📥 Export Data</button>
         <button class="btn btn-secondary admin-only" style="flex:1;padding:6px 12px;font-size:.8rem;" onclick="document.getElementById('importFileInput').click()">📤 Import Data</button>
         <button class="btn btn-secondary admin-only" style="flex:1;padding:6px 12px;font-size:.8rem;" onclick="pushAllToCloud()">☁️ Cloud Sync</button>
       </div>
 
       <!-- Import warning box -->
-      <div id="importConfirmBox" class="hidden" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin-bottom:16px;">
-        <div style="font-size:.8rem;color:#dc2626;margin-bottom:8px;font-weight:500;">⚠️ Overwrite all categories? Type <strong>IMPORT</strong>:</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="text" id="importConfirmInput" style="flex:1;padding:6px 10px;border:2px solid #fecaca;border-radius:6px;font-size:.85rem;" placeholder="IMPORT">
-          <button class="btn btn-sm" style="background:#dc2626;" onclick="confirmImport()">Go</button>
+      <div id="importConfirmBox" class="hidden confirm-box confirm-import">
+        <p class="confirm-text">⚠️ Overwrite all categories? Type <strong>IMPORT</strong>:</p>
+        <div class="confirm-actions">
+          <input type="text" id="importConfirmInput" class="confirm-input" placeholder="IMPORT">
+          <button class="btn confirm-btn" onclick="confirmImport()">Go</button>
           <button class="btn btn-secondary btn-sm" onclick="cancelImport()">Cancel</button>
         </div>
-        <span id="importConfirmError" style="font-size:.75rem;color:#dc2626;display:block;margin-top:4px;"></span>
+        <span id="importConfirmError" class="text-muted" style="font-size:.75rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
 
       <!-- Categories List -->
       <h3 style="font-size:.95rem;margin-bottom:10px;font-weight:600;color:var(--text-main);border-bottom:1px solid var(--border);padding-bottom:6px;">Categories</h3>
-      <div id="manageCategoryList" style="max-height:220px;overflow-y:auto;margin-bottom:20px;padding-right:4px;"></div>
+      <div id="manageCategoryList" class="modal-list"></div>
 
       <!-- Add Category Form -->
-      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:16px;">
+      <div class="modal-form">
         <h3 style="font-size:.95rem;margin-top:0;margin-bottom:12px;font-weight:600;">Add New Category</h3>
         
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);">Category Label</label>
-              <input type="text" id="newCatName" placeholder="e.g. Junior Singles" style="padding:8px 10px;border:2px solid var(--border);border-radius:6px;font-size:.85rem;">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Category Label</label>
+              <input type="text" id="newCatName" class="form-input" placeholder="e.g. Junior Singles">
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);">Event Name</label>
-              <input type="text" id="newCatEvent" placeholder="e.g. Summer Games 2026" style="padding:8px 10px;border:2px solid var(--border);border-radius:6px;font-size:.85rem;">
+            <div class="form-field">
+              <label class="form-label">Event Name</label>
+              <input type="text" id="newCatEvent" class="form-input" placeholder="e.g. Summer Games 2026">
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);">Format</label>
-              <select id="newCatType" style="padding:8px 10px;border:2px solid var(--border);border-radius:6px;font-size:.85rem;height:38px;">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label">Format</label>
+              <select id="newCatType" class="form-input">
                 <option value="singles">Singles</option>
                 <option value="doubles">Doubles</option>
               </select>
             </div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
-              <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);">Sport</label>
-              <select id="newCatSport" style="padding:8px 10px;border:2px solid var(--border);border-radius:6px;font-size:.85rem;height:38px;">
+            <div class="form-field">
+              <label class="form-label">Sport</label>
+              <select id="newCatSport" class="form-input">
                 <option value="badminton">Badminton</option>
                 <option value="tableTennis">Table Tennis</option>
                 <option value="chess">Chess</option>
@@ -153,22 +154,22 @@
       <label id="setupLabel" class="text-muted" style="display:block;margin-bottom:6px;">Number of players</label>
       <input type="number" id="playerCount" value="4" onchange="onPlayerCountChange()">
       <div id="playerInputs" class="player-inputs"></div>
-      <div id="reduceConfirmBox" class="hidden" style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:left;">
-        <p style="font-size:.85rem;margin-bottom:8px;color:#dc2626;">Type <strong>REMOVE</strong> to confirm reducing player count:</p>
-        <div id="reduceConfirmList" style="font-size:.85rem;margin-bottom:8px;color:#dc2626;"></div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="reduceConfirmInput" placeholder="Type REMOVE" style="flex:1;padding:8px 12px;border:2px solid #fecaca;border-radius:8px;font-size:.9rem;">
-          <button class="btn" style="background:#dc2626;white-space:nowrap;" onclick="confirmReduce()">Confirm</button>
+      <div id="reduceConfirmBox" class="hidden confirm-box confirm-reduce">
+        <p class="confirm-text">Type <strong>REMOVE</strong> to confirm reducing player count:</p>
+        <div id="reduceConfirmList" style="font-size:.85rem;margin-bottom:8px;color:#c2410c;"></div>
+        <div class="confirm-actions">
+          <input type="text" id="reduceConfirmInput" class="confirm-input" placeholder="Type REMOVE">
+          <button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmReduce()">Confirm</button>
           <button class="btn btn-secondary" style="white-space:nowrap;" onclick="cancelReduce()">Cancel</button>
         </div>
         <span id="reduceConfirmError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
       <button class="btn btn-block mt-16 admin-only" onclick="showStartConfirm()">Start Tournament</button>
-      <div id="startConfirmBox" class="hidden admin-only" style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:left;">
-        <p style="font-size:.85rem;margin-bottom:8px;color:#dc2626;">Type <strong>START</strong> to confirm:</p>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="startConfirmInput" placeholder="Type START" style="flex:1;padding:8px 12px;border:2px solid #fecaca;border-radius:8px;font-size:.9rem;">
-          <button class="btn" style="background:#dc2626;white-space:nowrap;" onclick="confirmStart()">Confirm</button>
+      <div id="startConfirmBox" class="hidden confirm-box confirm-start admin-only">
+        <p class="confirm-text">Type <strong>START</strong> to confirm:</p>
+        <div class="confirm-actions">
+          <input type="text" id="startConfirmInput" class="confirm-input" placeholder="Type START">
+          <button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmStart()">Confirm</button>
         </div>
         <span id="startConfirmError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
@@ -179,11 +180,11 @@
     </div>
       <div id="resetSection" class="hidden admin-only text-center mt-12" style="padding-top:12px;border-top:1px solid var(--border);">
       <button class="btn btn-outline admin-only" style="border-color:#dc2626;color:#dc2626;" onclick="showResetConfirm()">🗑 Reset Tournament</button>
-      <div id="resetConfirmBox" class="hidden admin-only" style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:left;">
-        <p style="font-size:.85rem;margin-bottom:8px;color:#dc2626;">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="resetConfirmInput" placeholder="Type RESET" style="flex:1;padding:8px 12px;border:2px solid #fecaca;border-radius:8px;font-size:.9rem;">
-          <button class="btn" style="background:#dc2626;white-space:nowrap;" onclick="executeReset()">Confirm</button>
+      <div id="resetConfirmBox" class="hidden confirm-box confirm-reset admin-only">
+        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
+        <div class="confirm-actions">
+          <input type="text" id="resetConfirmInput" class="confirm-input" placeholder="Type RESET">
+          <button class="btn confirm-btn" style="white-space:nowrap;" onclick="executeReset()">Confirm</button>
         </div>
         <span id="resetError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
@@ -218,7 +219,7 @@
       <div class="footer-nav">
         <button class="btn btn-secondary btn-sm" data-public="1" onclick="goToGroups()">← Back to Groups</button>
         <button id="btnShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()">📊 Results Table</button>
-        <button id="btnViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()">📊 Results Table</button>
+        <button id="btnViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()">🏆 View Champion</button>
       </div>
     </div>
   </div>
@@ -240,11 +241,11 @@
         <img id="runnerupPhotoImg" class="photo-preview hidden">
       </div>
       <button class="btn btn-block mt-20 admin-only" onclick="showNewTournamentConfirm()">New Tournament</button>
-      <div id="newTournamentConfirmBox" class="hidden admin-only" style="margin-top:8px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:left;">
-        <p style="font-size:.85rem;margin-bottom:8px;color:#dc2626;">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="newTournamentConfirmInput" placeholder="Type RESET" style="flex:1;padding:8px 12px;border:2px solid #fecaca;border-radius:8px;font-size:.9rem;">
-          <button class="btn" style="background:#dc2626;white-space:nowrap;" onclick="confirmNewTournament()">Confirm</button>
+      <div id="newTournamentConfirmBox" class="hidden confirm-box confirm-reset admin-only">
+        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this category:</p>
+        <div class="confirm-actions">
+          <input type="text" id="newTournamentConfirmInput" class="confirm-input" placeholder="Type RESET">
+          <button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmNewTournament()">Confirm</button>
         </div>
         <span id="newTournamentConfirmError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>
       </div>
@@ -264,6 +265,10 @@
 
   <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="onPhotoPicked(event)">
   <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+  </div>
 </div>
 
 <!-- Layer 1: Engine (pure logic, no DOM, no storage) -->

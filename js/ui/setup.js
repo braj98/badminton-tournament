@@ -68,6 +68,8 @@ function onPlayerCountChange() {
   if (clamped > _lastGoodCount) {
     _lastGoodCount = clamped;
     rebuildPlayerInputs(clamped);
+    var firstInput = document.querySelector('#playerInputs input');
+    if (firstInput) setTimeout(function() { firstInput.focus(); }, 50);
   } else {
     showReduceConfirm(clamped, _lastGoodCount);
   }

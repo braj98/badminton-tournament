@@ -1,6 +1,7 @@
 let _supabase = null;
 let _realtimeChannel = null;
 let _saveDebounceTimer = null;
+let _pendingSave = null;
 
 function isAdmin() {
   return !!(AppState.user && AppState.user.role === 'admin');
@@ -14,6 +15,10 @@ function initSupabase() {
   try {
     _supabase = supabase.createClient(_SUPABASE_URL, _SUPABASE_ANON_KEY);
     checkSession();
+    _supabase.auth.onAuthStateChange(function(event, session) {
+      AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : null;
+      updateBanners();
+    });
   } catch(e) { }
 }
 
@@ -21,7 +26,7 @@ async function checkSession() {
   if (!_supabase) { AppState.user = null; return; }
   try {
     const { data: { session } } = await _supabase.auth.getSession();
-    AppState.user = session ? { role: 'admin' } : null;
+    AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : null;
   } catch(e) { AppState.user = null; }
 }
 
@@ -37,15 +42,25 @@ function closeLogin() {
   document.getElementById('loginOverlay').classList.add('hidden');
 }
 
+function showLoading() {
+  var el = document.getElementById('loadingOverlay');
+  if (el) el.classList.remove('hidden');
+}
+function hideLoading() {
+  var el = document.getElementById('loadingOverlay');
+  if (el) el.classList.add('hidden');
+}
+
 async function login() {
   if (!_supabase) return;
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   if (!email || !password) { document.getElementById('loginError').textContent = 'Enter email and password.'; return; }
+  showLoading();
   const { error } = await _supabase.auth.signInWithPassword({ email, password });
-  if (error) { document.getElementById('loginError').textContent = error.message; return; }
+  if (error) { hideLoading(); document.getElementById('loginError').textContent = error.message; return; }
   closeLogin();
-  AppState.user = { role: 'admin' };
+  AppState.user = { role: 'admin', email: email, loggedInAt: Date.now() };
   const serverState = await fetchState(AppState.category);
   if (serverState) { AppState.tournament = serverState; localSave(AppState.category, AppState.tournament); }
   const cloudCats = await fetchCategoriesFromCloud();
@@ -53,6 +68,7 @@ async function login() {
     saveCategories(cloudCats);
     migrateCategorySports();
   }
+  hideLoading();
   updateBanners();
   renderAll();
 }
@@ -83,10 +99,14 @@ async function upsertState(catId, data) {
 }
 
 function flushCloudSave() {
-  if (_saveDebounceTimer) {
-    clearTimeout(_saveDebounceTimer);
-    _saveDebounceTimer = null;
-    return upsertState(AppState.category, AppState.tournament);
+  if (_pendingSave) {
+    if (_saveDebounceTimer) {
+      clearTimeout(_saveDebounceTimer);
+      _saveDebounceTimer = null;
+    }
+    const pending = _pendingSave;
+    _pendingSave = null;
+    return upsertState(pending.catId, pending.data);
   }
   return Promise.resolve();
 }
@@ -100,8 +120,11 @@ async function fetchState(catId) {
 
 function scheduleCloudSave(catId, data) {
   clearTimeout(_saveDebounceTimer);
+  _pendingSave = { catId: catId, data: data };
   _saveDebounceTimer = setTimeout(function() {
-    upsertState(catId, data);
+    const pending = _pendingSave;
+    _pendingSave = null;
+    if (pending) upsertState(pending.catId, pending.data);
   }, 500);
 }
 

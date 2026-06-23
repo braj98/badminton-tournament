@@ -51,6 +51,7 @@ function renderActionBar() {
 function saveState() {
   if (!AppState.category) return;
   AppState.tournament._lastSave = Date.now();
+  AppState.tournament.updatedAt = AppState.tournament._lastSave;
   localSave(AppState.category, AppState.tournament);
   if (isAdmin() && AppState.tournament.phase !== 'setup') {
     scheduleCloudSave(AppState.category, AppState.tournament);
@@ -112,6 +113,7 @@ function renderHomePage() {
 function renderBreadcrumb() {
   var bc = document.getElementById('breadcrumb');
   if (!bc) return;
+  bc.classList.remove('hidden');
   var parts = ['<span class="bc-item' + (AppState.view === 'home' ? ' bc-current' : '') + '" onclick="goHome()">Home</span>'];
   if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
@@ -136,14 +138,9 @@ function updateGlobalNavigation() {
   const view = AppState.view;
   const showingResults = AppState.ui.showingResults;
 
-  const breadcrumb = document.getElementById('breadcrumb');
   const catBar = document.getElementById('catBar');
   const tournamentTabs = document.getElementById('tournamentTabs');
   const actionBar = document.getElementById('actionBar');
-
-  if (breadcrumb) {
-    breadcrumb.classList.remove('hidden');
-  }
 
   if (catBar) {
     const showCatBar = view !== 'home' && view !== 'event' && view !== 'sport';
@@ -242,10 +239,14 @@ function renderSportPage() {
         else if (s.phase !== 'setup') { dot = 'playing'; statusText = '🟢 In Progress'; }
       }
       var fmt = cat.format || 'singles';
+      var isDoubles = fmt === 'doubles';
+      var countLabel = isDoubles ? ' Teams' : ' Players';
+      var participantCount = (s && s.participants) ? s.participants.length : 0;
       html += '<div class="category-card" onclick="switchCategory(\'' + cat.id + '\')">'
         + '<div class="cat-card-left"><span class="dot ' + dot + '"></span>'
         + '<span class="cat-card-name">' + escapeHtml(cat.label) + '</span></div>'
-        + '<div class="cat-card-right"><span class="cat-card-format">' + fmt + '</span>'
+        + '<div class="cat-card-right"><span class="cat-card-count">' + participantCount + countLabel + '</span>'
+        + '<span class="cat-card-format">' + fmt + '</span>'
         + '<span class="cat-card-status ' + dot + '">' + statusText + '</span></div></div>';
     }
   }
@@ -443,6 +444,7 @@ function goBackFromChampion() {
 // ===================== RESULTS PAGE =====================
 function showResultsPage() {
   AppState.ui.showingResults = true;
+  renderBreadcrumb();
   updateGlobalNavigation();
   renderCategoryBar();
   updateHeader();
@@ -522,16 +524,20 @@ function renderResults() {
   if (matches.length === 0) {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No knockout matches yet.</p>';
   } else {
-    html += '<h2 class="mt-20">Knockout Matches</h2><table class="standings-table"><thead><tr><th>Category</th><th>Round</th><th>Match</th><th>Score</th><th>Status</th></tr></thead><tbody>';
+    html += '<h2 class="mt-20">Knockout Matches</h2><div class="results-cards">';
     for (const m of matches) {
-      const status = m.done ? '<span style="color:var(--success);font-weight:600;">✓ ' + escapeHtml(m.winner) + '</span>' : '<span style="color:var(--muted);">⏳ Upcoming</span>';
-      html += '<tr><td style="font-weight:600;">' + escapeHtml(m.cat.label) + '</td>'
-        + '<td>' + m.round + '</td>'
-        + '<td>' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</td>'
-        + '<td style="font-weight:600;">' + escapeHtml(m.score) + '</td>'
-        + '<td>' + status + '</td></tr>';
+      const status = m.done ? '<span class="match-status-done">✓ ' + escapeHtml(m.winner) + '</span>' : '<span class="match-status-pending">⏳ Upcoming</span>';
+      html += '<div class="result-card' + (m.done ? ' result-done' : '') + '">'
+        + '<div class="result-card-header">'
+        + '<span class="result-cat">' + escapeHtml(m.cat.label) + '</span>'
+        + '<span class="result-round">' + m.round + '</span>'
+        + '</div>'
+        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
+        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
+        + '<div class="result-status">' + status + '</div>'
+        + '</div>';
     }
-    html += '</tbody></table>';
+    html += '</div>';
   }
   container.innerHTML = html;
 }

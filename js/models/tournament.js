@@ -1,8 +1,11 @@
 function createTournament(sport, format) {
+  var now = Date.now();
   return {
     phase: 'setup',
     sport: sport || 'badminton',
     format: format || 'singles',
+    createdAt: now,
+    updatedAt: now,
     participants: [],
     players: [],
     groups: {},

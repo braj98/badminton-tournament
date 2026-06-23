@@ -101,7 +101,24 @@ body {
   padding: 4px 10px;
   font-size: 0.72rem;
   color: #166534;
+}
+
+.mode-tag {
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
   margin-left: auto;
+  font-weight: 600;
+}
+.mode-tag.mode-admin {
+  background: var(--success-light);
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.mode-tag.mode-viewer {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
 }
 
 /* ===== ACTION BAR ===== */
@@ -148,8 +165,8 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text-main); }
   background: var(--primary);
   transition: background .15s, transform .1s;
 }
-.btn:hover { background: var(--primary-dark); transform: scale(1.02); }
-.btn:active { transform: scale(.98); }
+.btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
 .btn:disabled { opacity: .5; cursor: default; transform: none; }
 .btn-secondary { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
 .btn-secondary:hover { background: #f1f5f9; }
@@ -713,6 +730,85 @@ select:focus { outline: none; border-color: var(--primary); }
 .bc-item.bc-current:hover { text-decoration: none; }
 .bc-sep { color: #cbd5e1; font-size: 1rem; }
 
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.35);
+  backdrop-filter: blur(6px);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal-card {
+  margin: 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 24px;
+  border: 1px solid rgba(255,255,255,0.8);
+}
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color .15s;
+}
+.modal-close:hover { color: var(--text-main); }
+.modal-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.modal-list {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 4px;
+}
+.modal-form {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-label {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.form-input {
+  padding: 8px 10px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: .85rem;
+}
+.form-input:focus { outline: none; border-color: var(--primary); }
+
 /* ===== TOURNAMENT TABS ===== */
 .tournament-tabs {
   display: flex;
@@ -784,6 +880,12 @@ select:focus { outline: none; border-color: var(--primary); }
   padding: 2px 8px;
   border-radius: 4px;
 }
+.cat-card-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
 .cat-card-status {
   font-size: 0.75rem;
   font-weight: 600;
@@ -796,7 +898,112 @@ select:focus { outline: none; border-color: var(--primary); }
 
 /* ===== RESULTS OVERRIDE ===== */
 #screen-results .page-title { font-size: 1.25rem; }
+.results-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.result-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-card.result-done { border-left: 4px solid var(--success); }
+.result-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.result-cat { font-weight: 700; font-size: 0.85rem; }
+.result-round { font-size: 0.75rem; color: var(--text-muted); }
+.result-match { font-size: 0.95rem; font-weight: 600; }
+.result-score { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+.match-status-done { color: var(--success); font-weight: 600; }
+.match-status-pending { color: var(--text-muted); }
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ===== UTILITY ===== */
+.confirm-box {
+  margin-top: 8px;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+}
+.confirm-box .confirm-text {
+  font-size: .85rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.confirm-box .confirm-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.confirm-box .confirm-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid;
+  border-radius: 8px;
+  font-size: .9rem;
+}
+.confirm-box.confirm-start {
+  background: var(--primary-light);
+  border: 1px solid #bfdbfe;
+}
+.confirm-box.confirm-start .confirm-text { color: var(--primary); }
+.confirm-box.confirm-start .confirm-input { border-color: #bfdbfe; }
+.confirm-box.confirm-start .confirm-btn { background: var(--primary); }
+
+.confirm-box.confirm-reset,
+.confirm-box.confirm-reduce {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.confirm-box.confirm-reset .confirm-text,
+.confirm-box.confirm-reduce .confirm-text { color: #dc2626; }
+.confirm-box.confirm-reset .confirm-input,
+.confirm-box.confirm-reduce .confirm-input { border-color: #fecaca; }
+.confirm-box.confirm-reset .confirm-btn,
+.confirm-box.confirm-reduce .confirm-btn { background: #dc2626; }
+
+.confirm-box.confirm-reduce {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+.confirm-box.confirm-reduce .confirm-text { color: #c2410c; }
+.confirm-box.confirm-reduce .confirm-input { border-color: #fed7aa; }
+
+.confirm-box.confirm-import {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+}
+.confirm-box.confirm-import .confirm-text { color: #7c3aed; }
+.confirm-box.confirm-import .confirm-input { border-color: #ddd6fe; }
+.confirm-box.confirm-import .confirm-btn { background: #7c3aed; }
+
 .hidden { display: none !important; }
 .mt-12 { margin-top: 12px; }
 .mt-16 { margin-top: 16px; }

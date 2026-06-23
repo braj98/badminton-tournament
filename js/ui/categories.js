@@ -24,6 +24,18 @@ function updateBanners() {
     if (isAdmin()) ab.classList.remove('hidden');
     else ab.classList.add('hidden');
   }
+  const mb = document.getElementById('modeBanner');
+  if (mb) {
+    if (isAdmin()) {
+      mb.textContent = '🔧 Admin Mode';
+      mb.classList.add('mode-admin');
+      mb.classList.remove('mode-viewer');
+    } else {
+      mb.textContent = '👁 Viewer Mode';
+      mb.classList.add('mode-viewer');
+      mb.classList.remove('mode-admin');
+    }
+  }
 }
 
 // ===================== SPORT BAR =====================
