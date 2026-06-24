@@ -7,9 +7,12 @@ function renderUpcomingView() {
   }
   const fixtures = AppState.tournament.fixtures || [];
   const knockout = AppState.tournament.knockout || [];
+  console.log('DEBUG upcoming: fixtures=' + fixtures.length + ' knockout=' + (knockout ? knockout.length : 0));
+  if (knockout) { knockout.forEach(function(mm,i){ console.log('  KO['+i+'] id='+mm.id+' status='+mm.status+' p1='+mm.p1+' p2='+mm.p2+' done='+mm.done); }); }
   const upcomingMatches = fixtures.filter(function(f) { return f.status === 'UPCOMING' && f.p1 && f.p2; }).concat(
     knockout.filter(function(m) { return m.status === 'UPCOMING' && m.p1 && m.p2; })
   );
+  console.log('DEBUG upcomingMatches count=' + upcomingMatches.length);
   if (upcomingMatches.length === 0) {
     container.innerHTML = '<p class="text-muted text-center" style="padding:32px 0;">No upcoming matches.</p>';
     return;
@@ -25,7 +28,7 @@ function renderUpcomingView() {
       + '</div>'
       + '<div class="result-match">' + escapeHtml(n1) + ' <span class="vs">vs</span> ' + escapeHtml(n2) + '</div>';
     if (isAdmin()) {
-      html += '<div style="margin-top:6px;"><button class="btn btn-sm btn-outline" onclick="startUpcomingMatch(' + m.id + ')" style="font-size:.75rem;padding:2px 12px;">▶ Start Match</button></div>';
+      html += '<div style="margin-top:6px;"><button class="btn btn-sm btn-outline" onclick="startUpcomingMatch(\'' + m.id + '\')" style="font-size:.75rem;padding:2px 12px;">▶ Start Match</button></div>';
     }
     html += '</div>';
   }
