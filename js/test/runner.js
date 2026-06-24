@@ -268,10 +268,104 @@ function testPlayerCount(n) {
   }
 }
 
+// ===== Public API tests (tournamentEngine.js) =====
+function testPublicAPI(n) {
+  console.log('\n=== Public API — ' + n + ' players ===');
+
+  const participants = Array.from({ length: n }, (_, i) => 'P' + String(i + 1)).map(n => context.createParticipant(n));
+
+  const groupCount = context.determineGroupCount(participants.length);
+  const groups = context.createGroups(participants, groupCount);
+  const groupKeys = Object.keys(groups);
+  assert(groupKeys.length === groupCount, 'createGroups returns ' + groupCount + ' groups');
+
+  const allIds = Object.values(groups).flat();
+  assert(allIds.length === n, 'createGroups allocates all ' + n + ' players');
+  assert(allIds.every(id => id.startsWith('p')), 'createGroups stores participant IDs (p...)');
+
+  const sizes = groupKeys.map(k => groups[k].length);
+  assert(Math.max(...sizes) - Math.min(...sizes) <= 1, 'Groups balanced: sizes=' + JSON.stringify(sizes));
+  assert(new Set(allIds).size === n, 'All participant IDs unique across groups');
+
+  // createFixtures
+  const fixtures = context.createFixtures(groups);
+  let expectedMatches = 0;
+  for (const k of groupKeys) {
+    const m = groups[k].length;
+    expectedMatches += m * (m - 1) / 2;
+  }
+  assert(fixtures.length === expectedMatches, 'createFixtures generates ' + fixtures.length + ' matches');
+  for (const f of fixtures) {
+    assert(typeof f.p1 === 'string' && typeof f.p2 === 'string', 'Fixture p1/p2 are strings');
+    assert(f.round === 'group', 'Fixture round = group');
+    assert(f.group !== null, 'Fixture has group assigned');
+  }
+
+  // Fill group scores
+  for (const f of fixtures) {
+    f.s1 = groupCount > 1 ? 13 : 2;
+    f.s2 = Math.floor(Math.random() * 9);
+    f.done = true;
+  }
+
+  // computeStandings
+  const result = context.computeStandings(groups, fixtures, participants);
+  assert(result.standings !== undefined, 'computeStandings returns standings');
+  const standingsKeys = Object.keys(result.standings);
+  assert(standingsKeys.length === groupCount, 'Standings computed for ' + groupCount + ' groups');
+
+  for (const k of standingsKeys) {
+    const st = result.standings[k];
+    assert(st.length === groups[k].length, 'Group ' + k + ' standings has ' + st.length + ' entries');
+    for (let i = 0; i < st.length; i++) {
+      assert(st[i].rank === i + 1, 'Group ' + k + ' player ' + st[i].name + ' rank=' + st[i].rank);
+    }
+  }
+
+  // Qualifiers
+  assert(result.qualifiers.length === groupCount * 2, result.qualifiers.length + ' qualifiers (expected ' + (groupCount * 2) + ')');
+  for (const k of groupKeys) {
+    const q = result.qualifiers.filter(q => q.group === k);
+    assert(q.length === 2, 'Group ' + k + ' has 2 qualifiers');
+  }
+
+  // createKnockoutBracket
+  const knockout = context.createKnockoutBracket(result.qualifiers);
+  let totalKOMatches = 0;
+  let m = result.qualifiers.length;
+  while (m >= 2) { totalKOMatches += m / 2; m = m / 2; }
+  assert(knockout.length === totalKOMatches, 'createKnockoutBracket returns ' + knockout.length + ' matches');
+
+  // advanceWinner — simulate full tournament
+  let ko = knockout.map(m => ({ ...m }));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const m of ko) {
+      if (m.p1 && m.p2 && !m.done) {
+        m.s1 = 11; m.s2 = Math.floor(Math.random() * 9);
+        m.done = true; m.winner = m.s1 > m.s2 ? m.p1 : m.p2;
+        changed = true;
+      }
+    }
+    if (changed) ko = context.advanceWinner(ko);
+  }
+  const finalMatch = ko.find(m => m.round === 'Final');
+  assert(finalMatch.p1 !== null && finalMatch.p2 !== null, 'advanceWinner populates Final');
+  assert(finalMatch.winner !== null, 'advanceWinner determines champion');
+  const champion = finalMatch.winner;
+  const runnerUp = champion === finalMatch.p1 ? finalMatch.p2 : finalMatch.p1;
+  assert(champion !== runnerUp, 'Champion and runner-up are different');
+}
+
 // Run tests for different player counts
 console.log('\n========== ENGINE TESTS ==========\n');
 
 [2, 3, 4, 5, 6, 7, 10, 11, 20].forEach(n => testPlayerCount(n));
+
+console.log('\n========== PUBLIC API TESTS ==========\n');
+
+[2, 3, 5, 6, 10, 11, 20].forEach(n => testPublicAPI(n));
 
 // ===================== STORAGE MODEL TESTS =====================
 
