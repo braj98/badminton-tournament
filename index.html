@@ -228,6 +228,7 @@
     <div class="card">
       <div class="flex justify-between items-center mb-12">
         <div id="matchViewTabBar" style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="tab-btn" id="subNavFeed" onclick="switchMatchView('feed')" data-public="1">📰 Feed</button>
           <button class="tab-btn active" id="subNavLive" onclick="switchMatchView('live')" data-public="1">🔥 Live</button>
           <button class="tab-btn" id="subNavResults" onclick="switchMatchView('results')" data-public="1">📖 Recent Results</button>
           <button class="tab-btn" id="subNavUpcoming" onclick="switchMatchView('upcoming')" data-public="1">📅 Upcoming</button>
@@ -279,6 +280,7 @@
 <script src="js/ui/fixtures.js"></script>
 <script src="js/ui/knockout.js"></script>
 <script src="js/ui/live.js"></script>
+<script src="js/ui/feed.js"></script>
 <script src="js/ui/upcoming.js"></script>
     <script src="js/ui/champion.js"></script>
 

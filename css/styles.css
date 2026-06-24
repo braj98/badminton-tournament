@@ -1011,6 +1011,35 @@ select:focus { outline: none; border-color: var(--primary); }
 .result-score { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
 .match-status-done { color: var(--success); font-weight: 600; }
 .match-status-pending { color: var(--text-muted); }
+/* ===== TOURNAMENT FEED ===== */
+.feed { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.feed-item {
+  display: flex; gap: 10px; padding: 10px 12px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.feed-badge {
+  font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+  white-space: nowrap; height: fit-content; min-width: 100px; text-align: center;
+  letter-spacing: .02em;
+}
+.feed-badge.live { background: #fee2e2; color: #dc2626; }
+.feed-badge.result { background: #e0e7ff; color: #4338ca; }
+.feed-badge.next { background: #fef3c7; color: #d97706; }
+.feed-badge.champion { background: #fef9c3; color: #ca8a04; }
+body.dark-mode .feed-badge.live { background: #451a1a; color: #fca5a5; }
+body.dark-mode .feed-badge.result { background: #1e1b4b; color: #a5b4fc; }
+body.dark-mode .feed-badge.next { background: #422006; color: #f9a03f; }
+body.dark-mode .feed-badge.champion { background: #422006; color: #fbbf24; }
+.feed-content { flex: 1; min-width: 0; }
+.feed-category { font-size: .75rem; color: var(--text-muted); margin-bottom: 2px; }
+.feed-round { font-size: .7rem; }
+.feed-match { font-size: .95rem; font-weight: 600; margin: 2px 0; }
+.feed-score { font-size: 1rem; font-weight: 700; color: var(--primary); margin: 2px 0; }
+.feed-winner { font-size: .85rem; color: var(--success); font-weight: 600; }
+.feed-champ-name { font-size: 1rem; font-weight: 700; }
+.feed-runnerup { font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
+.feed-sets { font-size: .9rem; font-weight: 600; color: var(--primary); }
+.feed-sets .set { margin-right: 6px; }
 /* ===== LOADING OVERLAY ===== */
 .loading-overlay {
   position: fixed;

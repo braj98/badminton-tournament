@@ -515,6 +515,7 @@ function switchMatchView(view) {
 
 function renderMatchView() {
   clearDisabled();
+  if (_currentMatchView === 'feed') { renderTournamentFeed(); return; }
   if (_currentMatchView === 'live') { renderLiveView(); return; }
   if (_currentMatchView === 'results') { renderRecentResults(); return; }
   if (_currentMatchView === 'upcoming') { renderUpcomingView(); return; }
