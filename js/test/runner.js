@@ -322,13 +322,24 @@ function testEventModel(ctx) {
   a(!!e2, 'Second event created');
   a(ctx.getEvents().length === 2, 'getEvents returns 2 events');
 
-  ctx.renameEvent('Test Event', 'Renamed Event');
+  const renameResult = ctx.renameEventImpl('Test Event', 'Renamed Event');
+  a(renameResult === null, 'renameEventImpl returns null on success');
   const events = ctx.getEvents();
   a(!!events.find(function(e) { return e.name === 'Renamed Event'; }), 'Event renamed');
   a(!events.find(function(e) { return e.name === 'Test Event'; }), 'Old name no longer exists');
 
+  a(ctx.renameEventImpl('Renamed Event', '') === 'empty', 'Empty name rejected');
+  a(ctx.renameEventImpl('Renamed Event', '   ') === 'empty', 'Whitespace name rejected');
+  a(ctx.renameEventImpl('Renamed Event', 'Event B') === 'duplicate', 'Duplicate name rejected');
+  ctx.createEvent('New Event');
+  a(ctx.renameEventImpl('Not Found', 'Anything') === 'not_found', 'Non-existent old name returns not_found');
+
   ctx.addTemplateToEvent('test_event', 'tmpl_1');
   a(!!ctx.getEvents().find(function(e) { return e.id === 'test_event'; }).templateIds.includes('tmpl_1'), 'addTemplateToEvent works');
+
+  ctx.saveEvents([{ id: 'event_b', name: 'Event B', templateIds: [], createdAt: 1 }]);
+  const afterCleanup = ctx.getEvents();
+  a(afterCleanup.length === 1, 'Cleanup: only Event B remains');
 
   ctx.localStorage.clear();
   console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);

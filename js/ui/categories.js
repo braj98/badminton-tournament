@@ -108,16 +108,11 @@ function renderEventBar() {
 function renameEvent(oldName) {
   if (!isAdmin()) return;
   const newName = prompt('Rename "' + oldName + '" to:', oldName);
-  if (!newName || newName === oldName) return;
-  const events = getEvents();
-  let changed = false;
-  for (const ev of events) {
-    if (ev.name === oldName) { ev.name = newName; changed = true; break; }
-  }
-  if (!changed) return;
-  saveEvents(events);
-  if (_supabase) syncMetadataToCloud();
-  if (AppState.event === oldName) setCurrentEvent(newName);
+  if (!newName || newName.trim() === oldName) return;
+  const result = renameEventImpl(oldName, newName.trim());
+  if (result === 'duplicate') { alert('An event with this name already exists.'); return; }
+  if (result === 'not_found') { alert('Event not found.'); return; }
+  if (result === 'not_admin') return;
   renderEventBar();
   var panel = document.getElementById('managePanel');
   if (panel && !panel.classList.contains('hidden')) {

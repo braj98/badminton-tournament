@@ -77,15 +77,20 @@ async function deleteEvent(eventId) {
   return true;
 }
 
-function renameEvent(oldName, newName) {
-  if (!isAdmin()) return;
+function renameEventImpl(oldName, newName) {
+  if (!isAdmin()) return 'not_admin';
+  if (!newName || !newName.trim()) return 'empty';
+  newName = newName.trim();
+  if (newName === oldName) return null;
   const events = getEvents();
-  let changed = false;
+  if (events.find(e => e.name.toLowerCase() === newName.toLowerCase() && e.name !== oldName)) return 'duplicate';
+  let found = false;
   for (const ev of events) {
-    if (ev.name === oldName) { ev.name = newName; changed = true; break; }
+    if (ev.name === oldName) { ev.name = newName; found = true; break; }
   }
-  if (changed) {
-    saveEvents(events);
-    if (AppState.event === oldName) setCurrentEvent(newName);
-  }
+  if (!found) return 'not_found';
+  saveEvents(events);
+  if (_supabase) syncMetadataToCloud();
+  if (AppState.event === oldName) setCurrentEvent(newName);
+  return null;
 }
