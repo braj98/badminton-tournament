@@ -72,6 +72,7 @@ function renderLiveView() {
   }
   container.innerHTML = html;
   document.getElementById('subNavLive').classList.add('active');
+  document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
   document.getElementById('subNavChampions').classList.remove('active');
 }

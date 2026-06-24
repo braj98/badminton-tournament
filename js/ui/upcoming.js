@@ -48,6 +48,7 @@ function renderUpcomingView() {
   }
   container.innerHTML = html;
   document.getElementById('subNavLive').classList.remove('active');
+  document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.add('active');
   document.getElementById('subNavChampions').classList.remove('active');
 }

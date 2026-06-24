@@ -381,6 +381,7 @@ function renderAll() {
     document.getElementById('screen-results').classList.add('active');
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
     document.getElementById('subNavLive').classList.add('active');
+    document.getElementById('subNavResults').classList.remove('active');
     document.getElementById('subNavUpcoming').classList.remove('active');
     document.getElementById('subNavChampions').classList.remove('active');
     if (!isAdmin()) applyViewerMode();
@@ -515,6 +516,7 @@ function switchMatchView(view) {
 function renderMatchView() {
   clearDisabled();
   if (_currentMatchView === 'live') { renderLiveView(); return; }
+  if (_currentMatchView === 'results') { renderRecentResults(); return; }
   if (_currentMatchView === 'upcoming') { renderUpcomingView(); return; }
   if (_currentMatchView === 'champions') { renderChampionsView(); return; }
 }
@@ -523,6 +525,66 @@ function closeResults() {
   AppState.ui.showingResults = false;
   document.getElementById('screen-results').classList.remove('active');
   renderAll();
+}
+
+function renderRecentResults() {
+  const templates = getTemplates();
+  const events = getEvents();
+  const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final', 'group': 'Group Stage' };
+  const container = document.getElementById('resultsList');
+  let allCompleted = [];
+  const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
+  for (const ev of filteredEvents) {
+    for (const tmplId of ev.templateIds) {
+      const tmpl = templates.find(t => t.id === tmplId);
+      if (!tmpl) continue;
+      const s = localLoad(tmpl.id);
+      if (!s) continue;
+      migrateMatchStatus(s);
+      const resolve = function(id) { return s.participants ? participantName(s.participants, id) || id || 'TBD' : id || 'TBD'; };
+      for (const m of (s.knockout || [])) {
+        if (m.status !== 'COMPLETED') continue;
+        allCompleted.push({
+          catLabel: tmpl.name,
+          round: roundLabel[m.round] || m.round,
+          p1: resolve(m.p1), p2: resolve(m.p2),
+          winner: resolve(m.winner),
+          score: (m.round === 'Final' && m.sets) ? m.sets.filter(function(st) { return st.s1 !== null && st.s2 !== null; }).map(function(st) { return st.s1 + '-' + st.s2; }).join(' / ') : ((m.s1 !== null && m.s2 !== null) ? m.s1 + '-' + m.s2 : '—'),
+          updatedAt: m.updatedAt || 0
+        });
+      }
+    }
+  }
+  allCompleted.sort(function(a, b) { return b.updatedAt - a.updatedAt; });
+  var _maxResults = 10;
+  var _recent = allCompleted.slice(0, _maxResults);
+  var _hasMore = allCompleted.length > _maxResults;
+  let html = '';
+  if (_recent.length === 0) {
+    html += '<p class="text-muted text-center" style="padding:32px 0;">No completed matches yet.</p>';
+  } else {
+    html += '<div class="results-cards">';
+    for (const m of _recent) {
+      html += '<div class="result-card result-done">'
+        + '<div class="result-card-header">'
+        + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
+        + '<span class="result-round">' + m.round + '</span>'
+        + '</div>'
+        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
+        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
+        + '<div class="result-status">✓ ' + escapeHtml(m.winner) + '</div>'
+        + '</div>';
+    }
+    html += '</div>';
+    if (_hasMore) {
+      html += '<p class="text-muted text-center" style="padding:8px 0;font-size:.85rem;">Showing last ' + _maxResults + ' of ' + allCompleted.length + ' completed matches.</p>';
+    }
+  }
+  container.innerHTML = html;
+  document.getElementById('subNavLive').classList.remove('active');
+  document.getElementById('subNavResults').classList.add('active');
+  document.getElementById('subNavUpcoming').classList.remove('active');
+  document.getElementById('subNavChampions').classList.remove('active');
 }
 
 function renderChampionsView() {
@@ -567,6 +629,7 @@ function renderChampionsView() {
   }
   container.innerHTML = html;
   document.getElementById('subNavLive').classList.remove('active');
+  document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
   document.getElementById('subNavChampions').classList.add('active');
 }
