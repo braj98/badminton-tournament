@@ -11,13 +11,13 @@ function updateHeader() {
     if (tag) tag.classList.add('hidden');
   } else if (AppState.view === 'event') {
     if (sub) {
-      sub.textContent = AppState.event;
+      sub.textContent = getCurrentEventName();
       sub.classList.remove('hidden');
     }
     if (tag) tag.classList.add('hidden');
   } else {
     if (sub) {
-      sub.textContent = AppState.event;
+      sub.textContent = getCurrentEventName();
       sub.classList.remove('hidden');
     }
     if (tag) {
@@ -119,15 +119,15 @@ function renderBreadcrumb() {
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
+    parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
   } else if (AppState.view === 'sport') {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
+    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current" onclick="goToSportPage()">' + sportLabel(AppState.sport) + '</span>');
   } else {
     parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(AppState.event) + '</span>');
+    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item" onclick="goToSportPage()">' + sportLabel(AppState.sport) + '</span>');
     parts.push('<span class="bc-sep">›</span>');
@@ -172,7 +172,7 @@ function renderEventPage() {
   updateHeader();
   var container = document.getElementById('eventContent');
   var cats = getCategories().filter(function(c) { return c.eventId === AppState.eventId; });
-  var html = '<h2 class="page-title">' + escapeHtml(AppState.event) + '</h2>';
+  var html = '<h2 class="page-title">' + escapeHtml(getCurrentEventName()) + '</h2>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this event.</p>';
   } else {

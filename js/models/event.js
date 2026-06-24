@@ -1,9 +1,23 @@
 const EVENTS_KEY = 'btm_events';
 
 function setCurrentEvent(eventName) {
-  AppState.event = eventName;
   const ev = getEvents().find(function(e) { return e.name === eventName; });
-  AppState.eventId = ev ? ev.id : null;
+  if (ev) setCurrentEventById(ev.id);
+  else { AppState.event = eventName; AppState.eventId = null; }
+}
+
+function setCurrentEventById(eventId) {
+  const ev = getEvents().find(function(e) { return e.id === eventId; });
+  AppState.eventId = eventId;
+  AppState.event = ev ? ev.name : null;
+}
+
+function getCurrentEventName() {
+  if (AppState.eventId) {
+    const ev = getEvents().find(e => e.id === AppState.eventId);
+    if (ev) return ev.name;
+  }
+  return AppState.event;
 }
 
 function getEvents() {
@@ -85,12 +99,13 @@ function renameEventImpl(oldName, newName) {
   const events = getEvents();
   if (events.find(e => e.name.toLowerCase() === newName.toLowerCase() && e.name !== oldName)) return 'duplicate';
   let found = false;
+  let renamedId = null;
   for (const ev of events) {
-    if (ev.name === oldName) { ev.name = newName; found = true; break; }
+    if (ev.name === oldName) { ev.name = newName; found = true; renamedId = ev.id; break; }
   }
   if (!found) return 'not_found';
   saveEvents(events);
   if (_supabase) syncMetadataToCloud();
-  if (AppState.event === oldName) setCurrentEvent(newName);
+  if (renamedId && AppState.eventId === renamedId) setCurrentEvent(newName);
   return null;
 }

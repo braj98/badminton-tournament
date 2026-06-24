@@ -1,292 +1,215 @@
-Requirement: Introduce Organization Layer (Future-Proof Architecture)
-Objective
+Remaining Issues
+Issue 1
 
-Prepare the Tournament Manager platform for future growth without increasing complexity for current users.
+AppState.event vs AppState.eventId
 
-Current hierarchy:
+Current:
 
-Event
-→ Sport
-→ Competition
-→ Tournament
-
-Proposed future hierarchy:
-
-Organization
-→ Event
-→ Sport
-→ Competition
-→ Tournament
-
-The Organization layer will be introduced in the data model first and exposed in the UI only when needed.
-
-Problem Statement
-
-Currently:
-
-BREN AVALON SPORTS MEET 2026
-
-acts as both:
-
-Organization
-Event
-
-These are actually different business entities.
+Both exist.
 
 Example:
 
-Organization:
-Bren Avalon
+AppState.event
+AppState.eventId
 
-Event:
-Sports Meet 2026
+Risk:
 
-Combining both concepts makes future expansion difficult.
+Future inconsistencies.
 
-Business Goals
+Recommendation:
 
-Support:
+Use:
 
-Multiple annual sports meets
-Multiple tournaments per year
-Multiple sports
-Multiple communities/apartments/clubs (future)
+AppState.eventId
 
-Without redesigning the platform later.
+as primary.
 
-Proposed Hierarchy
-Level 1 - Organization
+Resolve display name from event object.
 
-Represents:
+Priority:
 
-Apartment Complex
-Sports Club
-Resident Welfare Association
-Corporate Sports League
+Medium
 
-Examples:
+Issue 2
 
-Bren Avalon
-Prestige Lakeside
-XYZ Sports Club
-Level 2 - Event
+Event Lookup By Name
 
-Represents a sports festival or tournament event.
+Current:
 
-Examples:
+setCurrentEvent(eventName)
 
-Sports Meet 2026
-Sports Meet 2027
-Independence Day Tournament
-Winter Games 2027
+then:
 
-Events belong to exactly one Organization.
+find(e => e.name === eventName)
 
-Level 3 - Sport
+This still depends on names.
 
-Examples:
+Recommendation:
 
-Badminton
-Table Tennis
-Chess
-Carrom
+Create:
 
-Sports belong to an Event.
+setCurrentEventById(eventId)
 
-Level 4 - Competition
+Priority:
 
-Examples:
+High
 
-Badminton:
+Issue 3
 
-Junior Singles
-Junior Doubles
-Senior Boys
-Senior Girls
+Delete Event Uses Local State Only
 
-Table Tennis:
+Current:
 
-Open Singles
-Open Doubles
+localLoad(tmplId)
 
-Chess:
+during validation.
 
-Open Category
+Potential issue:
 
-Competitions belong to a Sport within an Event.
+Cloud state exists.
 
-Level 5 - Tournament Instance
+Local state missing.
 
-Contains runtime tournament data:
+Recommendation:
 
-Players
-Groups
-Fixtures
-Standings
-Knockout
-Champion
-Example
-Bren Avalon
-│
-├── Sports Meet 2026
-│   │
-│   ├── Badminton
-│   │   ├── Junior Singles
-│   │   ├── Junior Doubles
-│   │   └── Senior Boys
-│   │
-│   ├── Table Tennis
-│   │   └── Open Singles
-│   │
-│   └── Chess
-│       └── Open
-│
-└── Sports Meet 2027
-Scope For Current Release
-UI Scope
+Eventually validate cloud state too.
 
-No Organization UI.
+Priority:
 
-Users continue to see:
+Low
 
-Event
-→ Sport
-→ Competition
-→ Tournament
+UX Improvements
+Event Dropdown First
 
-No additional complexity.
+I strongly support your proposal.
 
-Data Model Scope
+Manage should begin with:
 
-Introduce:
+Event ▼
 
-organizationId
+Then:
 
-into Event.
+Competitions
+Templates
+Import / Export
+Cloud Sync
+
+Everything should operate within the selected event.
+
+Priority:
+
+High
+
+Competition Cards
+
+Replace text lists with cards.
 
 Example:
 
-{
-  "id": "sports_meet_2026",
-  "organizationId": "bren_avalon",
-  "name": "Sports Meet 2026"
-}
+🏸 Junior Singles
 
-Default value:
+12 Players
 
-{
-  "organizationId": "default"
-}
+🟢 In Progress
 
-for all existing data.
+Benefits:
 
-Database Changes
-organizations
-{
-  "id": "bren_avalon",
-  "name": "Bren Avalon"
-}
-events
-{
-  "id": "sports_meet_2026",
-  "organizationId": "bren_avalon",
-  "name": "Sports Meet 2026",
-  "templateIds": []
-}
-templates
+Easier scanning
+Better mobile experience
 
-No change required.
+Priority:
 
-{
-  "id": "junior_singles",
-  "sport": "badminton"
-}
-tournament_state
+High
 
-No change required.
+Status Badges
 
-{
-  "eventId": "sports_meet_2026",
-  "templateId": "junior_singles",
-  "data": {}
-}
-Migration Strategy
-Phase 1 (Current)
+Every competition should display:
 
-Add:
+⚪ Not Started
 
-organizationId
+🟢 In Progress
 
-to Event model.
+🏆 Completed
 
-Default:
+Priority:
 
-default
+High
 
-No UI changes.
+Viewer/Admin Banner
 
-Phase 2
+Always visible:
 
-Create Organization model.
+🔧 Admin Mode
 
-Support:
+or
 
-Create Organization
-Edit Organization
+👁 Viewer Mode
 
-Still hidden from standard users.
+Priority:
 
-Phase 3
+Medium
 
-Expose Organization selection.
+Testing Priorities
 
-Navigation:
+Now more important than architecture.
 
-Organization
-→ Event
-→ Sport
-→ Competition
+Test:
 
-Non-Goals
+2 participants
 
-For current release:
+3 participants
 
-Do NOT implement:
+5 participants
 
-Organization management screens
-Organization permissions
-Organization-level reporting
-Multi-organization login
+6 participants
 
-These are future enhancements.
+10 participants
 
-Benefits
-Immediate Benefits
-Future-proof architecture
-Cleaner business model
-Easier event management
-Long-Term Benefits
+11 participants
 
-Supports:
+20 participants
 
-Multiple apartment complexes
-Multiple clubs
-Multi-tenant deployments
-Historical event tracking
+Validate:
 
-without redesign.
+group generation
+qualification
+knockout generation
+champion selection
+Multi-Sport Readiness
 
-Recommendation
+Current Estimate
 
-Implement only the data model change now:
+Badminton 100%
+Table Tennis 100%
+Chess 95%
+Carrom 90%
 
-organizationId
+The platform is now ready for Table Tennis.
 
-Keep the current user experience unchanged:
+No additional architecture work required.
 
-Event
-→ Sport
-→ Competition
-→ Tournament
+Recommended Next Sprint
 
-This provides future scalability while keeping the application simple for apartment users.
+Priority 1
+
+Implement Event dropdown workflow.
+
+Priority 2
+
+Add competition cards.
+
+Priority 3
+
+Add status badges.
+
+Priority 4
+
+Run a full tournament.
+
+Priority 5
+
+Add Table Tennis.
+
+Priority 6
+
+Collect user feedback

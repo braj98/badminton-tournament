@@ -74,7 +74,7 @@ function renderSportBar() {
 
 function switchSport(sport) {
   if (sport === AppState.sport) return;
-  goToSportPage(AppState.event, sport);
+  goToSportPage(getCurrentEventName(), sport);
 }
 
 // ===================== EVENT BAR =====================
@@ -128,9 +128,10 @@ function renameEvent(oldName) {
   renderAll();
 }
 
-function switchEvent(ev) {
-  if (ev === AppState.event) return;
-  goToEventPage(ev);
+function switchEvent(evName) {
+  const ev = getEvents().find(function(e) { return e.name === evName; });
+  if (!ev || ev.id === AppState.eventId) return;
+  goToEventPage(evName);
 }
 
 // ===================== TEMPLATE MANAGEMENT =====================
@@ -197,7 +198,7 @@ function createEventFromHome() {
   if (_supabase) syncMetadataToCloud();
   setCurrentEvent(ev.name);
   renderHomePage();
-  goToEventPage(AppState.event);
+  goToEventPage(getCurrentEventName());
 }
 
 // ===================== CATEGORY SWITCHING =====================
@@ -413,7 +414,7 @@ function renderManagePanel() {
     const participantCount = (saved && saved.participants) ? saved.participants.length : 0;
     const countLabel = (tmpl.type || 'singles') === 'doubles' ? 'teams' : 'players';
 
-    html += '<div id="manageTmplRow_' + tmpl.id + '" style="padding:10px 0;border-bottom:1px solid var(--border);">'
+    html += '<div id="manageTmplRow_' + tmpl.id + '" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
       + '  <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">'
       + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
