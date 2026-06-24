@@ -383,6 +383,7 @@ function renderAll() {
     renderCategoryBar();
     updateHeader();
     var _ab = document.getElementById('actionBar'); if (_ab) _ab.style.display = 'none';
+    AppState.view = 'home';
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-results').classList.add('active');
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
