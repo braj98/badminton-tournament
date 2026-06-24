@@ -1460,6 +1460,122 @@ body.dark-mode .vs-separator-label {
   background: #1d4ed8;
 }
 
+/* ===== RESULTS MATRIX CARDS (a.html) ===== */
+.results-ledger-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.result-matrix-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+  border-left: 4px solid var(--primary);
+}
+
+@media (max-width: 600px) {
+  .result-matrix-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+  }
+}
+
+.result-matrix-row.stage-final {
+  border-left-color: #eab308;
+}
+
+.result-matrix-row.stage-semifinal {
+  border-left-color: #a855f7;
+}
+
+.result-matrix-row .competitors-versus-block {
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.stage-final .stage-badge-tag {
+  color: #854d0e;
+  background-color: #fef08a;
+}
+
+body.dark-mode .stage-final .stage-badge-tag {
+  color: #fbbf24;
+  background-color: #422006;
+}
+
+.competitors-versus-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.competitor-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.competitor-row.match-winner {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.check-icon-marker {
+  color: var(--success);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.scores-tablet-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.score-set-pill {
+  background: #f1f5f9;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  min-width: 54px;
+  text-align: center;
+}
+
+.score-set-pill.won-set {
+  background: #f0fdf4;
+  color: var(--success);
+  border: 1px solid #bbf7d0;
+}
+
+body.dark-mode .score-set-pill {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+body.dark-mode .score-set-pill.won-set {
+  background: #052e16;
+  color: #4ade80;
+  border-color: #166534;
+}
+
+body.dark-mode .check-icon-marker {
+  color: #4ade80;
+}
+
 /* ===== TIMELINE CARDS (Feed) ===== */
 .timeline-stack {
   display: flex;

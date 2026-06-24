@@ -539,31 +539,43 @@ function closeResults() {
 }
 
 function renderRecentResults() {
-  const templates = getTemplates();
-  const events = getEvents();
-  const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final', 'group': 'Group Stage' };
+  clearDisabled();
   const container = document.getElementById('resultsList');
+  const ev = getEvents().find(e => e.id === AppState.eventId);
+  if (!ev) {
+    container.innerHTML = '<p class="text-muted text-center" style="padding:32px 0;">No event selected.</p>';
+    return;
+  }
+  const templates = getTemplates();
+  const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final', 'group': 'Group Stage' };
+  const sportIcons = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
   let allCompleted = [];
-  const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
-  for (const ev of filteredEvents) {
-    for (const tmplId of ev.templateIds) {
-      const tmpl = templates.find(t => t.id === tmplId);
-      if (!tmpl) continue;
-      const s = localLoad(tmpl.id);
-      if (!s) continue;
-      migrateMatchStatus(s);
-      const resolve = function(id) { return s.participants ? participantName(s.participants, id) || id || 'TBD' : id || 'TBD'; };
-      for (const m of (s.knockout || [])) {
-        if (m.status !== 'COMPLETED') continue;
-        allCompleted.push({
-          catLabel: tmpl.name,
-          round: roundLabel[m.round] || m.round,
-          p1: resolve(m.p1), p2: resolve(m.p2),
-          winner: resolve(m.winner),
-          score: (m.round === 'Final' && m.sets) ? m.sets.filter(function(st) { return st.s1 !== null && st.s2 !== null; }).map(function(st) { return st.s1 + '-' + st.s2; }).join(' / ') : ((m.s1 !== null && m.s2 !== null) ? m.s1 + '-' + m.s2 : '—'),
-          updatedAt: m.updatedAt || 0
-        });
+  for (const tmplId of ev.templateIds) {
+    const tmpl = templates.find(t => t.id === tmplId);
+    if (!tmpl) continue;
+    const s = localLoad(tmpl.id);
+    if (!s) continue;
+    migrateMatchStatus(s);
+    const resolve = function(id) { return s.participants ? participantName(s.participants, id) || id || 'TBD' : id || 'TBD'; };
+    for (const m of (s.knockout || [])) {
+      if (m.status !== 'COMPLETED') continue;
+      let scores = [];
+      if (m.round === 'Final' && m.sets) {
+        scores = m.sets.filter(st => st.s1 !== null && st.s2 !== null).map(st => ({ s1: st.s1, s2: st.s2 }));
+      } else if (m.s1 !== null && m.s2 !== null) {
+        scores = [{ s1: m.s1, s2: m.s2 }];
       }
+      const winnerId = m.winner;
+      const loserId = winnerId === m.p1 ? m.p2 : m.p1;
+      allCompleted.push({
+        catLabel: tmpl.name,
+        catSport: tmpl.sport,
+        round: roundLabel[m.round] || m.round,
+        winner: resolve(winnerId),
+        loser: resolve(loserId),
+        scores: scores,
+        updatedAt: m.updatedAt || 0
+      });
     }
   }
   allCompleted.sort(function(a, b) { return b.updatedAt - a.updatedAt; });
@@ -572,18 +584,29 @@ function renderRecentResults() {
   var _hasMore = allCompleted.length > _maxResults;
   let html = '';
   if (_recent.length === 0) {
-    html += '<p class="text-muted text-center" style="padding:32px 0;">No completed matches yet.</p>';
+    html = '<p class="text-muted text-center" style="padding:32px 0;">No completed matches yet.</p>';
   } else {
-    html += '<div class="results-cards">';
+    html = '<div class="results-ledger-stack">';
     for (const m of _recent) {
-      html += '<div class="result-card result-done">'
-        + '<div class="result-card-header">'
-        + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
-        + '<span class="result-round">' + m.round + '</span>'
+      let stageCls = '';
+      if (m.round === 'Final') stageCls = ' stage-final';
+      else if (m.round === 'Semi Final') stageCls = ' stage-semifinal';
+      const badgeText = m.round === 'Final' ? '🥇 Final' : m.round;
+      let scoreHtml = '<div class="scores-tablet-wrapper">';
+      for (const sc of m.scores) {
+        scoreHtml += '<span class="score-set-pill' + (sc.s1 > sc.s2 ? ' won-set' : '') + '">' + sc.s1 + '-' + sc.s2 + '</span>';
+      }
+      scoreHtml += '</div>';
+      html += '<div class="result-matrix-row' + stageCls + '">'
+        + '<div class="meta-tags-block">'
+        + '<span class="division-label-string">' + (sportIcons[m.catSport] || '🏸') + ' ' + escapeHtml(m.catLabel) + '</span>'
+        + '<span class="stage-badge-tag">' + escapeHtml(badgeText) + '</span>'
         + '</div>'
-        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
-        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
-        + '<div class="result-status">✓ ' + escapeHtml(m.winner) + '</div>'
+        + '<div class="competitors-versus-block">'
+        + '<div class="competitor-row match-winner"><span class="check-icon-marker">✓</span> ' + escapeHtml(m.winner) + '</div>'
+        + '<div class="competitor-row">' + escapeHtml(m.loser) + '</div>'
+        + '</div>'
+        + scoreHtml
         + '</div>';
     }
     html += '</div>';
