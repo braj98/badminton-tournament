@@ -136,7 +136,7 @@ function renderTournamentFeed() {
     return bTime - aTime;
   });
 
-  let html = '<div class="feed">';
+  let html = '<div class="timeline-stack">';
   let resultCount = 0;
   for (let i = 0; i < feedItems.length; i++) {
     const item = feedItems[i];
@@ -152,42 +152,61 @@ function renderTournamentFeed() {
 }
 
 function renderFeedItem(item) {
-  let badge, cls;
-  if (item.type === 'live') { badge = '🔥 LIVE'; cls = 'live'; }
-  else if (item.type === 'result') { badge = '📖 RESULT'; cls = 'result'; }
-  else if (item.type === 'next') { badge = '📅 NEXT'; cls = 'next'; }
-  else { badge = '🏆 CHAMPION'; cls = 'champion'; }
+  let badge, typeClass, isChamp = false, isNext = false, isLive = false;
+  if (item.type === 'live') { badge = '🔴 LIVE'; typeClass = 'type-live'; isLive = true; }
+  else if (item.type === 'result') { badge = '📖 Result'; typeClass = 'type-result'; }
+  else if (item.type === 'next') { badge = '📅 Next Match'; typeClass = 'type-next'; isNext = true; }
+  else { badge = '🏆 Champion'; typeClass = 'type-champion'; isChamp = true; }
 
-  let html = '<div class="feed-item feed-' + item.type + '">'
-    + '<div class="feed-badge ' + cls + '">' + badge + '</div>'
-    + '<div class="feed-content">'
-    + '<div class="feed-category">' + item.sportIcon + ' ' + escapeHtml(item.catName)
-    + (item.round ? ' <span class="feed-round">' + escapeHtml(item.round) + '</span>' : '') + '</div>';
+  let cardCls = 'timeline-row-card';
+  if (isLive) cardCls += ' is-live';
+  else if (isNext) cardCls += ' is-next';
+  else if (isChamp) cardCls += ' is-champion';
+
+  let html = '<div class="' + cardCls + '">'
+    + '<div class="badge-column">'
+    + '<span class="status-badge ' + typeClass + '">' + badge + '</span>'
+    + '<span class="sub-division-text">' + item.sportIcon + ' ' + escapeHtml(item.catName)
+    + (item.round ? ' ' + escapeHtml(item.round) : '') + '</span>'
+    + '</div>'
+    + '<div class="match-details-column">';
 
   if (item.type === 'live') {
-    html += '<div class="feed-match">' + escapeHtml(item.p1) + ' <span class="vs">vs</span> ' + escapeHtml(item.p2) + '</div>';
+    html += '<div class="match-vs-row">'
+      + escapeHtml(item.p1) + ' <span class="vs-text">vs</span> ' + escapeHtml(item.p2)
+      + '</div>';
     if (item.isFinal && item.sets) {
-      html += '<div class="feed-sets">';
+      html += '<div style="display:flex;gap:4px;font-size:.8rem;">';
       for (let si = 0; si < item.sets.length; si++) {
         const st = item.sets[si];
-        if (st && st.s1 !== null) html += '<span class="set">' + st.s1 + '-' + st.s2 + '</span> ';
+        if (st && st.s1 !== null) html += '<span>S' + (si+1) + ': ' + st.s1 + '-' + st.s2 + '</span>';
       }
       html += '</div>';
     } else if (item.scoreDisplay) {
-      html += '<div class="feed-score">' + escapeHtml(item.scoreDisplay) + '</div>';
+      html += '<div class="score-display-pill" style="align-self:flex-start;font-size:.75rem;">' + escapeHtml(item.scoreDisplay) + '</div>';
     }
   } else if (item.type === 'result') {
-    html += '<div class="feed-match">' + escapeHtml(item.p1) + ' <span class="vs">vs</span> ' + escapeHtml(item.p2) + '</div>'
-      + '<div class="feed-score">' + escapeHtml(item.scoreDisplay) + '</div>'
-      + '<div class="feed-winner">✓ ' + escapeHtml(item.winner) + '</div>';
+    html += '<div class="match-vs-row">'
+      + escapeHtml(item.p1) + ' <span class="vs-text">vs</span> <span class="winner">' + escapeHtml(item.p2) + ' ✓</span>'
+      + '</div>';
   } else if (item.type === 'next') {
-    html += '<div class="feed-match">' + escapeHtml(item.p1) + ' <span class="vs">vs</span> ' + escapeHtml(item.p2) + '</div>';
-    if (isAdmin()) {
-      html += '<div style="margin-top:4px;"><button class="btn btn-sm btn-outline" onclick="startUpcomingMatch(\'' + item.catId + '\',\'' + item.matchId + '\')" style="font-size:.7rem;padding:2px 10px;">▶ Start Match</button></div>';
-    }
+    html += '<div class="match-vs-row">'
+      + escapeHtml(item.p1) + ' <span class="vs-text">vs</span> ' + escapeHtml(item.p2)
+      + '</div>';
   } else if (item.type === 'champion') {
-    html += '<div class="feed-champ-name">🏆 ' + escapeHtml(item.champion) + '</div>';
-    if (item.runnerUp) html += '<div class="feed-runnerup">Runner-up: ' + escapeHtml(item.runnerUp) + '</div>';
+    html += '<div class="match-vs-row"><span class="champion-trophy-emblem">🏆</span> ' + escapeHtml(item.champion) + '</div>'
+      + '<div class="runner-up-subline">Runner-up: ' + escapeHtml(item.runnerUp || '—') + '</div>';
+  }
+
+  html += '</div>'
+    + '<div class="action-score-column">';
+
+  if (item.type === 'result') {
+    html += '<span class="score-display-pill">' + escapeHtml(item.scoreDisplay) + '</span>';
+  } else if (item.type === 'next' && isAdmin()) {
+    html += '<button class="btn-action-score" onclick="startUpcomingMatch(\'' + item.catId + '\',\'' + item.matchId + '\')">✍️ Enter Score</button>';
+  } else if (item.type === 'champion') {
+    // empty — no action needed
   }
 
   html += '</div></div>';
