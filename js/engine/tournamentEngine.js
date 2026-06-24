@@ -45,3 +45,13 @@ function completeMatch(match, participants) {
     match.winner = match.s1 > match.s2 ? match.p1 : match.p2;
   }
 }
+
+function revertMatch(match) {
+  match.status = 'UPCOMING';
+  match.done = false;
+  match.winner = null;
+  match.s1 = null;
+  match.s2 = null;
+  match.sets = null;
+  match.updatedAt = Date.now();
+}

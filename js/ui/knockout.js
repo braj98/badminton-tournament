@@ -66,6 +66,7 @@ function renderKnockout() {
             html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Start Match</button>';
           }
           if (m.status === 'LIVE') {
+            html += '<button class="btn btn-sm btn-outline" onclick="revertKnockoutMatch(\'' + m.id + '\')" style="color:var(--text-muted);">↩ Revert</button>';
             html += '<button class="btn btn-sm btn-outline" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="border-color:var(--success);color:var(--success);">☑ Match Completed</button>';
           }
           html += '</div>';
@@ -173,6 +174,16 @@ function startKnockoutMatch(id) {
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   startMatch(m);
+  saveState();
+  renderKnockout();
+}
+
+function revertKnockoutMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Revert this match to Upcoming? Scores will be cleared.')) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
+  if (!m) return;
+  revertMatch(m);
   saveState();
   renderKnockout();
 }

@@ -62,6 +62,7 @@ function renderFixtures() {
           html += '<button class="btn btn-sm btn-outline" onclick="startFixtureMatch(' + f.id + ')">▶ Start Match</button>';
         }
         if (f.status === 'LIVE') {
+          html += '<button class="btn btn-sm btn-outline" onclick="revertFixtureMatch(' + f.id + ')" style="color:var(--text-muted);">↩ Revert</button>';
           html += '<button class="btn btn-sm btn-outline" onclick="completeFixtureMatch(' + f.id + ')" style="border-color:var(--success);color:var(--success);">☑ Complete Match</button>';
         }
         html += '</div>';
@@ -124,6 +125,20 @@ function startFixtureMatch(id) {
   const f = AppState.tournament.fixtures.find(m => m.id === id);
   if (!f) return;
   startMatch(f);
+  saveState();
+  renderFixtures();
+}
+
+function revertFixtureMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Revert this match to Upcoming? Scores will be cleared.')) return;
+  const f = AppState.tournament.fixtures.find(m => m.id === id);
+  if (!f) return;
+  revertMatch(f);
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
   saveState();
   renderFixtures();
 }
