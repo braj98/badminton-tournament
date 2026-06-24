@@ -31,7 +31,7 @@ js/
 - `models/match.js` — `createMatch(p1, p2, round, group, id?)`
 - `models/tournament.js` — `createTournament(sport, format)` (single source of truth for state shape), `isTeamSport(format)`
 - `models/sportConfig.js` — `SPORT_CONFIG` object with badminton/tableTennis/chess, `getSportConfig(sport, format)`, `getCurrentConfig()`
-- `models/event.js` — `getEvents()`, `saveEvents()`, `createEvent()`, `deleteEvent()`, `addTemplateToEvent()`, `removeTemplateFromEvent()`, `setCurrentEvent()`. Key `btm_events`.
+- `models/event.js` — `getEvents()`, `saveEvents()`, `createEvent()`, `deleteEvent()`, `addTemplateToEvent()`, `removeTemplateFromEvent()`, `setCurrentEvent()`. Events carry `organizationId: 'default'`. Key `btm_events`.
 - `models/template.js` — `getTemplates()`, `saveTemplates()`, `createTemplateId()`, `createTemplate()`, `ensureTemplate()`. Key `btm_templates`.
 - `models/appState.js` — `AppState` single state container: `{user, event, eventId, sport, category, loadingCategory, view, tournament, ui: {showingResults, managePanelOpen}}`
 - `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()` (shim: builds categories from events+templates), `saveCategories()` (reverse shim: recreates events+templates from flat category list)
@@ -89,8 +89,9 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 - Supabase is primary source of truth; localStorage is cache.
 - `btm_state_{categoryId}` — per-category tournament state (localStorage)
 - `btm_categories` — custom category list (localStorage — shim, see above)
-- `btm_templates` — global template list (localStorage + cloud)
-- `btm_events` — global event list (localStorage + cloud)
+- `btm_templates` — global template list (localStorage + cloud, legacy cloud key)
+- `btm_events` — global event list (localStorage + cloud, legacy cloud key)
+- `btm_metadata` — atomic composite key (templates+events+categories) for cloud sync
 - `upsertState()` has retry logic (3 attempts, exponential backoff 1s/2s)
 - `flushCloudSave()` cancels pending debounce and writes immediately
 - `init()` fetches from Supabase BEFORE first render

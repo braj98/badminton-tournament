@@ -22,7 +22,7 @@ function createEvent(name) {
   const events = getEvents();
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
   if (events.find(e => e.id === id)) return null;
-  const ev = { id, name, templateIds: [], createdAt: Date.now() };
+  const ev = { id, name, templateIds: [], createdAt: Date.now(), organizationId: 'default' };
   events.push(ev);
   saveEvents(events);
   return ev;

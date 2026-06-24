@@ -1,6 +1,6 @@
 # Feedback Implementation Plan
 
-All items from `feedback.txt` are complete — verified line-by-line against the running codebase on 24 Jun 2026. Each item was checked for actual code evidence (file:line references in the audit). Progress per section:
+All items from `feedback.txt` are complete — verified line-by-line against the running codebase on 24 Jun 2026. Each item was checked for actual code evidence (file:line references in the audit).
 
 ## Design: Event owns TemplateIds
 - [x] Templates have no `event` field — clean `{id, name, sport, type}`
@@ -42,6 +42,12 @@ All items from `feedback.txt` are complete — verified line-by-line against the
 - [x] Event page shows cards with: icon, category, status, counts
 - [x] Home page shows event cards with active/competition count
 
+## Organization Layer (Phase 1 — Data Model Only)
+- [x] Events now carry `organizationId: "default"` at creation
+- [x] `saveCategories()` reverse shim includes `organizationId`
+- [x] No UI changes — user experience unchanged
+- [x] Future-proof: supports multiple orgs without redesign
+
 ## Multi-Sport Readiness
 - [x] Table Tennis — 2 factory defaults (TT Singles, TT Dbls)
 - [x] All scoring rules from `sportConfig.js`
@@ -49,10 +55,11 @@ All items from `feedback.txt` are complete — verified line-by-line against the
 
 ## Testing
 - [x] Template model tests (5)
-- [x] Event model tests (11)
-- [x] `getCategories()` shim tests (7)
+- [x] Event model tests (25)
+- [x] `getCategories()` shim tests (8)
 - [x] Rename validation tests (5)
 - [x] Delete event edge cases (7)
+- [x] organizationId field tests (2)
 - [x] All 275 engine + model tests pass
 
 ---
@@ -74,3 +81,4 @@ Every item from feedback.txt was verified against actual code. All items are clo
 | Participant counts with label | ✅ | `categories.js:413-426`, `app.js:186-192`, `app.js:263-268` |
 | Event dropdown in Manage | ✅ | `categories.js:390-393` — `<select>` + `_manageEventId` |
 | No event-name string matching | ✅ | `app.js:76` — uses `c.eventId === ev.id` (fixed) |
+| Organization layer | ✅ | `event.js:25`, `local.js:61` — `organizationId: "default"` |

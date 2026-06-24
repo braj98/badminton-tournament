@@ -1,316 +1,292 @@
-Biggest Remaining Design Problem
-Event and Category Relationship
+Requirement: Introduce Organization Layer (Future-Proof Architecture)
+Objective
 
-I found:
+Prepare the Tournament Manager platform for future growth without increasing complexity for current users.
 
-const cats = getCategories().filter(c => c.event === ev.name);
-
-inside UI code.
-
-This means:
-
-Category still contains Event.
-
-Example:
-
-{
-  "event": "BREN AVALON SPORTS MEET 2026"
-}
-
-This is the same architectural concern from previous reviews.
-
-Why It Is A Problem
-
-Current:
-
-Category
-  └── Event
-
-Future preferred:
+Current hierarchy:
 
 Event
-  └── TemplateIds
+→ Sport
+→ Competition
+→ Tournament
 
-Example:
+Proposed future hierarchy:
 
-Event
+Organization
+→ Event
+→ Sport
+→ Competition
+→ Tournament
 
-{
-  "id":"sports_2026",
-  "templateIds":[
-      "junior_singles",
-      "senior_boys"
-  ]
-}
+The Organization layer will be introduced in the data model first and exposed in the UI only when needed.
 
-Template
+Problem Statement
 
-{
-  "id":"junior_singles",
-  "sport":"badminton"
-}
-
-Template should never know which event uses it.
-
-Event should decide that.
-
-Recommendation
-
-Move towards:
-
-Template
-   ↓
-Event
-   ↓
-Tournament State
-
-instead of:
-
-Template
-   ↓
-Category
-   ↓
-Event
-
-Priority:
-
-HIGH
-
-Bugs / Risks
-Bug 1
-
-Event Rename Is Dangerous
-
-Current:
-
-renameEvent(oldName,newName)
-
-updates:
-
-ev.name
-
-but categories appear linked by:
-
-c.event === ev.name
-
-Risk:
-
-Renaming an event can orphan categories.
-
-Example:
-
-Before:
+Currently:
 
 BREN AVALON SPORTS MEET 2026
 
-After:
+acts as both:
 
-Summer Games 2026
+Organization
+Event
 
-Categories still contain:
-
-BREN AVALON SPORTS MEET 2026
-
-Result:
-
-Categories disappear.
-
-Priority:
-
-HIGH
-
-Bug 2
-
-Event Name Used As Key
-
-Current:
-
-AppState.event = ev.name
-
-Recommendation:
-
-Store:
-
-AppState.eventId
-
-and resolve name from event object.
-
-Never use display name as identifier.
-
-Priority:
-
-HIGH
-
-Bug 3
-
-Template ID Generation
-
-Current:
-
-createTemplateId(label)
-
-generates IDs from labels.
+These are actually different business entities.
 
 Example:
+
+Organization:
+Bren Avalon
+
+Event:
+Sports Meet 2026
+
+Combining both concepts makes future expansion difficult.
+
+Business Goals
+
+Support:
+
+Multiple annual sports meets
+Multiple tournaments per year
+Multiple sports
+Multiple communities/apartments/clubs (future)
+
+Without redesigning the platform later.
+
+Proposed Hierarchy
+Level 1 - Organization
+
+Represents:
+
+Apartment Complex
+Sports Club
+Resident Welfare Association
+Corporate Sports League
+
+Examples:
+
+Bren Avalon
+Prestige Lakeside
+XYZ Sports Club
+Level 2 - Event
+
+Represents a sports festival or tournament event.
+
+Examples:
+
+Sports Meet 2026
+Sports Meet 2027
+Independence Day Tournament
+Winter Games 2027
+
+Events belong to exactly one Organization.
+
+Level 3 - Sport
+
+Examples:
+
+Badminton
+Table Tennis
+Chess
+Carrom
+
+Sports belong to an Event.
+
+Level 4 - Competition
+
+Examples:
+
+Badminton:
 
 Junior Singles
+Junior Doubles
+Senior Boys
+Senior Girls
 
-↓
+Table Tennis:
 
-junior_singles
+Open Singles
+Open Doubles
 
-Risk:
+Chess:
 
-Renaming label later causes confusion.
+Open Category
 
-Recommendation:
+Competitions belong to a Sport within an Event.
 
-Store:
+Level 5 - Tournament Instance
+
+Contains runtime tournament data:
+
+Players
+Groups
+Fixtures
+Standings
+Knockout
+Champion
+Example
+Bren Avalon
+│
+├── Sports Meet 2026
+│   │
+│   ├── Badminton
+│   │   ├── Junior Singles
+│   │   ├── Junior Doubles
+│   │   └── Senior Boys
+│   │
+│   ├── Table Tennis
+│   │   └── Open Singles
+│   │
+│   └── Chess
+│       └── Open
+│
+└── Sports Meet 2027
+Scope For Current Release
+UI Scope
+
+No Organization UI.
+
+Users continue to see:
+
+Event
+→ Sport
+→ Competition
+→ Tournament
+
+No additional complexity.
+
+Data Model Scope
+
+Introduce:
+
+organizationId
+
+into Event.
+
+Example:
 
 {
-  "id":"junior_singles",
-  "name":"Junior Singles"
+  "id": "sports_meet_2026",
+  "organizationId": "bren_avalon",
+  "name": "Sports Meet 2026"
 }
 
-ID never changes.
+Default value:
 
-Name can change.
+{
+  "organizationId": "default"
+}
 
-Priority:
+for all existing data.
 
-MEDIUM
-
-Bug 4
-
-Cloud Sync Metadata Race
-
-Current:
-
-syncMetadataToCloud()
-
-writes:
-
-templates
+Database Changes
+organizations
+{
+  "id": "bren_avalon",
+  "name": "Bren Avalon"
+}
 events
-categories
+{
+  "id": "sports_meet_2026",
+  "organizationId": "bren_avalon",
+  "name": "Sports Meet 2026",
+  "templateIds": []
+}
+templates
 
-in parallel.
+No change required.
 
-Potential issue:
+{
+  "id": "junior_singles",
+  "sport": "badminton"
+}
+tournament_state
 
-Partial success.
+No change required.
 
-Recommendation:
+{
+  "eventId": "sports_meet_2026",
+  "templateId": "junior_singles",
+  "data": {}
+}
+Migration Strategy
+Phase 1 (Current)
 
 Add:
 
-metadataVersion
-updatedAt
+organizationId
 
-for future recovery.
+to Event model.
 
-Priority:
+Default:
 
-LOW
+default
 
-UX Improvements
-Event Dropdown
+No UI changes.
 
-I completely agree with your idea.
+Phase 2
 
-Future Manage Panel:
+Create Organization model.
 
-Manage
-│
-├── Event ▼
-│
-├── Competitions
-│
-├── Import / Export
-│
-├── Cloud Sync
-│
-└── Settings
+Support:
 
-Much cleaner.
+Create Organization
+Edit Organization
 
-Competition List
+Still hidden from standard users.
 
-When Event is selected:
+Phase 3
 
-BREN AVALON SPORTS MEET 2026
+Expose Organization selection.
 
-🏸 Junior Singles
-🏸 Junior Doubles
-🏸 Senior Boys
+Navigation:
 
-🏓 Open Singles
+Organization
+→ Event
+→ Sport
+→ Competition
 
-This is much easier to understand.
+Non-Goals
 
-Status Badges
+For current release:
 
-Show:
+Do NOT implement:
 
-⚪ Not Started
+Organization management screens
+Organization permissions
+Organization-level reporting
+Multi-organization login
 
-🟢 In Progress
+These are future enhancements.
 
-🏆 Completed
+Benefits
+Immediate Benefits
+Future-proof architecture
+Cleaner business model
+Easier event management
+Long-Term Benefits
 
-for every competition.
+Supports:
 
-Priority:
+Multiple apartment complexes
+Multiple clubs
+Multi-tenant deployments
+Historical event tracking
 
-HIGH
+without redesign.
 
-Participant Counts
+Recommendation
 
-Show:
+Implement only the data model change now:
 
-12 Players
+organizationId
 
-or
+Keep the current user experience unchanged:
 
-8 Teams
+Event
+→ Sport
+→ Competition
+→ Tournament
 
-under each competition.
-
-Priority:
-
-MEDIUM
-
-Multi-Sport Readiness
-
-Current estimate:
-
-Badminton 100%
-Table Tennis 98%
-Chess 95%
-Carrom 90%
-
-The architecture is now ready for Table Tennis.
-
-No major refactoring required.
-
-Recommended Next Sprint
-
-Priority 1
-
-Remove event references from category/template objects.
-
-Event should own templateIds.
-
-Priority 2
-
-Introduce eventId everywhere.
-
-Stop using event names as identifiers.
-
-Priority 3
-
-Add Event dropdown in Manage panel.
-
-Priority 4
-
-Add competition status cards.
+This provides future scalability while keeping the application simple for apartment users.

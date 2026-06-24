@@ -58,7 +58,7 @@ function saveCategories(cats) {
     const evName = cat.event || APP_CONFIG.defaultEvent;
     const evId = evName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
     if (!eventMap[evName]) {
-      eventMap[evName] = { id: evId, name: evName, templateIds: [], createdAt: Date.now() };
+      eventMap[evName] = { id: evId, name: evName, templateIds: [], createdAt: Date.now(), organizationId: 'default' };
     }
     const key = cat.label.toLowerCase() + '|' + cat.sport + '|' + cat.type;
     const tmpl = seen[key];

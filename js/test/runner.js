@@ -310,6 +310,7 @@ function testEventModel(ctx) {
   a(e1.id === 'test_event', 'createEvent generates correct ID');
   a(e1.name === 'Test Event', 'createEvent preserves name');
   a(e1.templateIds.length === 0, 'New event has empty templateIds');
+  a(e1.organizationId === 'default', 'New event has organizationId default');
 
   const dup = ctx.createEvent('Test Event');
   a(!dup, 'Duplicate event name returns null');
@@ -396,6 +397,8 @@ function testGetCategoriesShim(ctx) {
   const empty = ctx.getCategories();
   a(empty.length === 7, 'Empty state → 7 factory categories');
   a(empty[0].eventId === 'bren_avalon_sports_meet_2026', 'Factory cat has eventId');
+  const factoryEv = ctx.getEvents().find(function(e) { return e.id === 'bren_avalon_sports_meet_2026'; });
+  a(factoryEv && factoryEv.organizationId === 'default', 'Factory events have organizationId default');
   ctx.localStorage.clear();
 
   // Pre-populated templates+events → shim returns combined view

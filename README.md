@@ -29,6 +29,7 @@ Add `?admin` to the URL (e.g., `index.html?admin`) — this reveals the admin lo
 - **Rename**: Click the pencil icon next to an event name
 - **Delete**: Click "Manage" → find the event → type DELETE and click Go
 - Events contain templates (categories). Each template is a tournament configuration.
+- Events carry `organizationId` (set to `"default"`) — future-proofing for multi-org support, no UI yet.
 
 ### Templates (Categories)
 A template = a category type (e.g., "Jr Dbls", "Sr Boys"). Templates belong to events.
@@ -75,7 +76,7 @@ Events ─── templateIds ──→ Templates (competition types)
 node js/test/runner.js
 ```
 
-278 tests covering full tournament flow + event/template model.
+275 tests covering full tournament flow + event/template model.
 
 ## Configuration
 

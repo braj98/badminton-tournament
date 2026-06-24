@@ -28,6 +28,7 @@ Events ─── templateIds ──→ Templates (competition types)
 ```
 
 - **Events** are top-level containers (e.g., "Summer Tournament 2026"). Users create/rename/delete events.
+- **Events** carry `organizationId: "default"` — future-proofing for multi-organization support (no UI yet).
 - **Templates** define a competition type: `{id, name, sport, type}`. Templates belong to events via `templateIds` array.
 - Same template can be linked to multiple events.
 - `getCategories()` is a computed view — derived from events + templates, not stored independently.
@@ -266,7 +267,7 @@ Persist:
 ### Cloud Storage (Optional)
 - Supabase integration for cross-device sync
 - Per-category state stored in `state` table with key `btm_state_{catId}`
-- Templates + Events stored in `state` table with keys `btm_templates` and `btm_events`
+- Templates + Events stored in `state` table with key `btm_metadata` (atomic composite), legacy fallback to `btm_templates`/`btm_events`
 - Real-time updates via Supabase Realtime (guarded by `_lastSave` timestamp)
 - Session auto-refresh via `onAuthStateChange()` listener keeps `AppState.user` in sync
 - 500ms debounce on cloud upsert to prevent save storms
