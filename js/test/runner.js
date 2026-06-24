@@ -287,14 +287,10 @@ function testTemplateModel(ctx) {
   a(ctx.getTemplates()[0].id === 't1', 'Template ID preserved through save/load');
 
   const id1 = ctx.createTemplateId('Junior');
-  a(id1 === 'junior', 'createTemplateId("Junior") = "junior"');
+  a(id1.startsWith('tmpl_'), 'createTemplateId starts with tmpl_ (got "' + id1 + '")');
+  a(/^tmpl_[a-z0-9]+_[a-z0-9]+$/.test(id1), 'createTemplateId format: tmpl_<ts>_<rand> (got "' + id1 + '")');
   const id2 = ctx.createTemplateId('JUNIOR');
-  a(id2 === 'junior' || id2 === 'junior_1', 'createTemplateId("JUNIOR") collides or dedups');
-  ctx.saveTemplates([]);
-  const id3 = ctx.createTemplateId('Senior Boys');
-  a(id3 === 'senior_boys', 'createTemplateId with spaces becomes underscores');
-  const id4 = ctx.createTemplateId('Test!!@#');
-  a(id4 === 'test', 'createTemplateId strips non-alphanumeric chars');
+  a(id1 !== id2, 'createTemplateId produces unique IDs');
 
   ctx.localStorage.clear();
   console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);

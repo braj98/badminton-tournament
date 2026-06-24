@@ -522,17 +522,19 @@ function testTemplateModel() {
   pass &= assert(loaded[0].id === 'test_one' && loaded[0].name === 'Test One', 'Template 1 data preserved');
   pass &= assert(loaded[1].id === 'test_two' && loaded[1].name === 'Test Two', 'Template 2 data preserved');
 
-  // createTemplateId
-  const newId = createTemplateId('New Template');
-  pass &= assert(newId === 'new_template', 'createTemplateId("New Template") = "new_template"');
+  // createTemplateId — name-independent (timestamp + random), no label encoding
+  const id1 = createTemplateId('New Template');
+  pass &= assert(id1.startsWith('tmpl_'), 'createTemplateId starts with tmpl_ (got "' + id1 + '")');
+  pass &= assert(/^tmpl_[a-z0-9]+_[a-z0-9]+$/.test(id1), 'createTemplateId format: tmpl_<ts>_<rand> (got "' + id1 + '")');
 
-  // Duplicate ID generation
-  const dupId = createTemplateId('Test One');
-  pass &= assert(dupId !== 'test_one', 'createTemplateId for existing label generates unique id (got "' + dupId + '")');
+  // Unique IDs for different calls
+  const id2 = createTemplateId('Some Other');
+  pass &= assert(id1 !== id2, 'createTemplateId produces unique IDs');
 
-  // Empty label fallback
+  // Empty label still produces valid ID
   const emptyId = createTemplateId('');
-  pass &= assert(emptyId === 't' || emptyId.startsWith('t'), 'createTemplateId("") falls back to "t"');
+  pass &= assert(emptyId.startsWith('tmpl_'), 'createTemplateId("") still starts with tmpl_ (got "' + emptyId + '")');
+  pass &= assert(id1 !== emptyId, 'createTemplateId produces unique ID even from empty label');
 
   // Restore
   saveTemplates(origTemplates);

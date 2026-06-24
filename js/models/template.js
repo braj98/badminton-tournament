@@ -12,13 +12,13 @@ function saveTemplates(templates) {
   try { localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates)); } catch(e) {}
 }
 
-function createTemplateId(label) {
-  const base = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 't';
+function createTemplateId(_label) {
   const templates = getTemplates();
-  let id = base;
-  let counter = 1;
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 6);
+  let id = 'tmpl_' + ts + '_' + rand;
   while (templates.find(t => t.id === id)) {
-    id = base + '_' + counter++;
+    id = 'tmpl_' + ts + '_' + Math.random().toString(36).slice(2, 6);
   }
   return id;
 }
