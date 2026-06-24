@@ -6,6 +6,15 @@
 const fs = require('fs');
 const vm = require('vm');
 
+// localStorage mock
+const _store = {};
+const _storage = {
+  getItem: k => _store[k] !== undefined ? _store[k] : null,
+  setItem: (k, v) => { _store[k] = String(v); },
+  removeItem: k => { delete _store[k]; },
+  clear: () => { Object.keys(_store).forEach(k => delete _store[k]); }
+};
+
 // Load model scripts (order matters)
 const models = [
   'js/models/participant.js',
@@ -13,7 +22,9 @@ const models = [
   'js/models/tournament.js',
   'js/models/sportConfig.js',
   'js/models/appState.js',
-  'js/models/template.js'
+  'js/models/template.js',
+  'js/models/event.js',
+  'js/storage/local.js'
 ];
 
 // Load engine scripts
@@ -32,57 +43,37 @@ const context = {
     log: (...args) => console.log(...args),
     error: (...args) => console.error(...args)
   },
-  Math,
-  Array,
-  Object,
-  Set,
-  Map,
-  JSON,
-  Date,
-  setTimeout,
-  clearTimeout,
-  require: require,
-  module: module,
-  process: process,
-  APP_CONFIG: {
-    defaultEvent: "BREN AVALON SPORTS MEET 2026"
-  },
+  Math, Array, Object, Set, Map, JSON, Date,
+  setTimeout, clearTimeout,
+  require: require, module: module, process: process,
+  localStorage: _storage,
+  isAdmin: () => true,
+  _supabase: null,
+  AppState: { user: { role: 'admin' }, event: null, eventId: null, sport: null, category: null, view: null, tournament: null, ui: { showingResults: false, managePanelOpen: false } },
+  APP_CONFIG: { defaultEvent: "BREN AVALON SPORTS MEET 2026" },
+  DEFAULT_EVENT_ID: "bren_avalon_sports_meet_2026",
+  FACTORY_CATEGORIES: [
+    { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" }
+  ],
   SPORT_CONFIG: {
     badminton: {
-      minPlayers: 2,
-      maxPlayers: 20,
-      groupPointsToWin: 13,
-      knockoutPointsToWin: 11,
-      finalSets: 3,
-      finalPointsToWin: 11,
-      maxScoreInput: 30,
-      maxFinalSetInput: 15,
-      groupThresholds: [5, 10, 20],
-      groupCounts: [1, 2, 4]
+      minPlayers: 2, maxPlayers: 20, groupPointsToWin: 13, knockoutPointsToWin: 11,
+      finalSets: 3, finalPointsToWin: 11, maxScoreInput: 30, maxFinalSetInput: 15,
+      groupThresholds: [5, 10, 20], groupCounts: [1, 2, 4]
     },
     tableTennis: {
-      minPlayers: 2,
-      maxPlayers: 32,
-      groupPointsToWin: 11,
-      knockoutPointsToWin: 11,
-      finalSets: 5,
-      finalPointsToWin: 11,
-      maxScoreInput: 20,
-      maxFinalSetInput: 15,
-      groupThresholds: [5, 10, 32],
-      groupCounts: [1, 2, 4]
+      minPlayers: 2, maxPlayers: 32, groupPointsToWin: 11, knockoutPointsToWin: 11,
+      finalSets: 5, finalPointsToWin: 11, maxScoreInput: 20, maxFinalSetInput: 15,
+      groupThresholds: [5, 10, 32], groupCounts: [1, 2, 4]
     },
     chess: {
-      minPlayers: 2,
-      maxPlayers: 50,
-      groupPointsToWin: 1,
-      knockoutPointsToWin: 1,
-      finalSets: 1,
-      finalPointsToWin: 1,
-      maxScoreInput: 1,
-      maxFinalSetInput: 1,
-      groupThresholds: [5, 10, 50],
-      groupCounts: [1, 2, 4]
+      minPlayers: 2, maxPlayers: 50, groupPointsToWin: 1, knockoutPointsToWin: 1,
+      finalSets: 1, finalPointsToWin: 1, maxScoreInput: 1, maxFinalSetInput: 1,
+      groupThresholds: [5, 10, 50], groupCounts: [1, 2, 4]
     }
   }
 };
@@ -280,9 +271,112 @@ console.log('\n========== ENGINE TESTS ==========\n');
 
 [2, 3, 4, 5, 6, 7, 10, 11, 20].forEach(n => testPlayerCount(n));
 
+// ===================== STORAGE MODEL TESTS =====================
+
+function testTemplateModel(ctx) {
+  ctx.localStorage.clear();
+  console.log('\n=== Template Model ===');
+  let p = 0, f = 0;
+  function a(cond, msg) { cond ? (p++, console.log('  PASS: ' + msg)) : (f++, console.error('  FAIL: ' + msg)); }
+
+  a(ctx.getTemplates().length === 0, 'getTemplates() returns empty on fresh start');
+  ctx.saveTemplates([{ id: 't1', name: 'Test 1', sport: 'badminton', type: 'singles' }]);
+  a(ctx.getTemplates().length === 1, 'saveTemplates() persists one template');
+  a(ctx.getTemplates()[0].id === 't1', 'Template ID preserved through save/load');
+
+  const id1 = ctx.createTemplateId('Junior');
+  a(id1 === 'junior', 'createTemplateId("Junior") = "junior"');
+  const id2 = ctx.createTemplateId('JUNIOR');
+  a(id2 === 'junior' || id2 === 'junior_1', 'createTemplateId("JUNIOR") collides or dedups');
+  ctx.saveTemplates([]);
+  const id3 = ctx.createTemplateId('Senior Boys');
+  a(id3 === 'senior_boys', 'createTemplateId with spaces becomes underscores');
+  const id4 = ctx.createTemplateId('Test!!@#');
+  a(id4 === 'test', 'createTemplateId strips non-alphanumeric chars');
+
+  ctx.localStorage.clear();
+  console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);
+  return f === 0;
+}
+
+function testEventModel(ctx) {
+  ctx.localStorage.clear();
+  console.log('\n=== Event Model ===');
+  let p = 0, f = 0;
+  function a(cond, msg) { cond ? (p++, console.log('  PASS: ' + msg)) : (f++, console.error('  FAIL: ' + msg)); }
+
+  a(ctx.getEvents().length === 0, 'getEvents() returns empty on fresh start');
+
+  const e1 = ctx.createEvent('Test Event');
+  a(!!e1, 'createEvent returns event object');
+  a(e1.id === 'test_event', 'createEvent generates correct ID');
+  a(e1.name === 'Test Event', 'createEvent preserves name');
+  a(e1.templateIds.length === 0, 'New event has empty templateIds');
+
+  const dup = ctx.createEvent('Test Event');
+  a(!dup, 'Duplicate event name returns null');
+
+  const e2 = ctx.createEvent('Event B');
+  a(!!e2, 'Second event created');
+  a(ctx.getEvents().length === 2, 'getEvents returns 2 events');
+
+  ctx.renameEvent('Test Event', 'Renamed Event');
+  const events = ctx.getEvents();
+  a(!!events.find(function(e) { return e.name === 'Renamed Event'; }), 'Event renamed');
+  a(!events.find(function(e) { return e.name === 'Test Event'; }), 'Old name no longer exists');
+
+  ctx.addTemplateToEvent('test_event', 'tmpl_1');
+  a(!!ctx.getEvents().find(function(e) { return e.id === 'test_event'; }).templateIds.includes('tmpl_1'), 'addTemplateToEvent works');
+
+  ctx.localStorage.clear();
+  console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);
+  return f === 0;
+}
+
+function testGetCategoriesShim(ctx) {
+  ctx.localStorage.clear();
+  console.log('\n=== getCategories() Shim ===');
+  let p = 0, f = 0;
+  function a(cond, msg) { cond ? (p++, console.log('  PASS: ' + msg)) : (f++, console.error('  FAIL: ' + msg)); }
+
+  // Empty state returns factory defaults
+  const empty = ctx.getCategories();
+  a(empty.length === 5, 'Empty state → 5 factory categories');
+  a(empty[0].eventId === 'bren_avalon_sports_meet_2026', 'Factory cat has eventId');
+  ctx.localStorage.clear();
+
+  // Pre-populated templates+events → shim returns combined view
+  ctx.saveTemplates([
+    { id: 't1', name: 'Cat 1', sport: 'badminton', type: 'singles' },
+    { id: 't2', name: 'Cat 2', sport: 'tableTennis', type: 'doubles' }
+  ]);
+  ctx.saveEvents([{ id: 'ev1', name: 'Event A', templateIds: ['t1'], createdAt: 1 }]);
+  const cats = ctx.getCategories();
+  a(cats.length === 1, '1 event × 1 template = 1 category');
+  a(cats[0].id === 't1' && cats[0].label === 'Cat 1' && cats[0].event === 'Event A', 'Category has correct fields');
+  a(cats[0].eventId === 'ev1', 'Category has eventId');
+
+  // Template not in any event → excluded from shim
+  const cats2 = ctx.getCategories();
+  a(cats2.length === 1, 'Unlinked template excluded');
+  a(!cats2.find(function(c) { return c.id === 't2'; }), 'Table tennis template not in result');
+
+  ctx.localStorage.clear();
+  console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);
+  return f === 0;
+}
+
+// Run storage model tests
+console.log('\n========== STORAGE MODEL TESTS ==========\n');
+let tmplPass = testTemplateModel(context);
+let evPass = testEventModel(context);
+let shimPass = testGetCategoriesShim(context);
+context.localStorage.clear();
+
 console.log('\n========== RESULTS ==========');
 console.log(`Passed: ${pass}`);
 console.log(`Failed: ${fail}`);
+console.log(`Model tests: ${tmplPass ? 'PASS' : 'FAIL'}, ${evPass ? 'PASS' : 'FAIL'}, ${shimPass ? 'PASS' : 'FAIL'}`);
 console.log(`Total:  ${pass + fail}`);
 
 process.exit(fail > 0 ? 1 : 0);
