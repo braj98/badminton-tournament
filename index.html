@@ -196,31 +196,9 @@
   </div>
 
   <!-- ============ CHAMPION ============ -->
+  <!-- ============ CHAMPION ============ -->
   <div id="screen-champion" class="screen">
-    <div class="card champion-card">
-      <div class="crown" id="championCatLabel"></div>
-      <div class="trophy">🏆</div>
-      <div class="crown">Champion</div>
-      <div id="championName" class="name"></div>
-      <div id="championPhotoZone" class="photo-zone mt-12" onclick="pickPhoto('champion')">
-        <span class="photo-placeholder">+ Add Photo</span>
-        <img id="championPhotoImg" class="photo-preview hidden">
-      </div>
-      <div class="runner-up mt-20">Runner-up: <span id="runnerUpName" style="font-weight:600;color:var(--text);"></span></div>
-      <div id="runnerupPhotoZone" class="photo-zone mt-12" onclick="pickPhoto('runnerup')">
-        <span class="photo-placeholder">+ Add Photo</span>
-        <img id="runnerupPhotoImg" class="photo-preview hidden">
-      </div>
-      <button class="btn btn-block mt-20 admin-only" onclick="showNewTournamentConfirm()">New Tournament</button>
-      <div id="newTournamentConfirmBox" class="hidden confirm-box confirm-reset admin-only">
-        <p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this competition:</p>
-        <div class="confirm-actions">
-          <input type="text" id="newTournamentConfirmInput" class="confirm-input" placeholder="Type RESET">
-          <button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmNewTournament()">Confirm</button>
-        </div>
-        <span id="newTournamentConfirmError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>
-      </div>
-    </div>
+    <div id="championContainer"></div>
   </div>
 
   <!-- ============ MATCH VIEWS (Live / Upcoming / Results / Champions) ============ -->

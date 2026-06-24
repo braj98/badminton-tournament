@@ -53,26 +53,67 @@ function newTournament() {
 
 function renderChampion() {
   clearDisabled();
+  const container = document.getElementById('championContainer');
   const cat = getCategories().find(c => c.id === AppState.category);
-  document.getElementById('championCatLabel').textContent = cat ? cat.label : '';
-  document.getElementById('championName').textContent = pName(AppState.tournament.champion) || '—';
-  document.getElementById('runnerUpName').textContent = pName(AppState.tournament.runnerUp) || '—';
+  const chName = pName(AppState.tournament.champion) || '—';
+  const ruName = pName(AppState.tournament.runnerUp) || '—';
+  const catLabel = cat ? cat.label : '';
+
+  container.innerHTML = ''
+    + '<div class="podium-split-grid">'
+    // Champion card
+    + '<div class="podium-tier-card tier-champion">'
+    + '<span class="tier-label-badge">' + escapeHtml(catLabel) + '</span>'
+    + '<div class="emblem-trophy-badge">🏆</div>'
+    + '<h2 class="player-name-headline" id="championName">' + escapeHtml(chName) + '</h2>'
+    + '<div class="image-uploader-dropzone" id="championPhotoZone" onclick="pickPhoto(\'champion\')">'
+    + '<span class="dropzone-camera-icon">📷</span>'
+    + '<span class="dropzone-string-text photo-placeholder">+ Add Champion Photo</span>'
+    + '<img id="championPhotoImg" class="photo-preview hidden">'
+    + '</div>'
+    + '</div>'
+    // Runner-up card
+    + '<div class="podium-tier-card tier-runnerup">'
+    + '<span class="tier-label-badge">Runner-Up Position</span>'
+    + '<div class="emblem-trophy-badge">🥈</div>'
+    + '<h3 class="player-name-headline" id="runnerUpName">' + escapeHtml(ruName) + '</h3>'
+    + '<div class="image-uploader-dropzone" id="runnerupPhotoZone" onclick="pickPhoto(\'runnerup\')">'
+    + '<span class="dropzone-camera-icon">📷</span>'
+    + '<span class="dropzone-string-text photo-placeholder">+ Add Runner-up Photo</span>'
+    + '<img id="runnerupPhotoImg" class="photo-preview hidden">'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    // Actions
+    + '<div class="champion-actions">'
+    + '<button class="btn btn-block admin-only" onclick="showNewTournamentConfirm()">New Tournament</button>'
+    + '<div id="newTournamentConfirmBox" class="hidden confirm-box confirm-reset admin-only">'
+    + '<p class="confirm-text">Type <strong>RESET</strong> to permanently delete all data for this competition:</p>'
+    + '<div class="confirm-actions">'
+    + '<input type="text" id="newTournamentConfirmInput" class="confirm-input" placeholder="Type RESET">'
+    + '<button class="btn confirm-btn" style="white-space:nowrap;" onclick="confirmNewTournament()">Confirm</button>'
+    + '</div>'
+    + '<span id="newTournamentConfirmError" class="text-muted" style="font-size:.8rem;color:#dc2626;display:block;margin-top:4px;"></span>'
+    + '</div>'
+    + '</div>';
+
   showPhoto('champion', AppState.tournament.championPhoto);
   showPhoto('runnerup', AppState.tournament.runnerUpPhoto);
 }
 
 function showPhoto(which, dataUrl) {
   const zone = document.getElementById(which + 'PhotoZone');
+  if (!zone) return;
   const img = document.getElementById(which + 'PhotoImg');
   const placeholder = zone.querySelector('.photo-placeholder');
   if (dataUrl) {
     img.src = dataUrl;
     img.classList.remove('hidden');
-    placeholder.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
     zone.classList.add('has-photo');
   } else {
-    img.classList.add('hidden');
-    placeholder.style.display = '';
+    if (img) img.classList.add('hidden');
+    if (placeholder) placeholder.style.display = '';
     zone.classList.remove('has-photo');
   }
 }
