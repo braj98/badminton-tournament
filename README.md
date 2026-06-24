@@ -18,6 +18,35 @@ Standalone browser-based tournament manager for local apartment tournaments. No 
 
 Open `index.html` in any browser. That's it.
 
+## Admin Guide
+
+### Login
+Add `?admin` to the URL (e.g., `index.html?admin`) — this reveals the admin login link in the footer. Sign in via Supabase Auth.
+
+### Events
+- **Create**: Click "+ New Event", enter a name
+- **Rename**: Click the pencil icon next to an event name
+- **Delete**: Click "Manage" → find the event → type DELETE and click Go
+- Events contain templates (categories). Each template is a tournament configuration.
+
+### Templates (Categories)
+A template = a category type (e.g., "Jr Dbls", "Sr Boys"). Templates belong to events.
+- **Add to event**: Click "Manage" → select an event → enter category name, sport, format → Add
+- **Remove**: Click "Manage" → find the template → Remove
+- Templates with running tournaments cannot be removed
+
+### Tournament Flow
+1. Pick an event → pick a sport → pick a category
+2. **Setup**: Enter player names → click START (type START to confirm)
+3. **Groups**: View group allocation (drag to move players between groups if needed)
+4. **Fixtures**: Enter scores for group matches (single set, first to 13)
+5. **Standings**: Auto-calculated — click "Go to Knockout" to proceed
+6. **Knockout**: Enter scores for QF/SF (single set, first to 13) → Final (Best of 3)
+7. **Champion**: View winner, optionally upload photos
+
+### Viewer Mode
+Users without admin login see a read-only UI — score inputs hidden, navigation controls hidden, no edit buttons.
+
 ## Architecture
 
 ```
