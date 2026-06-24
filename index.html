@@ -229,12 +229,12 @@
       <div class="flex justify-between items-center mb-12">
         <div id="matchViewTabBar" style="display:flex;gap:4px;flex-wrap:wrap;">
           <button class="tab-btn" id="subNavFeed" onclick="switchMatchView('feed')" data-public="1">📰 Feed</button>
-          <button class="tab-btn active" id="subNavLive" onclick="switchMatchView('live')" data-public="1">🔥 Live</button>
+          <button class="tab-btn active" id="subNavLive" onclick="switchMatchView('live')" data-public="1"><span class="live-pulse-dot"></span> Live</button>
           <button class="tab-btn" id="subNavResults" onclick="switchMatchView('results')" data-public="1">📖 Recent Results</button>
           <button class="tab-btn" id="subNavUpcoming" onclick="switchMatchView('upcoming')" data-public="1">📅 Upcoming</button>
           <button class="tab-btn" id="subNavChampions" onclick="switchMatchView('champions')" data-public="1">🏆 Champions</button>
         </div>
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:.8rem;" onclick="closeResults()" data-public="1">← Back</button>
+        <button class="btn-history-back" onclick="closeResults()" data-public="1">← Back</button>
       </div>
       <div id="resultsList"></div>
     </div>
