@@ -12,7 +12,7 @@ function migrateMatchStatus(state) {
       if (!arr || !arr.length) continue;
       for (var _i = 0; _i < arr.length; _i++) {
         if (!arr[_i].status) {
-          arr[_i].status = 'UPCOMING';
+          arr[_i].status = arr[_i].done ? 'COMPLETED' : 'UPCOMING';
           didMigrate = true;
         }
       }
@@ -542,7 +542,6 @@ function renderResultsArchive() {
       const s = localLoad(tmpl.id);
       if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
       migrateMatchStatus(s);
-      hasContent = true;
       for (const m of s.knockout) {
         if (m.status !== 'COMPLETED') continue;
         const _participants = s.participants;
@@ -569,6 +568,7 @@ function renderResultsArchive() {
           winner: winnerName,
           updatedAt: m.updatedAt || 0
         });
+        hasContent = true;
       }
     }
     if (evMatchData.length === 0) continue;
