@@ -1,6 +1,6 @@
 # Feedback Implementation Plan
 
-All items from `feedback.txt` are complete. Progress per section:
+All items from `feedback.txt` are complete — verified line-by-line against the running codebase on 24 Jun 2026. Each item was checked for actual code evidence (file:line references in the audit). Progress per section:
 
 ## Design: Event owns TemplateIds
 - [x] Templates have no `event` field — clean `{id, name, sport, type}`
@@ -54,3 +54,23 @@ All items from `feedback.txt` are complete. Progress per section:
 - [x] Rename validation tests (5)
 - [x] Delete event edge cases (7)
 - [x] All 275 engine + model tests pass
+
+---
+
+## Final Audit (24 Jun 2026)
+
+Every item from feedback.txt was verified against actual code. All items are closed.
+
+| Item | Status | Code Evidence |
+|------|--------|------|
+| Templates have no event field | ✅ | `template.js:16-23` — `{id, name, sport, type}` only |
+| Events own templateIds | ✅ | `event.js:25` — `{id, name, templateIds: [], createdAt}` |
+| Categories derived from events×templates | ✅ | `local.js:25-42` — joins ev.templateIds with tmpl.id |
+| Bug 1: Event rename validation+cloud | ✅ | `event.js:80-96` — `renameEventImpl()` with sync |
+| Bug 2: eventId everywhere | ✅ | `appState.js:4` — `eventId`, `event.js:3-7` — `setCurrentEvent()` |
+| Bug 3: Name-independent template IDs | ✅ | `template.js:15-23` — `tmpl_timestamp_random` format |
+| Bug 4: Single atomic metadata sync | ✅ | `supabase.js:63-67` — `btm_metadata` key |
+| Status badges: ⚪/🟢/🏆 | ✅ | `categories.js:411-412`, `app.js:184-185`, `app.js:256-260` |
+| Participant counts with label | ✅ | `categories.js:413-426`, `app.js:186-192`, `app.js:263-268` |
+| Event dropdown in Manage | ✅ | `categories.js:390-393` — `<select>` + `_manageEventId` |
+| No event-name string matching | ✅ | `app.js:76` — uses `c.eventId === ev.id` (fixed) |

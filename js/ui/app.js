@@ -73,7 +73,7 @@ function renderHomePage() {
     + '</div>'
     + '<div class="home-events-list">';
   for (const ev of events) {
-    const cats = getCategories().filter(c => c.event === ev.name);
+    const cats = getCategories().filter(c => c.eventId === ev.id);
     let active = 0;
     for (const c of cats) {
       const st = localLoad(c.id);
