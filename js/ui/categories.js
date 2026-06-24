@@ -1,5 +1,6 @@
 // ===================== CATEGORY DEFINITIONS =====================
 const DEFAULT_EVENT_ID = APP_CONFIG.defaultEvent.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+let _manageEventId = null;
 
 const FACTORY_CATEGORIES = [
   { id: 'junior', label: 'Junior', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
@@ -7,6 +8,8 @@ const FACTORY_CATEGORIES = [
   { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
   { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
   { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'tt_singles', label: 'TT Singles', type: 'singles', sport: 'tableTennis', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
+  { id: 'tt_doubles', label: 'TT Dbls', type: 'doubles', sport: 'tableTennis', event: APP_CONFIG.defaultEvent, eventId: DEFAULT_EVENT_ID },
 ];
 
 function migrateCategorySports() {
@@ -376,28 +379,46 @@ function renderManagePanel() {
   // --- Competitions Section ---
   const tmplContainer = document.getElementById('manageTemplateList');
   if (!tmplContainer) return;
-  const events = getEvents();
+  const allEvents = getEvents();
   const templates = getTemplates();
-  let html = '';
 
-  // Add new template form
-  html += '<div class="modal-form" style="margin-bottom:12px;padding:10px;background:var(--primary-light);border-radius:6px;">'
-    + '<div class="form-row" style="gap:6px;">'
-    + '<div class="form-field" style="flex:2;"><input type="text" id="manageNewTemplateLabel" class="form-input" placeholder="Competition name" style="font-size:.8rem;"></div>'
-    + '<div class="form-field" style="flex:1;"><select id="manageNewTemplateSport" class="form-input" style="font-size:.8rem;"><option value="badminton">🏸 Badminton</option><option value="tableTennis">🏓 TT</option><option value="chess">♟ Chess</option></select></div>'
-    + '<div class="form-field" style="flex:1;"><select id="manageNewTemplateType" class="form-input" style="font-size:.8rem;"><option value="singles">Singles</option><option value="doubles">Doubles</option></select></div>'
-    + '<div style="display:flex;align-items:flex-end;"><button class="btn btn-sm" onclick="addTemplateFromManage()" style="font-size:.75rem;">➕ Add</button></div>'
+  // Init manage event selection
+  if (!_manageEventId || !allEvents.find(function(e) { return e.id === _manageEventId; })) {
+    _manageEventId = AppState.eventId && allEvents.find(function(e) { return e.id === AppState.eventId; }) ? AppState.eventId : allEvents.length > 0 ? allEvents[0].id : null;
+  }
+  const manageEv = allEvents.find(function(e) { return e.id === _manageEventId; });
+  const evTemplates = manageEv ? templates.filter(function(t) { return manageEv.templateIds.indexOf(t.id) !== -1; }) : [];
+
+  // Event dropdown + add form inline
+  let html = '<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">'
+    + '<label style="font-size:.8rem;font-weight:600;white-space:nowrap;">Event:</label>'
+    + '<select id="manageEventSelect" onchange="changeManageEvent(this.value)" style="flex:1;min-width:120px;padding:6px 8px;border:2px solid var(--border);border-radius:6px;font-size:.8rem;">';
+  for (const ev of allEvents) {
+    html += '<option value="' + ev.id + '"' + (ev.id === _manageEventId ? ' selected' : '') + '>' + escapeHtml(ev.name) + '</option>';
+  }
+  html += '</select>'
+    + '<div style="display:flex;gap:4px;flex-shrink:0;"><input type="text" id="manageNewTemplateLabel" placeholder="New competition name" style="padding:6px 8px;border:2px solid var(--border);border-radius:6px;font-size:.8rem;width:140px;">'
+    + '<select id="manageNewTemplateSport" class="form-input" style="font-size:.8rem;width:auto;"><option value="badminton">🏸</option><option value="tableTennis">🏓</option><option value="chess">♟</option></select>'
+    + '<select id="manageNewTemplateType" class="form-input" style="font-size:.8rem;width:auto;"><option value="singles">S</option><option value="doubles">D</option></select>'
+    + '<button class="btn btn-sm" onclick="addTemplateFromManage()" style="font-size:.75rem;">➕ Add</button></div>'
     + '</div>'
-    + '<span id="manageTemplateError" style="font-size:.7rem;color:var(--danger);display:block;margin-top:4px;"></span>'
-    + '</div>';
+    + '<span id="manageTemplateError" style="font-size:.7rem;color:var(--danger);display:block;margin-bottom:8px;"></span>';
 
-  for (const tmpl of templates) {
+  if (!manageEv) {
+    html += '<p class="text-muted" style="padding:16px 0;text-align:center;">No event selected.</p>';
+    tmplContainer.innerHTML = html;
+    return;
+  }
+
+  for (const tmpl of evTemplates) {
     const saved = localLoad(tmpl.id);
     const running = saved && saved.phase !== 'setup';
-    const evNames = events.filter(function(ev) { return ev.templateIds.indexOf(tmpl.id) !== -1; }).map(function(ev) { return ev.name; });
-    const evBadges = evNames.map(function(n) { return '<span style="font-size:.65rem;background:var(--border);color:var(--text-muted);padding:1px 6px;border-radius:4px;margin-right:4px;">' + escapeHtml(n) + '</span>'; }).join('');
+    const statusIcon = !saved ? '⚪' : saved.phase === 'champion' ? '🏆' : saved.phase === 'setup' ? '⚪' : '🟢';
+    const statusLabel = !saved ? 'Not Started' : saved.phase === 'champion' ? 'Complete' : saved.phase === 'setup' ? 'Not Started' : 'In Progress';
+    const participantCount = (saved && saved.participants) ? saved.participants.length : 0;
+    const countLabel = (tmpl.type || 'singles') === 'doubles' ? 'teams' : 'players';
 
-    html += '<div id="manageTmplRow_' + tmpl.id + '" style="padding:8px 0;border-bottom:1px solid var(--border);">'
+    html += '<div id="manageTmplRow_' + tmpl.id + '" style="padding:10px 0;border-bottom:1px solid var(--border);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
       + '  <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">'
       + '    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
@@ -405,11 +426,12 @@ function renderManagePanel() {
       + '      <span style="font-weight:600;font-size:.85rem;">' + escapeHtml(tmpl.name) + '</span>'
       + '      <span style="font-size:.6rem;text-transform:uppercase;background:var(--primary-light);color:var(--text-muted);padding:1px 5px;border-radius:4px;font-weight:600;">' + tmpl.type + '</span>'
       + '    </div>'
-      + '    <div style="font-size:.7rem;color:var(--text-muted);">' + getSportLabel(tmpl.sport) + (evBadges ? ' • ' + evBadges : '') + '</div>'
+      + '    <div style="font-size:.7rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">'
+      +       '<span>' + statusIcon + ' ' + statusLabel + '</span>'
+      +       (participantCount > 0 ? '<span>·</span><span>' + participantCount + ' ' + countLabel + '</span>' : '')
+      + '    </div>'
       + '  </div>'
       + '  <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">'
-      + (AppState.view === 'event' && events.find(function(ev) { return ev.id === AppState.eventId && ev.templateIds.indexOf(tmpl.id) === -1; })
-        ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.65rem;" onclick="linkTemplateToEvent(\'' + tmpl.id + '\')">➕ Link</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 6px;font-size:.7rem;" onclick="toggleEditTemplate(\'' + tmpl.id + '\')">✏️</button>'
       + (running ? '<button class="btn btn-outline" style="padding:3px 6px;font-size:.7rem;border-color:var(--danger);color:var(--danger);" onclick="toggleManageReset(\'' + tmpl.id + '\')">Reset</button>' : '')
       + '<button class="btn btn-secondary" style="padding:3px 8px;font-size:.7rem;" ' + (running ? 'disabled title="Has running tournament"' : '') + ' onclick="toggleDeleteTemplateConfirm(\'' + tmpl.id + '\')">✕</button>'
@@ -456,6 +478,11 @@ function executeManageReset(catId) {
 
 // --- Template management from Manage panel ---
 
+function changeManageEvent(eventId) {
+  _manageEventId = eventId;
+  renderManagePanel();
+}
+
 function addTemplateFromManage() {
   if (!isAdmin()) return;
   const label = document.getElementById('manageNewTemplateLabel').value.trim();
@@ -471,6 +498,13 @@ function addTemplateFromManage() {
   const id = createTemplateId(label);
   templates.push({ id: id, name: label, sport: sport, type: type });
   saveTemplates(templates);
+  // Link to selected manage event
+  const events = getEvents();
+  const ev = events.find(function(e) { return e.id === _manageEventId; });
+  if (ev && ev.templateIds.indexOf(id) === -1) {
+    ev.templateIds.push(id);
+    saveEvents(events);
+  }
   if (_supabase) syncMetadataToCloud();
   document.getElementById('manageNewTemplateLabel').value = '';
   document.getElementById('manageTemplateError').textContent = '';

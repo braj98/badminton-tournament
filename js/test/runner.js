@@ -57,7 +57,9 @@ const context = {
     { id: 'junior_doubles', label: 'Jr Dbls', type: 'doubles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
     { id: 'senior_boys', label: 'Sr Boys', type: 'singles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
     { id: 'senior_girls', label: 'Sr Girls', type: 'singles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
-    { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" }
+    { id: 'senior_doubles', label: 'Sr Dbls', type: 'doubles', sport: 'badminton', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'tt_singles', label: 'TT Singles', type: 'singles', sport: 'tableTennis', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" },
+    { id: 'tt_doubles', label: 'TT Dbls', type: 'doubles', sport: 'tableTennis', event: "BREN AVALON SPORTS MEET 2026", eventId: "bren_avalon_sports_meet_2026" }
   ],
   SPORT_CONFIG: {
     badminton: {
@@ -341,7 +343,7 @@ function testGetCategoriesShim(ctx) {
 
   // Empty state returns factory defaults
   const empty = ctx.getCategories();
-  a(empty.length === 5, 'Empty state → 5 factory categories');
+  a(empty.length === 7, 'Empty state → 7 factory categories');
   a(empty[0].eventId === 'bren_avalon_sports_meet_2026', 'Factory cat has eventId');
   ctx.localStorage.clear();
 

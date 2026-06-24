@@ -302,6 +302,7 @@ function navigateToSport(ev, sport) {
 function renderAll() {
   AppState.ui.showingResults = false;
   clearDisabled();
+  updateBanners();
 
   renderBreadcrumb();
   renderSportBar();
