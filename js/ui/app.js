@@ -350,8 +350,10 @@ function renderAll() {
   // Tab button visibility (overall tabs visibility handled by updateNavigationVisibility)
   var _tb = document.getElementById('tournamentTabs');
   if (_tb && AppState.tournament) {
-    document.querySelectorAll('.tab-btn').forEach(function(b) {
-      b.classList.toggle('active', b.dataset.tab === AppState.view);
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    // Skip results sub-tab buttons (match view nav bar)
+    if (b.id && b.id.startsWith('subNav')) return;
+    b.classList.toggle('active', b.dataset.tab === AppState.view);
       var tab = b.dataset.tab;
       if (tab === 'groups' || tab === 'fixtures') {
         b.classList.toggle('hidden', AppState.tournament.phase === 'setup');
