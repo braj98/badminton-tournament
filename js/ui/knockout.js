@@ -169,6 +169,7 @@ function enterFinalSet(id, setNum, s1, s2) {
 
 function startKnockoutMatch(id) {
   if (!isAdmin()) return;
+  if (!confirm('Start this knockout match? It will be marked as live.')) return;
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   startMatch(m);

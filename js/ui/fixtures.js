@@ -120,6 +120,7 @@ function enterFixtureScore(id, s1, s2) {
 
 function startFixtureMatch(id) {
   if (!isAdmin()) return;
+  if (!confirm('Start this fixture match? It will be marked as live.')) return;
   const f = AppState.tournament.fixtures.find(m => m.id === id);
   if (!f) return;
   startMatch(f);

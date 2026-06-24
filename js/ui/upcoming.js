@@ -68,6 +68,7 @@ function renderUpcomingCard(tmpl, s, roundLabel, m, matchId, isFixture, sportIco
 
 function startUpcomingMatch(catId, id) {
   if (!isAdmin()) return;
+  if (!confirm('Start this match? It will be marked as live.')) return;
   const s = localLoad(catId);
   if (!s) return;
   var m = s.fixtures.find(function(f) { return f.id === id; })
