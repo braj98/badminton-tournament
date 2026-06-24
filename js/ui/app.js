@@ -1,6 +1,26 @@
 // ===================== APP STATE =====================
 // AppState is defined in js/models/appState.js and loaded before this script.
 
+// ===================== MIGRATIONS =====================
+function migrateMatchStatus(state) {
+  state = state || AppState.tournament;
+  if (!state) return;
+  var didMigrate = false;
+  for (var _k in state) {
+    if (_k === 'fixtures' || _k === 'knockout') {
+      var arr = state[_k];
+      if (!arr || !arr.length) continue;
+      for (var _i = 0; _i < arr.length; _i++) {
+        if (!arr[_i].status) {
+          arr[_i].status = 'UPCOMING';
+          didMigrate = true;
+        }
+      }
+    }
+  }
+  return didMigrate;
+}
+
 // ===================== HEADER + ACTION BAR =====================
 function updateHeader() {
   var sub = document.getElementById('eventSubtitle');
@@ -369,6 +389,7 @@ function renderAll() {
   }
 
   if (!AppState.tournament) { AppState.tournament = defaultState(); }
+  migrateMatchStatus();
   renderCategoryBar();
   updateHeader();
   renderActionBar();
@@ -520,6 +541,7 @@ function renderResultsArchive() {
       if (!tmpl) continue;
       const s = localLoad(tmpl.id);
       if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
+      migrateMatchStatus(s);
       hasContent = true;
       for (const m of s.knockout) {
         if (m.status !== 'COMPLETED') continue;
@@ -735,11 +757,14 @@ async function init() {
     AppState.tournament = defaultState();
   }
 
+  migrateMatchStatus();
+
   // Supabase-first for current category state
   if (_supabase) {
     const serverState = await fetchState(AppState.category).catch(() => null);
     if (serverState && serverState._lastSave > (AppState.tournament._lastSave || 0)) {
       AppState.tournament = serverState;
+      migrateMatchStatus();
       localSave(AppState.category, AppState.tournament);
     }
   }

@@ -219,11 +219,13 @@ async function switchCategory(catId) {
   if (AppState.loadingCategory !== catId) return;
   if (serverState) {
     AppState.tournament = serverState;
+    migrateMatchStatus();
     localSave(catId, AppState.tournament);
   } else {
     const saved = localLoad(catId);
     if (saved && saved.phase && saved.phase !== 'setup') {
       AppState.tournament = saved;
+      migrateMatchStatus();
     } else {
       AppState.tournament = defaultState();
       if (tmpl) AppState.tournament.sport = tmpl.sport;
@@ -634,6 +636,7 @@ function resumeTournament() {
   const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
     AppState.tournament = saved;
+    migrateMatchStatus();
     navigateTo(AppState.tournament.phase);
   }
 }
