@@ -12,6 +12,7 @@ function createMatch(p1, p2, round, group, id) {
     done: false,
     winner: null,
     sets: null,
+    status: 'UPCOMING',
     updatedAt: null
   };
 }

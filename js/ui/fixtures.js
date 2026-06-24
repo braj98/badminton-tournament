@@ -19,7 +19,8 @@ function renderFixtures() {
       const n1 = pName(f.p1), n2 = pName(f.p2);
       const i1 = getInitials(n1), i2 = getInitials(n2);
       const winner = done ? (f.s1 > f.s2 ? f.p1 : f.p2) : null;
-      html += '<div class="match-row' + (done ? ' match-done' : '') + '">'
+      const statusIcon = f.status === 'COMPLETED' ? '✓' : f.status === 'LIVE' ? '🔴' : '⏳';
+      html += '<div class="match-row' + (done ? ' match-done' : '') + '" id="fixtureRow_' + f.id + '">'
         + '<span class="p-avatar">' + escapeHtml(i1) + '</span>'
         + '<span class="pname' + (done && winner === f.p1 ? ' winner' : '') + '">' + escapeHtml(n1) + '</span>';
       if (isAdmin()) {
@@ -38,11 +39,20 @@ function renderFixtures() {
       }
       html += '<span class="pname' + (done && winner === f.p2 ? ' winner' : '') + '">' + escapeHtml(n2) + '</span>'
         + '<span class="p-avatar">' + escapeHtml(i2) + '</span>'
-        + '<span class="match-badge ' + (done ? 'done' : 'pending') + '">' + (done ? '✓' : '⏳') + '</span>'
+        + '<span class="match-badge ' + (done ? 'done' : (f.status === 'LIVE' ? 'live' : 'pending')) + '">' + statusIcon + ' ' + f.status + '</span>'
         + '</div>';
+      if (isAdmin() && f.p1 && f.p2 && f.status !== 'COMPLETED') {
+        html += '<div class="match-controls" style="display:flex;gap:6px;justify-content:center;padding:4px 0 8px 0;">';
+        if (f.status === 'UPCOMING') {
+          html += '<button class="btn btn-sm btn-outline" onclick="startFixtureMatch(' + f.id + ')" style="font-size:.7rem;padding:2px 10px;">▶ Start Match</button>';
+        }
+        if (f.status === 'LIVE') {
+          html += '<button class="btn btn-sm btn-outline" onclick="completeFixtureMatch(' + f.id + ')" style="font-size:.7rem;padding:2px 10px;border-color:var(--success);color:var(--success);">☑ Complete Match</button>';
+        }
+        html += '</div>';
+      }
     }
     html += '</div>';
-    // Standings for this group
     const rows = AppState.tournament.standings[key];
     if (rows) {
       html += '<table class="standings-table"><thead><tr>'
@@ -67,7 +77,7 @@ function renderFixtures() {
   }
   container.innerHTML = html;
   document.getElementById('groupStandings').innerHTML = '';
-  const allDone = fixtures.every(f => f.done);
+  const allDone = fixtures.filter(f => f.done).length === fixtures.length;
   document.getElementById('btnProceedKnockout').classList.toggle('hidden', !allDone);
 }
 
@@ -77,8 +87,30 @@ function enterFixtureScore(id, s1, s2) {
   if (!f) return;
   f.s1 = parseInt(s1) || 0;
   f.s2 = parseInt(s2) || 0;
-  f.done = f.s1 !== f.s2;
   f.updatedAt = Date.now();
+  if (f.status === 'UPCOMING') f.status = 'LIVE';
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+  saveState();
+  renderFixtures();
+}
+
+function startFixtureMatch(id) {
+  if (!isAdmin()) return;
+  const f = AppState.tournament.fixtures.find(m => m.id === id);
+  if (!f) return;
+  startMatch(f);
+  saveState();
+  renderFixtures();
+}
+
+function completeFixtureMatch(id) {
+  if (!isAdmin()) return;
+  const f = AppState.tournament.fixtures.find(m => m.id === id);
+  if (!f) return;
+  completeMatch(f);
   const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;

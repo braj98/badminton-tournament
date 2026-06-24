@@ -360,6 +360,10 @@ function renderAll() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-results').classList.add('active');
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
+    document.getElementById('subNavLive').classList.add('active');
+    document.getElementById('subNavUpcoming').classList.remove('active');
+    document.getElementById('subNavResults').classList.remove('active');
+    document.getElementById('subNavChampions').classList.remove('active');
     if (!isAdmin()) applyViewerMode();
     return;
   }
@@ -462,9 +466,12 @@ function goBackFromChampion() {
   navigateTo('knockout');
 }
 
-// ===================== RESULTS PAGE =====================
+// ===================== MATCH VIEWS (Live / Upcoming / Results Archive / Champions) =====================
+var _currentMatchView = 'live';
+
 function showResultsPage() {
   AppState.ui.showingResults = true;
+  _currentMatchView = 'live';
   renderBreadcrumb();
   updateNavigationVisibility();
   renderCategoryBar();
@@ -472,9 +479,24 @@ function showResultsPage() {
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
-  renderResults();
+  renderMatchView();
   applyViewerMode();
   document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+}
+
+function switchMatchView(view) {
+  _currentMatchView = view;
+  renderMatchView();
+  applyViewerMode();
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+}
+
+function renderMatchView() {
+  clearDisabled();
+  if (_currentMatchView === 'live') { renderLiveView(); return; }
+  if (_currentMatchView === 'upcoming') { renderUpcomingView(); return; }
+  if (_currentMatchView === 'results') { renderResultsArchive(); return; }
+  if (_currentMatchView === 'champions') { renderChampionsView(); return; }
 }
 
 function closeResults() {
@@ -483,17 +505,16 @@ function closeResults() {
   renderAll();
 }
 
-function renderResults() {
-  clearDisabled();
+function renderResultsArchive() {
   const templates = getTemplates();
   const events = getEvents();
   const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
   const container = document.getElementById('resultsList');
   let html = '';
   let hasContent = false;
-  for (const ev of events) {
+  const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
+  for (const ev of filteredEvents) {
     const evMatchData = [];
-    const evChampions = [];
     for (const tmplId of ev.templateIds) {
       const tmpl = templates.find(t => t.id === tmplId);
       if (!tmpl) continue;
@@ -501,6 +522,7 @@ function renderResults() {
       if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
       hasContent = true;
       for (const m of s.knockout) {
+        if (m.status !== 'COMPLETED') continue;
         const _participants = s.participants;
         const resolve = function(id) { return _participants ? participantName(_participants, id) || id || 'TBD' : id || 'TBD'; };
         const p1 = resolve(m.p1);
@@ -526,54 +548,78 @@ function renderResults() {
           updatedAt: m.updatedAt || 0
         });
       }
-      const _final = s.knockout.find(m => m.id === 'final');
-      if (_final && _final.done && _final.winner) {
-        const chId = _final.winner;
-        const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
-        const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
-        const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
-        evChampions.push({ catLabel: tmpl.name, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto });
-      }
     }
-    if (evChampions.length === 0 && evMatchData.length === 0) continue;
-    html += '<div class="home-event"><h2>' + escapeHtml(ev.name) + '</h2>';
-    if (evChampions.length > 0) {
-      html += '<div class="results-cards">';
-      for (const c of evChampions) {
-        html += '<div class="champion-card">'
-          + '<div class="trophy">🏆</div>'
-          + '<div class="crown">' + escapeHtml(c.catLabel) + '</div>'
-          + '<div class="name">' + escapeHtml(c.champion) + '</div>'
-          + (c.championPhoto ? '<img src="' + c.championPhoto + '" class="champion-photo">' : '')
-          + '<div class="runner-up">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
-          + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" class="runnerup-photo">' : '')
-          + '</div>';
-      }
-      html += '</div>';
-    }
-    if (evMatchData.length > 0) {
-      evMatchData.sort((a, b) => b.updatedAt - a.updatedAt);
-      html += '<div class="results-cards">';
-      for (const m of evMatchData) {
-        const status = m.done ? '<span class="match-status-done">\u2713 ' + escapeHtml(m.winner) + '</span>' : '<span class="match-status-pending">\u23F3 Upcoming</span>';
-        html += '<div class="result-card' + (m.done ? ' result-done' : '') + '">'
-          + '<div class="result-card-header">'
-          + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
-          + '<span class="result-round">' + m.round + '</span>'
-          + '</div>'
-          + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
-          + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
-          + '<div class="result-status">' + status + '</div>'
-          + '</div>';
-      }
-      html += '</div>';
+    if (evMatchData.length === 0) continue;
+    evMatchData.sort((a, b) => b.updatedAt - a.updatedAt);
+    html += '<div class="results-cards">';
+    for (const m of evMatchData) {
+      html += '<div class="result-card result-done">'
+        + '<div class="result-card-header">'
+        + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
+        + '<span class="result-round">' + m.round + '</span>'
+        + '</div>'
+        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
+        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
+        + '<div class="result-status">✓ ' + escapeHtml(m.winner) + '</div>'
+        + '</div>';
     }
     html += '</div>';
   }
   if (!hasContent) {
-    html += '<p class="text-muted text-center" style="padding:32px 0;">No knockout matches yet.</p>';
+    html += '<p class="text-muted text-center" style="padding:32px 0;">No completed matches yet.</p>';
   }
   container.innerHTML = html;
+  document.getElementById('subNavLive').classList.remove('active');
+  document.getElementById('subNavUpcoming').classList.remove('active');
+  document.getElementById('subNavResults').classList.add('active');
+  document.getElementById('subNavChampions').classList.remove('active');
+}
+
+function renderChampionsView() {
+  const templates = getTemplates();
+  const events = getEvents();
+  const container = document.getElementById('resultsList');
+  let html = '';
+  let hasContent = false;
+  const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
+  for (const ev of filteredEvents) {
+    const evChampions = [];
+    for (const tmplId of ev.templateIds) {
+      const tmpl = templates.find(t => t.id === tmplId);
+      if (!tmpl) continue;
+      const s = localLoad(tmpl.id);
+      if (!s || s.phase !== 'champion' || !s.knockout) continue;
+      const _final = s.knockout.find(m => m.id === 'final');
+      if (!_final || !_final.done || !_final.winner) continue;
+      hasContent = true;
+      const chId = _final.winner;
+      const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
+      const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
+      const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
+      evChampions.push({ catLabel: tmpl.name, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto });
+    }
+    if (evChampions.length === 0) continue;
+    html += '<div class="results-cards">';
+    for (const c of evChampions) {
+      html += '<div class="champion-card">'
+        + '<div class="trophy">🏆</div>'
+        + '<div class="crown">' + escapeHtml(c.catLabel) + '</div>'
+        + '<div class="name">' + escapeHtml(c.champion) + '</div>'
+        + (c.championPhoto ? '<img src="' + c.championPhoto + '" class="champion-photo">' : '')
+        + '<div class="runner-up">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
+        + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" class="runnerup-photo">' : '')
+        + '</div>';
+    }
+    html += '</div>';
+  }
+  if (!hasContent) {
+    html += '<p class="text-muted text-center" style="padding:32px 0;">No champions yet.</p>';
+  }
+  container.innerHTML = html;
+  document.getElementById('subNavLive').classList.remove('active');
+  document.getElementById('subNavUpcoming').classList.remove('active');
+  document.getElementById('subNavResults').classList.remove('active');
+  document.getElementById('subNavChampions').classList.add('active');
 }
 
 // ===================== INIT =====================

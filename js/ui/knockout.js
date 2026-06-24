@@ -18,7 +18,7 @@ function renderKnockout() {
       html += '<div class="match-card' + (done ? ' match-done' : '') + '">'
         + '<div class="match-card-header">'
         + '<span class="match-label">' + roundLabels[round] + '</span>'
-        + '<span class="match-status">' + (done ? '✓ ' + escapeHtml(pName(m.winner)) : (canPlay ? '● Ready to Play' : '— Waiting')) + '</span>'
+        + '<span class="match-status">' + (done ? '✓ ' + escapeHtml(pName(m.winner)) : (canPlay ? (m.status === 'LIVE' ? '🔴 LIVE' : (m.status === 'UPCOMING' ? '⏳ Upcoming' : '● Ready')) : '— Waiting')) + '</span>'
         + '</div>'
         + '<div class="match-body">'
         + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p1)) + '</div><div class="team-names">' + escapeHtml(pName(m.p1)) + '</div></div>'
@@ -35,6 +35,16 @@ function renderKnockout() {
             + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
         }
         html += '</div>';
+        if (m.status !== 'COMPLETED') {
+          html += '<div class="match-controls" style="display:flex;gap:6px;justify-content:center;padding:4px 0;">';
+          if (m.status === 'UPCOMING') {
+            html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')" style="font-size:.7rem;padding:2px 10px;">▶ Start Match</button>';
+          }
+          if (m.status === 'LIVE') {
+            html += '<button class="btn btn-sm btn-outline" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="font-size:.7rem;padding:2px 10px;border-color:var(--success);color:var(--success);">☑ Match Completed</button>';
+          }
+          html += '</div>';
+        }
       } else if (canPlay && !isAdmin()) {
         if (isFinal) {
           html += '<div class="match-score-area">' + renderFinalSetText(m) + '</div>';
@@ -107,22 +117,9 @@ function enterKnockoutScore(id, s1, s2) {
   m.s1 = parseInt(s1) || 0;
   m.s2 = parseInt(s2) || 0;
   m.updatedAt = Date.now();
+  if (m.status === 'UPCOMING') m.status = 'LIVE';
   if (m.round === 'Final') return;
-  if (m.s1 !== m.s2 && m.p1 && m.p2) {
-    m.done = true;
-    m.winner = m.s1 > m.s2 ? m.p1 : m.p2;
-  } else {
-    m.done = false;
-    m.winner = null;
-  }
   AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
-  if (AppState.tournament.phase === 'champion') {
-    var _fm = AppState.tournament.knockout.find(function(mm) { return mm.id === 'final'; });
-    if (_fm && _fm.done && _fm.winner) {
-      AppState.tournament.champion = _fm.winner;
-      AppState.tournament.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
-    }
-  }
   saveState();
   renderKnockout();
 }
@@ -140,32 +137,29 @@ function enterFinalSet(id, setNum, s1, s2) {
   const v2 = s2 === '' || s2 === null || s2 === undefined ? null : parseInt(s2) || 0;
   m.sets[setNum] = { s1: v1, s2: v2 };
   m.updatedAt = Date.now();
-  let w1 = 0, w2 = 0;
-  for (const s of m.sets) {
-    if (s.s1 !== null && s.s2 !== null) {
-      if (s.s1 > s.s2) w1++;
-      else if (s.s2 > s.s1) w2++;
-    }
-  }
-  var _needed = Math.ceil(_cfg.finalSets / 2);
-  if ((w1 >= _needed || w2 >= _needed) && m.p1 && m.p2) {
-    m.done = true;
-    m.winner = w1 >= _needed ? m.p1 : m.p2;
-    m.s1 = w1;
-    m.s2 = w2;
-  } else {
-    m.done = false;
-    m.winner = null;
-    m.s1 = null;
-    m.s2 = null;
-  }
+  if (m.status === 'UPCOMING') m.status = 'LIVE';
+  saveState();
+  renderKnockout();
+}
+
+function startKnockoutMatch(id) {
+  if (!isAdmin()) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
+  if (!m) return;
+  startMatch(m);
+  saveState();
+  renderKnockout();
+}
+
+function completeKnockoutMatch(id) {
+  if (!isAdmin()) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
+  if (!m) return;
+  completeMatch(m, AppState.tournament.participants);
   AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
-  if (AppState.tournament.phase === 'champion') {
-    var _fm = AppState.tournament.knockout.find(function(mm) { return mm.id === 'final'; });
-    if (_fm && _fm.done && _fm.winner) {
-      AppState.tournament.champion = _fm.winner;
-      AppState.tournament.runnerUp = _fm.winner === _fm.p1 ? _fm.p2 : _fm.p1;
-    }
+  if (m.id === 'final' && m.done && m.winner) {
+    AppState.tournament.champion = m.winner;
+    AppState.tournament.runnerUp = m.winner === m.p1 ? m.p2 : m.p1;
   }
   saveState();
   renderKnockout();

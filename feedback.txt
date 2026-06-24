@@ -1,215 +1,358 @@
-Remaining Issues
-Issue 1
+Tournament Manager UX Improvement - Match Status & Results Redesign
+Objective
 
-AppState.event vs AppState.eventId
+Simplify tournament navigation by separating:
 
-Current:
+Current Matches
+Upcoming Matches
+Completed Matches
+Champions
 
-Both exist.
+Instead of combining everything under a single "Results" page.
+
+This approach aligns with how spectators, players, and organizers naturally think during a tournament.
+
+Problem Statement
+
+Current Results page attempts to show:
+
+Live matches
+Upcoming matches
+Completed matches
+Champions
+Tournament summary
+
+This mixes:
+
+Past
+Present
+Future
+
+into a single view.
+
+Result:
+
+Harder navigation
+User confusion
+More complex UI logic
+Difficult to scale as tournaments grow
+User Mental Model
+
+Most users ask one of four questions:
+
+Question 1
+
+What is happening right now?
+
+Answer:
+
+LIVE MATCHES
+
+Question 2
+
+What match is next?
+
+Answer:
+
+UPCOMING MATCHES
+
+Question 3
+
+Who won?
+
+Answer:
+
+CHAMPIONS
+
+Question 4
+
+What were the previous match results?
+
+Answer:
+
+RESULTS ARCHIVE
+
+Proposed Navigation
+
+Replace current Results-centric approach with:
+
+🏆 Champions
+🔥 Live
+📅 Upcoming
+📖 Results
+1. Champions Page
+
+Purpose:
+
+Show completed tournament winners.
+
+This page becomes available once a competition is completed.
+
+Example
+🏆 Senior Doubles
+
+Champion
+Amit / Rajesh
+
+Runner Up
+Kiran / Deepak
+
+Status:
+Completed
+Characteristics
+Static
+Read-only
+No frequent updates
+2. Live Matches Page
+
+Purpose:
+
+Display matches currently being played.
+
+This becomes the primary spectator screen during tournament day.
+
+Example
+🔥 LIVE
+
+Court 1
+
+Amit / Rajesh
+21
+
+vs
+
+Kiran / Deepak
+18
+
+Game 2
+Characteristics
+Real-time updates
+Visible to all users
+Highest spectator usage
+Admin Controls
+
+Add explicit match status controls.
+
+Start Match
+▶ Start Match
+
+Changes:
+
+UPCOMING
+   ↓
+LIVE
+Complete Match
+☑ Match Completed
+
+Changes:
+
+LIVE
+   ↓
+COMPLETED
+Why Explicit Status Is Better
+
+Avoids guessing based on scores.
 
 Example:
 
-AppState.event
-AppState.eventId
+Bad Approach:
 
-Risk:
+Score entered
+→ Assume match completed
 
-Future inconsistencies.
+Problems:
 
-Recommendation:
+Partial scores
+Corrections
+Walkovers
+Interrupted matches
 
-Use:
+Recommended:
 
-AppState.eventId
+Admin explicitly confirms completion.
 
-as primary.
+☑ Match Completed
+3. Upcoming Matches Page
 
-Resolve display name from event object.
+Purpose:
 
-Priority:
+Show future matches.
 
-Medium
+Example
+📅 Upcoming
 
-Issue 2
+Semi Final
 
-Event Lookup By Name
+Amit / Rajesh
 
-Current:
+vs
 
-setCurrentEvent(eventName)
+Kiran / Deepak
 
-then:
+Court 1
+10:30 AM
+Characteristics
+Static
+Easy to scan
+Useful for players waiting for their turn
+Admin Controls
+▶ Start Match
 
-find(e => e.name === eventName)
+Moves match to:
 
-This still depends on names.
+LIVE
 
-Recommendation:
+4. Results Archive
 
-Create:
+Purpose:
 
-setCurrentEventById(eventId)
+Historical record of completed matches.
 
-Priority:
+Example
+📖 Results
 
-High
+Quarter Final
 
-Issue 3
+Amit / Rajesh
+21-18
 
-Delete Event Uses Local State Only
+Kiran / Deepak
+17-21
 
-Current:
+Winner:
+Amit / Rajesh
+Characteristics
+Read-only
+Historical reference
+Searchable in future
+Match State Model
 
-localLoad(tmplId)
+Each match should have an explicit status.
 
-during validation.
+Match Status Values
+UPCOMING
+LIVE
+COMPLETED
+State Transitions
+UPCOMING
+   ↓ Start Match
 
-Potential issue:
+LIVE
+   ↓ Match Completed
 
-Cloud state exists.
+COMPLETED
+Tournament Status Model
 
-Local state missing.
+Tournament itself should have status.
 
-Recommendation:
+Tournament Status Values
+NOT_STARTED
+IN_PROGRESS
+COMPLETED
+Example
+Senior Doubles
 
-Eventually validate cloud state too.
+🟢 IN PROGRESS
+Competition Card Improvements
 
-Priority:
+Competition cards should display status.
 
-Low
+Example
+🏸 Senior Doubles
 
-UX Improvements
-Event Dropdown First
+12 Teams
 
-I strongly support your proposal.
+🟢 In Progress
 
-Manage should begin with:
-
-Event ▼
-
-Then:
-
-Competitions
-Templates
-Import / Export
-Cloud Sync
-
-Everything should operate within the selected event.
-
-Priority:
-
-High
-
-Competition Cards
-
-Replace text lists with cards.
-
-Example:
+Another example:
 
 🏸 Junior Singles
 
-12 Players
-
-🟢 In Progress
-
-Benefits:
-
-Easier scanning
-Better mobile experience
-
-Priority:
-
-High
-
-Status Badges
-
-Every competition should display:
-
-⚪ Not Started
-
-🟢 In Progress
+16 Players
 
 🏆 Completed
+Viewer Navigation
 
-Priority:
+Viewer Mode
 
-High
+🏆 Champions
+🔥 Live
+📅 Upcoming
+📖 Results
 
-Viewer/Admin Banner
+No management options visible.
 
-Always visible:
+Admin Navigation
 
-🔧 Admin Mode
+Admin Mode
 
-or
+🏆 Champions
+🔥 Live
+📅 Upcoming
+📖 Results
+⚙ Manage
 
-👁 Viewer Mode
+Additional controls available.
 
-Priority:
+Benefits
+Better User Experience
 
-Medium
+Separates:
 
-Testing Priorities
+Past
+Present
+Future
 
-Now more important than architecture.
+into dedicated views.
 
-Test:
+Easier Navigation
 
-2 participants
+Users immediately know where to look.
 
-3 participants
+Better Spectator Experience
 
-5 participants
+Most spectators only need:
 
-6 participants
+🔥 Live
+📅 Upcoming
+🏆 Champions
+Cleaner Code
 
-10 participants
+Match status becomes explicit.
 
-11 participants
+No score-based inference required.
 
-20 participants
+Easier Multi-Sport Support
 
-Validate:
+Works equally well for:
 
-group generation
-qualification
-knockout generation
-champion selection
-Multi-Sport Readiness
+Badminton
+Table Tennis
+Chess
+Carrom
 
-Current Estimate
+without additional design changes.
 
-Badminton 100%
-Table Tennis 100%
-Chess 95%
-Carrom 90%
+Recommendation
 
-The platform is now ready for Table Tennis.
+Implement explicit match status:
 
-No additional architecture work required.
+UPCOMING
+LIVE
+COMPLETED
 
-Recommended Next Sprint
+Add:
 
-Priority 1
+▶ Start Match
+☑ Match Completed
 
-Implement Event dropdown workflow.
+for administrators.
 
-Priority 2
+Replace the current Results-centric approach with four dedicated views:
 
-Add competition cards.
+🏆 Champions
+🔥 Live
+📅 Upcoming
+📖 Results
 
-Priority 3
-
-Add status badges.
-
-Priority 4
-
-Run a full tournament.
-
-Priority 5
-
-Add Table Tennis.
-
-Priority 6
-
-Collect user feedback
+This will significantly improve usability, simplify state management, and better support future tournament growth

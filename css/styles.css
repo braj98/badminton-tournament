@@ -546,6 +546,9 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text-main); }
 }
 .match-badge.done { background: var(--success-light); color: var(--success); }
 .match-badge.pending { background: #f1f5f9; color: var(--text-muted); }
+.match-badge.live { background: #fee2e2; color: #dc2626; }
+
+.result-live { border-color: #dc2626 !important; }
 
 .score-input {
   width: 52px;
