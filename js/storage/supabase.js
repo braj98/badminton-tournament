@@ -62,13 +62,8 @@ function scheduleCloudSave(catId, data) {
 
 async function syncMetadataToCloud() {
   if (!_supabase) return;
-  const templates = getTemplates();
-  const events = getEvents();
-  await Promise.all([
-    _upsertByKey('btm_templates', templates),
-    _upsertByKey('btm_events', events),
-    _upsertByKey('btm_categories', getCategories())
-  ]);
+  const metadata = { templates: getTemplates(), events: getEvents(), categories: getCategories(), updatedAt: Date.now() };
+  await _upsertByKey('btm_metadata', metadata);
 }
 
 async function _upsertByKey(key, data) {
@@ -89,9 +84,13 @@ async function _fetchByKey(key) {
 
 async function fetchMetadataFromCloud() {
   if (!_supabase) return null;
+  // Atomic composite key (prevents partial-sync race)
+  const meta = await _fetchByKey('btm_metadata');
+  if (meta && meta.templates && meta.events) return { templates: meta.templates, events: meta.events };
+  // Fallback: legacy individual keys
   const templates = await _fetchByKey('btm_templates');
   const events = await _fetchByKey('btm_events');
-  if (templates && events) return { templates: templates, events: events };
+  if (templates && events) return { templates, events };
   const cats = await _fetchByKey('btm_categories');
   if (cats) return { categories: cats };
   return null;
@@ -126,7 +125,7 @@ function subscribeToMetadataChanges() {
   _metadataChannel = _supabase.channel('btm-metadata-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'state' }, payload => {
       const key = payload.new ? payload.new.key : null;
-      if (key === 'btm_templates' || key === 'btm_events') {
+      if (key === 'btm_metadata' || key === 'btm_templates' || key === 'btm_events') {
         fetchMetadataFromCloud().then(function(meta) {
           if (!meta) return;
           if (meta.templates && meta.events) {
