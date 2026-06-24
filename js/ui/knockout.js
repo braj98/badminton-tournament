@@ -12,19 +12,44 @@ function renderKnockout() {
     if (matches.length === 0) continue;
     html += '<div class="bracket-round"><div class="round-title">' + roundLabels[round] + 's</div>';
     for (const m of matches) {
-      var isFinal = m.round === 'Final';
-      var done = m.done;
-      var canPlay = m.p1 && m.p2;
-      html += '<div class="match-card' + (done ? ' match-done' : '') + '">'
+      const isFinal = m.round === 'Final';
+      const done = m.done;
+      const canPlay = m.p1 && m.p2;
+      const isWaiting = !canPlay;
+
+      let cardsCls = 'match-card';
+      if (done) cardsCls += ' match-done';
+      if (isWaiting) cardsCls += ' is-waiting';
+
+      html += '<div class="' + cardsCls + '">'
         + '<div class="match-card-header">'
-        + '<span class="match-label">' + roundLabels[round] + '</span>'
-        + '<span class="match-status">' + (done ? '✓ ' + escapeHtml(pName(m.winner)) : (canPlay ? (m.status === 'LIVE' ? '🔴 LIVE' : (m.status === 'UPCOMING' ? '⏳ Upcoming' : '● Ready')) : '— Waiting')) + '</span>'
+        + '<span class="match-label">' + roundLabels[round] + '</span>';
+
+      if (done) {
+        html += '<span class="match-status" style="color:var(--success);">✓ ' + escapeHtml(pName(m.winner)) + '</span>';
+      } else if (isWaiting) {
+        html += '<span class="match-status">— Waiting</span>';
+      } else if (isAdmin() && m.status === 'UPCOMING') {
+        html += '<button class="btn-go-live" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Go Live</button>';
+      } else if (m.status === 'LIVE') {
+        html += '<span class="match-status" style="color:var(--danger);">🔴 LIVE</span>';
+      } else if (canPlay) {
+        html += '<span class="match-status">● Ready</span>';
+      }
+
+      html += '</div>'
+        + '<div class="match-versus-row">'
+        + '<div class="team-horizontal">'
+        + '<div class="avatar">' + escapeHtml(getInitials(m.p1)) + '</div>'
+        + '<span class="player-name">' + escapeHtml(pName(m.p1)) + '</span>'
         + '</div>'
-        + '<div class="match-body">'
-        + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p1)) + '</div><div class="team-names">' + escapeHtml(pName(m.p1)) + '</div></div>'
-        + '<div class="vs-circle">VS</div>'
-        + '<div class="team"><div class="avatar">' + escapeHtml(getInitials(m.p2)) + '</div><div class="team-names">' + escapeHtml(pName(m.p2)) + '</div></div>'
+        + '<span class="vs-circle">VS</span>'
+        + '<div class="team-horizontal">'
+        + '<div class="avatar">' + escapeHtml(getInitials(m.p2)) + '</div>'
+        + '<span class="player-name">' + escapeHtml(pName(m.p2)) + '</span>'
+        + '</div>'
         + '</div>';
+
       if (canPlay && isAdmin()) {
         html += '<div class="match-score-area">';
         if (isFinal) {
@@ -36,12 +61,12 @@ function renderKnockout() {
         }
         html += '</div>';
         if (m.status !== 'COMPLETED') {
-          html += '<div class="match-controls" style="display:flex;gap:6px;justify-content:center;padding:4px 0;">';
+          html += '<div class="match-controls-inline">';
           if (m.status === 'UPCOMING') {
-            html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')" style="font-size:.7rem;padding:2px 10px;">▶ Start Match</button>';
+            html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Start Match</button>';
           }
           if (m.status === 'LIVE') {
-            html += '<button class="btn btn-sm btn-outline" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="font-size:.7rem;padding:2px 10px;border-color:var(--success);color:var(--success);">☑ Match Completed</button>';
+            html += '<button class="btn btn-sm btn-outline" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="border-color:var(--success);color:var(--success);">☑ Match Completed</button>';
           }
           html += '</div>';
         }

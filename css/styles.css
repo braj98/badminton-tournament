@@ -395,6 +395,67 @@ h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text-main); }
 
 .match-card.match-done .match-status { color: var(--success); }
 
+/* ===== KNOCKOUT BRACKET (a.html redesign) ===== */
+.match-versus-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.team-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.player-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.match-card.is-waiting {
+  border: 2px dashed #cbd5e1;
+  opacity: 0.65;
+}
+
+body.dark-mode .match-card.is-waiting {
+  border-color: #475569;
+}
+
+.btn-go-live {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.btn-go-live:hover {
+  background: var(--primary-dark);
+}
+
+.match-controls-inline {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 0.5rem 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.match-controls-inline .btn-sm {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+}
+
 .match-body {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
