@@ -26,14 +26,14 @@ function updateHeader() {
   var sub = document.getElementById('eventSubtitle');
   var tag = document.getElementById('sportTag');
   
-  if (AppState.view === 'home') {
-    if (sub) sub.classList.add('hidden');
-    if (tag) tag.classList.add('hidden');
-  } else if (AppState.ui.showingResults) {
+  if (AppState.ui.showingResults) {
     if (sub) {
       sub.textContent = getCurrentEventName();
       sub.classList.remove('hidden');
     }
+    if (tag) tag.classList.add('hidden');
+  } else if (AppState.view === 'home') {
+    if (sub) sub.classList.add('hidden');
     if (tag) tag.classList.add('hidden');
   } else if (AppState.view === 'event') {
     if (sub) {
