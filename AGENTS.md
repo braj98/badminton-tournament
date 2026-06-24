@@ -31,21 +31,23 @@ js/
 - `models/match.js` — `createMatch(p1, p2, round, group, id?)`
 - `models/tournament.js` — `createTournament(sport, format)` (single source of truth for state shape), `isTeamSport(format)`
 - `models/sportConfig.js` — `SPORT_CONFIG` object with badminton/tableTennis/chess, `getSportConfig(sport, format)`, `getCurrentConfig()`
-- `models/appState.js` — `AppState` single state container: `{category, sport, event, view, tournament, showingResults, isAdmin}`
-- `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()`
+- `models/event.js` — `getEvents()`, `saveEvents()`, `createEvent()`, `deleteEvent()`, `addTemplateToEvent()`, `removeTemplateFromEvent()`, `setCurrentEvent()`. Key `btm_events`.
+- `models/template.js` — `getTemplates()`, `saveTemplates()`, `createTemplateId()`, `createTemplate()`, `ensureTemplate()`. Key `btm_templates`.
+- `models/appState.js` — `AppState` single state container: `{user, event, eventId, sport, category, loadingCategory, view, tournament, ui: {showingResults, managePanelOpen}}`
+- `storage/local.js` — `localSave()`, `localLoad()`, `localClear()`, `getCategories()` (shim: builds categories from events+templates), `saveCategories()` (reverse shim: recreates events+templates from flat category list)
 - `storage/events.js` — `on()`, `off()`, `emit()` simple event bus
-- `storage/supabase.js` — `initSupabase()`, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`
+- `storage/supabase.js` — `initSupabase()`, `upsertState()` (3 retries), `fetchState()`, Realtime, `flushCloudSave()`, `syncMetadataToCloud()`, `fetchMetadataFromCloud()`, `subscribeToMetadataChanges()`
 - `storage/auth.js` — `isAdmin()`, `login()`, `logout()`, `checkSession()`, `showLogin()`, `closeLogin()`, `showLoading()`, `hideLoading()`
 - `ui/utils.js` — `escapeHtml()`, `isDoubles()`, `pName(id)` (resolves participant ID to display name)
 - `ui/app.js` — `saveState()`, `renderAll()`, navigation, async `init()` (Supabase-first). Uses `AppState.*` for all state.
-- `ui/categories.js` — `switchCategory()`, category bar, manage panel, export/import
+- `ui/categories.js` — `switchCategory()`, category bar, event bar, sport bar, manage panel, export/import, breadcrumb
 - `ui/setup.js` — player input, `_setupConfig()` helper, `startTournament()`, `renderSetup()`
 - `ui/groups.js` — `renderGroups()`, `movePlayerToGroup()`, rename
 - `ui/fixtures.js` — `renderFixtures()`, `enterFixtureScore()`
 - `ui/knockout.js` — `renderKnockout()`, `enterKnockoutScore()`, `enterFinalSet()`
 - `ui/champion.js` — `renderChampion()`, `viewChampion()`, `showResults()`, photos
 
-Script load order: Engine (5) → Models (4) → appState.js → tournamentEngine → Storage (4: local, events, supabase, auth) → UI (8) → Test (1) = 22 scripts total.
+Script load order: Engine (5) → Models (6) → appState.js → tournamentEngine → Storage (4: local, events, supabase, auth) → UI (8) → Test (1) = 24 scripts total.
 
 ## Source of truth
 
@@ -76,16 +78,19 @@ Flow: Setup → Groups → Fixtures + Standings → Knockout → Champion
 ## Categories
 
 - Dynamic — users can add/delete categories via the **Manage** button.
-- 5 factory defaults: Junior, Jr Dbls, Sr Boys, Sr Girls, Sr Dbls
+- 7 factory defaults: Junior, Jr Dbls, Sr Boys, Sr Girls, Sr Dbls, TT Singles, TT Dbls
 - Deleting a running tournament is blocked (phase !== 'setup')
 - Adding auto-generates unique ID from label, checks for duplicates
 - At least 1 category must always exist
+- Categories are a **derived view** — `getCategories()` in `local.js` joins events (via `templateIds`) with templates (by matching `tmpl.id`) to produce a flat category list. `saveCategories()` is the reverse shim: it takes a flat category list and recreates the underlying events + templates.
 
 ## Persistence
 
 - Supabase is primary source of truth; localStorage is cache.
 - `btm_state_{categoryId}` — per-category tournament state (localStorage)
-- `btm_categories` — custom category list (localStorage)
+- `btm_categories` — custom category list (localStorage — shim, see above)
+- `btm_templates` — global template list (localStorage + cloud)
+- `btm_events` — global event list (localStorage + cloud)
 - `upsertState()` has retry logic (3 attempts, exponential backoff 1s/2s)
 - `flushCloudSave()` cancels pending debounce and writes immediately
 - `init()` fetches from Supabase BEFORE first render
