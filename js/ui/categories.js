@@ -559,11 +559,11 @@ function toggleEventDeleteConfirm(eventId) {
   if (input) input.value = '';
 }
 
-function executeEventDelete(eventId) {
+async function executeEventDelete(eventId) {
   if (!isAdmin()) return;
   const input = document.getElementById('manageDeleteEventInput_' + eventId);
   if (!input || input.value !== 'DELETE') return;
-  const result = deleteEvent(eventId);
+  const result = await deleteEvent(eventId);
   if (result === false) { alert('Cannot delete: has running tournaments or only event.'); }
   renderManagePanel();
   renderAll();

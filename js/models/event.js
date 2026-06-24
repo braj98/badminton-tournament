@@ -46,7 +46,7 @@ function removeTemplateFromEvent(eventId, templateId) {
   saveEvents(events);
 }
 
-function deleteEvent(eventId) {
+async function deleteEvent(eventId) {
   if (!isAdmin()) return;
   const events = getEvents();
   if (events.length <= 1) return false;
@@ -63,6 +63,7 @@ function deleteEvent(eventId) {
     for (const tmplId of ev.templateIds) {
       _supabase.from('state').delete().eq('key', getStateKey(tmplId)).then().catch(() => {});
     }
+    await syncMetadataToCloud();
   }
   if (AppState.eventId === eventId) {
     if (remaining.length > 0) {
