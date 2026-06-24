@@ -9,63 +9,71 @@ function renderLiveView() {
   const templates = getTemplates();
   const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final', 'group': 'Group Stage' };
   const sportIcons = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
-  let html = '';
+  let html = '<div class="live-match-stack">';
   let hasContent = false;
   for (const tmplId of ev.templateIds) {
     const tmpl = templates.find(t => t.id === tmplId);
     if (!tmpl) continue;
     const s = localLoad(tmpl.id);
     if (!s) continue;
-    const arr = [];
     const cfg = getSportConfig(tmpl.sport, tmpl.type);
+    const arr = [];
     for (const f of (s.fixtures || [])) {
-      if (f.status === 'LIVE') arr.push({ catId: tmpl.id, catName: tmpl.name, round: f.round, c: f, participants: s.participants });
+      if (f.status === 'LIVE' && f.p1 && f.p2) arr.push({ catId: tmpl.id, catName: tmpl.name, round: f.round, c: f, participants: s.participants, isFixture: true });
     }
     for (const m of (s.knockout || [])) {
-      if (m.status === 'LIVE') arr.push({ catId: tmpl.id, catName: tmpl.name, round: m.round, c: m, participants: s.participants });
+      if (m.status === 'LIVE' && m.p1 && m.p2) arr.push({ catId: tmpl.id, catName: tmpl.name, round: m.round, c: m, participants: s.participants, isFixture: false });
     }
-    if (arr.length === 0) continue;
-    hasContent = true;
-    html += '<div style="margin-bottom:12px;">'
-      + '<div class="event-group-header">' + (sportIcons[tmpl.sport] || '🏸') + ' ' + escapeHtml(tmpl.name) + '</div>';
     for (const item of arr) {
+      hasContent = true;
       const m = item.c;
-      var isFinal = item.round === 'Final';
-      var isGroup = item.round === 'group';
-      var n1 = pName(m.p1, item.participants), n2 = pName(m.p2, item.participants);
-      html += '<div class="result-card result-live">'
-        + '<div class="result-card-header">'
-        + '<span class="result-cat">' + escapeHtml(roundLabel[item.round] || item.round) + '</span>'
-        + '<span class="result-round" style="color:var(--danger);">🔴 LIVE</span>'
+      const n1 = pName(m.p1, item.participants);
+      const n2 = pName(m.p2, item.participants);
+      const rl = roundLabel[item.round] || item.round;
+      const isFinal = item.round === 'Final';
+      html += '<div class="live-match-row">'
+        + '<div class="meta-tags-block">'
+        + '<span class="division-label-string">' + (sportIcons[tmpl.sport] || '🏸') + ' ' + escapeHtml(tmpl.name) + '</span>'
+        + '<span class="stage-badge-tag type-live-badge">🔴 ' + escapeHtml(rl) + '</span>'
         + '</div>'
-        + '<div class="result-match">' + escapeHtml(n1) + ' <span class="vs">vs</span> ' + escapeHtml(n2) + '</div>';
+        + '<div class="competitors-versus-block">'
+        + '<span>' + escapeHtml(n1) + '</span>'
+        + '<span class="vs-separator-label">vs</span>'
+        + '<span>' + escapeHtml(n2) + '</span>'
+        + '</div>'
+        + '<div class="score-live-wrapper">';
       if (isAdmin()) {
-        html += '<div class="match-score-area" style="margin-top:4px;">';
         if (isFinal) {
           html += _liveFinalSetInputs(m, item.catId, cfg);
-        } else if (isGroup) {
-          var maxS = cfg.maxScoreInput;
-          html += '<input class="score-input" type="number" min="0" max="' + maxS + '" value="' + (m.s1 ?? '') + '" '
+        } else if (item.isFixture) {
+          html += '<input class="score-input ls-first" type="number" min="0" max="' + cfg.maxScoreInput + '" value="' + (m.s1 ?? '') + '" '
             + 'onchange="enterLiveFixtureScore(\'' + item.catId + '\',' + m.id + ',this.value,this.parentElement.querySelector(\'.ls2\').value)">'
-            + '<span class="vs">vs</span>'
-            + '<input class="score-input ls2" type="number" min="0" max="' + maxS + '" value="' + (m.s2 ?? '') + '" '
-            + 'onchange="enterLiveFixtureScore(\'' + item.catId + '\',' + m.id + ',this.parentElement.querySelector(\'.score-input\').value,this.value)">';
+            + '<span class="score-sep-live">-</span>'
+            + '<input class="score-input ls2" type="number" min="0" max="' + cfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" '
+            + 'onchange="enterLiveFixtureScore(\'' + item.catId + '\',' + m.id + ',this.parentElement.querySelector(\'.ls-first\').value,this.value)">';
         } else {
-          var maxS2 = cfg.maxScoreInput;
-          var _koId = m.id;
-          html += '<input class="score-input" type="number" min="0" max="' + maxS2 + '" value="' + (m.s1 ?? '') + '" '
-            + 'onchange="enterLiveKnockoutScore(\'' + item.catId + '\',\'' + _koId + '\',this.value,this.parentElement.querySelector(\'.ls2\').value)">'
-            + '<span class="vs">vs</span>'
-            + '<input class="score-input ls2" type="number" min="0" max="' + maxS2 + '" value="' + (m.s2 ?? '') + '" '
-            + 'onchange="enterLiveKnockoutScore(\'' + item.catId + '\',\'' + _koId + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)">';
+          html += '<input class="score-input ls-first" type="number" min="0" max="' + cfg.maxScoreInput + '" value="' + (m.s1 ?? '') + '" '
+            + 'onchange="enterLiveKnockoutScore(\'' + item.catId + '\',\'' + m.id + '\',this.value,this.parentElement.querySelector(\'.ls2\').value)">'
+            + '<span class="score-sep-live">-</span>'
+            + '<input class="score-input ls2" type="number" min="0" max="' + cfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" '
+            + 'onchange="enterLiveKnockoutScore(\'' + item.catId + '\',\'' + m.id + '\',this.parentElement.querySelector(\'.ls-first\').value,this.value)">';
         }
-        html += '</div>';
       } else {
-        html += '<div class="result-score">' + (m.s1 ?? '-') + ' - ' + (m.s2 ?? '-') + '</div>';
+        html += '<span class="score-display-live">';
+        if (isFinal && m.sets) {
+          var setsShown = m.sets.filter(function(st) { return st.s1 !== null && st.s2 !== null; });
+          if (setsShown.length > 0) {
+            html += setsShown.map(function(st) { return st.s1 + '-' + st.s2; }).join(' / ');
+          } else {
+            html += ' — ';
+          }
+        } else {
+          html += (m.s1 ?? '-') + ' - ' + (m.s2 ?? '-');
+        }
+        html += '</span>';
       }
-      html += '</div>';
+      html += '</div></div>';
     }
-    html += '</div>';
   }
   if (!hasContent) {
     html = '<div class="empty-state-card">'
@@ -75,6 +83,7 @@ function renderLiveView() {
       + '<button class="btn-upcoming-cta" onclick="switchMatchView(\'upcoming\')">📅 Check Upcoming Schedule</button>'
       + '</div>';
   }
+  html += '</div>';
   container.innerHTML = html;
   document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.add('active');
@@ -84,17 +93,17 @@ function renderLiveView() {
 }
 
 function _liveFinalSetInputs(m, catId, cfg) {
-  let h = '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">';
+  let h = '<div class="final-sets-inline">';
   for (let i = 0; i < cfg.finalSets; i++) {
     const s = m.sets ? m.sets[i] : null;
-    h += '<span style="display:flex;align-items:center;gap:2px;font-size:.8rem;">'
-      + 'S' + (i+1) + ':'
-      + '<input class="score-input" type="number" min="0" max="' + cfg.maxFinalSetInput + '" style="width:56px;" value="' + (s ? (s.s1 ?? '') : '') + '" '
+    h += '<div class="final-set-group">'
+      + 'S' + (i + 1) + ':'
+      + '<input class="score-input" type="number" min="0" max="' + cfg.maxFinalSetInput + '" style="width:52px;" value="' + (s ? (s.s1 ?? '') : '') + '" '
       + 'onchange="enterLiveFinalSet(\'' + catId + '\',\'' + m.id + '\',' + i + ',this.value,this.parentElement.querySelector(\'.fs2-' + i + '\').value)" onfocus="this.select()">'
       + '-'
-      + '<input class="score-input fs2-' + i + '" type="number" min="0" max="' + cfg.maxFinalSetInput + '" style="width:56px;" value="' + (s ? (s.s2 ?? '') : '') + '" '
+      + '<input class="score-input fs2-' + i + '" type="number" min="0" max="' + cfg.maxFinalSetInput + '" style="width:52px;" value="' + (s ? (s.s2 ?? '') : '') + '" '
       + 'onchange="enterLiveFinalSet(\'' + catId + '\',\'' + m.id + '\',' + i + ',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">'
-      + '</span>';
+      + '</div>';
   }
   h += '</div>';
   return h;
