@@ -18,6 +18,20 @@ function migrateMatchStatus(state) {
       }
     }
   }
+  var champ = syncChampion(state.participants, state.knockout);
+  if (champ.champion && !state.champion) {
+    state.champion = champ.champion;
+    state.runnerUp = champ.runnerUp;
+    didMigrate = true;
+  }
+  if (!champ.champion && state.champion && state.knockout) {
+    var finalMatch = state.knockout.find(function(m) { return m.id === 'final'; });
+    if (!finalMatch || !finalMatch.done) {
+      state.champion = null;
+      state.runnerUp = null;
+      didMigrate = true;
+    }
+  }
   return didMigrate;
 }
 

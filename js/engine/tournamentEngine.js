@@ -55,3 +55,26 @@ function revertMatch(match) {
   match.sets = null;
   match.updatedAt = Date.now();
 }
+
+function reopenMatch(match) {
+  match.status = 'LIVE';
+  match.done = false;
+  match.winner = null;
+  match.updatedAt = Date.now();
+}
+
+function syncChampion(participants, knockout) {
+  const finalMatch = knockout.find(m => m.id === 'final');
+  if (finalMatch && finalMatch.done && finalMatch.winner) {
+    participants = participants || [];
+    const winnerName = participants.length > 0
+      ? (participants.find(p => p.id === finalMatch.winner) || {}).name || finalMatch.winner
+      : finalMatch.winner;
+    const loserId = finalMatch.winner === finalMatch.p1 ? finalMatch.p2 : finalMatch.p1;
+    const loserName = participants.length > 0
+      ? (participants.find(p => p.id === loserId) || {}).name || loserId
+      : loserId;
+    return { champion: winnerName, runnerUp: loserName };
+  }
+  return { champion: null, runnerUp: null };
+}

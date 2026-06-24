@@ -59,9 +59,13 @@ function renderKnockout() {
             + '<span class="vs">vs</span>'
             + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
         }
+html += '</div>';
+      if (m.status === 'COMPLETED' && isAdmin()) {
+        html += '<div class="match-controls-inline">';
+        html += '<button class="btn btn-sm btn-outline" onclick="reopenKnockoutMatch(\'' + m.id + '\')" style="color:var(--text-muted);">↩ Reopen Match</button>';
         html += '</div>';
-        if (m.status !== 'COMPLETED') {
-          html += '<div class="match-controls-inline">';
+      } else if (isAdmin()) {
+        html += '<div class="match-controls-inline">';
           if (m.status === 'UPCOMING') {
             html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Start Match</button>';
           }
@@ -193,10 +197,28 @@ function completeKnockoutMatch(id) {
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   completeMatch(m, AppState.tournament.participants);
-  AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
-  if (m.id === 'final' && m.done && m.winner) {
-    AppState.tournament.champion = m.winner;
-    AppState.tournament.runnerUp = m.winner === m.p1 ? m.p2 : m.p1;
+  if (m.round !== 'Final') {
+    AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
+  } else {
+    AppState.tournament.phase = 'champion';
+    AppState.tournament.completedAt = Date.now();
+  }
+  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
+  AppState.tournament.champion = champ.champion;
+  AppState.tournament.runnerUp = champ.runnerUp;
+  saveState();
+  renderKnockout();
+}
+
+function reopenKnockoutMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Reopen this match? It will go back to live with scores preserved.')) return;
+  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
+  if (!m) return;
+  reopenMatch(m);
+  if (m.round === 'Final') {
+    AppState.tournament.champion = null;
+    AppState.tournament.runnerUp = null;
   }
   saveState();
   renderKnockout();
