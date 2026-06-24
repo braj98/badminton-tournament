@@ -380,19 +380,36 @@ Home → Event → Sport → Category (breadcrumb always visible)
 - **Event bar** shows all events, always visible below breadcrumb in tournament views
 - **Category bar** hidden on Home/Event/Sport pages, visible in tournament views
 - **Tournament tabs** shown during tournament (Groups, Fixtures, Knockout, Champion)
+- **Match View sub-tabs** available from the results screen: 🔥 Live, 📅 Upcoming, 📖 Results, 🏆 Champions
 - **Action bar** hidden on Home/Event/Sport/Results, shown in tournament views
 - Navigation and UI visibility centralized in `updateNavigationVisibility()`
+
+### Match Status Model (24 Jun 2026)
+```
+UPCOMING → (Start Match) → LIVE → (Match Completed) → COMPLETED
+```
+- Each match has an explicit `status` field: `'UPCOMING'` (default), `'LIVE'`, or `'COMPLETED'`
+- Status transitions only via admin action, never inferred from scores
+- `done` field preserved for engine backward compatibility (standings, knockout propagation use `done`)
+- `enterFixtureScore` / `enterKnockoutScore` set status to `LIVE` but never auto-complete
+- `completeMatch()` sets status to `COMPLETED`, calculates winner from scores/sets
+- `startMatch()` sets status to `LIVE`
+
+### Match Views (replaces single Results page)
+1. **🔥 Live** — shows all LIVE matches (fixtures + knockout), admin can enter/update scores, finalize with "☑ Match Completed"
+2. **📅 Upcoming** — shows all UPCOMING matches, admin can start with "▶ Start Match"
+3. **📖 Results** — shows all COMPLETED knockout matches as read-only archive
+4. **🏆 Champions** — shows champions and runner-ups from completed tournaments
+
+Sub-tab bar in the results screen allows switching between views. Filtered to current event.
 
 ### Category Status Badges (on Sport page)
 - ⚪ Not Started — phase is `setup`
 - 🟢 In Progress — phase is groups/fixtures/knockout
 - 🏆 Complete — phase is `champion`
 
-### Results Dashboard
-- Card-based layout (not HTML tables)
-- Shows Champions with optional photos
-- Shows all knockout matches sorted by recency
-- Viewer-safe (admin-only nav hidden)
+### Results Dashboard (archived)
+Replaced by 4-dedicated match views. Legacy `renderResults()` replaced with `renderMatchView()` dispatcher.
 
 ### Key Security Patterns
 - `isAdmin()` function is single source of truth for admin status

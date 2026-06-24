@@ -47,7 +47,25 @@ js/
 - `ui/knockout.js` — `renderKnockout()`, `enterKnockoutScore()`, `enterFinalSet()`
 - `ui/champion.js` — `renderChampion()`, `viewChampion()`, `showResults()`, photos
 
-Script load order: Engine (5) → Models (6) → appState.js → tournamentEngine → Storage (4: local, events, supabase, auth) → UI (8) → Test (1) = 24 scripts total.
+Script load order: Engine (5) → Models (6) → appState.js → tournamentEngine → Storage (4: local, events, supabase, auth) → UI (10) → Test (1) = 26 scripts total.
+
+## Match Status Redesign (24 Jun 2026)
+
+- **Explicit match status**: `UPCOMING` (default) → `LIVE` (admin "Start Match") → `COMPLETED` (admin "☑ Match Completed")
+- `createMatch()` in `match.js` adds `status: 'UPCOMING'`
+- `startMatch(match)` and `completeMatch(match)` in `tournamentEngine.js`
+- `completeMatch` calculates winner from scores/sets at completion time
+- `done` field preserved for engine backward compat (standings, knockout use `done`)
+- Score entry functions set status to `LIVE` but never auto-complete
+- **4 match views** replace the single results page:
+  - `live.js` — `renderLiveView()`, `enterLiveFixtureScore()`, `enterLiveKnockoutScore()`
+  - `upcoming.js` — `renderUpcomingView()`, `startUpcomingMatch()`
+  - `app.js` — `renderResultsArchive()`, `renderChampionsView()`, `showResultsPage()` → `renderMatchView()` dispatcher
+- Sub-tab bar: 🔥 Live | 📅 Upcoming | 📖 Results | 🏆 Champions (in index.html `#matchViewTabBar`)
+- `_currentMatchView` global tracks active sub-tab
+- Admin controls: ▶ Start Match (UPCOMING→LIVE), ☑ Match Completed (LIVE→COMPLETED)
+- **Fixtures**: `startFixtureMatch(id)`, `completeFixtureMatch(id)`; **Knockout**: `startKnockoutMatch(id)`, `completeKnockoutMatch(id)`
+- CSS additions: `.match-badge.live` (red), `.result-live` (red border)
 
 ## Source of truth
 
