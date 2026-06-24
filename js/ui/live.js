@@ -68,7 +68,12 @@ function renderLiveView() {
     html += '</div>';
   }
   if (!hasContent) {
-    html += '<p class="text-muted text-center" style="padding:32px 0;">No matches currently live.</p>';
+    html = '<div class="empty-state-card">'
+      + '<div class="empty-state-icon">📡</div>'
+      + '<div class="empty-state-title">No Matches Currently Live</div>'
+      + '<div class="empty-state-sub">There are no active matches running right now.</div>'
+      + '<button class="btn-upcoming-cta" onclick="switchMatchView(\'upcoming\')">📅 Check Upcoming Schedule</button>'
+      + '</div>';
   }
   container.innerHTML = html;
   document.getElementById('subNavFeed').classList.remove('active');
