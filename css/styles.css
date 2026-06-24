@@ -1317,6 +1317,149 @@ body.dark-mode .rank-silver .winner-text-details h4 { color: #94a3b8; }
   gap: 0.35rem;
 }
 
+/* ===== UPCOMING SCHEDULE CARDS (b.html) ===== */
+.upcoming-queue-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.match-schedule-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.1rem 1.25rem;
+  display: grid;
+  grid-template-columns: 160px 1fr 200px;
+  align-items: center;
+  gap: 1.25rem;
+  border-left: 4px solid #cbd5e1;
+  transition: border-left-color 0.15s;
+}
+
+@media (max-width: 600px) {
+  .match-schedule-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+  }
+}
+
+.match-schedule-row:hover {
+  border-left-color: var(--primary);
+}
+
+body.dark-mode .match-schedule-row:hover {
+  border-left-color: #93c5fd;
+}
+
+.match-schedule-row.round-final {
+  border-left-color: #ca8a04;
+  border-color: #fef08a;
+  background: linear-gradient(90deg, var(--bg-card) 0%, #fffdf4 100%);
+}
+
+body.dark-mode .match-schedule-row.round-final {
+  border-left-color: #fbbf24;
+  border-color: #78350f;
+  background: linear-gradient(90deg, var(--bg-card) 0%, #1c1917 100%);
+}
+
+.match-schedule-row.round-sf {
+  border-left-color: var(--primary);
+}
+
+.match-schedule-row.round-qf {
+  border-left-color: #94a3b8;
+}
+
+body.dark-mode .match-schedule-row.round-qf {
+  border-left-color: #64748b;
+}
+
+.meta-tags-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.division-label-string {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.stage-badge-tag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+body.dark-mode .stage-badge-tag {
+  background: #1e293b;
+}
+
+.competitors-versus-block {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  flex-wrap: wrap;
+}
+
+.vs-separator-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background: #f1f5f9;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+body.dark-mode .vs-separator-label {
+  background: #1e293b;
+}
+
+.actions-schedule-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.btn-action-start {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-action-start:hover {
+  background: #1d4ed8;
+}
+
 /* ===== TIMELINE CARDS (Feed) ===== */
 .timeline-stack {
   display: flex;

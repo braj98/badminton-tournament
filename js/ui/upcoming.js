@@ -9,49 +9,61 @@ function renderUpcomingView() {
   const templates = getTemplates();
   const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final', 'group': 'Group Stage' };
   const sportIcons = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
-  let html = '';
+  let html = '<div class="upcoming-queue-stack">';
   let hasContent = false;
   for (const tmplId of ev.templateIds) {
     const tmpl = templates.find(t => t.id === tmplId);
     if (!tmpl) continue;
     const s = localLoad(tmpl.id);
     if (!s) continue;
-    const arr = [];
     for (const f of (s.fixtures || [])) {
-      if (f.status === 'UPCOMING' && f.p1 && f.p2) arr.push({ catId: tmpl.id, catName: tmpl.name, round: f.round, c: f, participants: s.participants });
+      if (f.status !== 'UPCOMING' || !f.p1 || !f.p2) continue;
+      hasContent = true;
+      html += renderUpcomingCard(tmpl, s, 'Group Stage', f, f.id, true, sportIcons);
     }
     for (const m of (s.knockout || [])) {
-      if (m.status === 'UPCOMING' && m.p1 && m.p2) arr.push({ catId: tmpl.id, catName: tmpl.name, round: m.round, c: m, participants: s.participants });
+      if (m.status !== 'UPCOMING' || !m.p1 || !m.p2) continue;
+      hasContent = true;
+      html += renderUpcomingCard(tmpl, s, roundLabel[m.round] || m.round, m, m.id, false, sportIcons);
     }
-    if (arr.length === 0) continue;
-    hasContent = true;
-    html += '<div style="margin-bottom:12px;">'
-      + '<div class="event-group-header">' + (sportIcons[tmpl.sport] || '🏸') + ' ' + escapeHtml(tmpl.name) + '</div>';
-    for (const item of arr) {
-      const m = item.c;
-      var n1 = pName(m.p1, item.participants), n2 = pName(m.p2, item.participants);
-      html += '<div class="result-card">'
-        + '<div class="result-card-header">'
-        + '<span class="result-cat">' + escapeHtml(roundLabel[item.round] || item.round) + '</span>'
-        + '<span class="result-round" style="color:var(--text-muted);">⏳ Upcoming</span>'
-        + '</div>'
-        + '<div class="result-match">' + escapeHtml(n1) + ' <span class="vs">vs</span> ' + escapeHtml(n2) + '</div>';
-      if (isAdmin()) {
-        html += '<div style="margin-top:6px;"><button class="btn btn-sm btn-outline" onclick="startUpcomingMatch(\'' + item.catId + '\',\'' + m.id + '\')" style="font-size:.75rem;padding:2px 12px;">▶ Start Match</button></div>';
-      }
-      html += '</div>';
-    }
-    html += '</div>';
   }
   if (!hasContent) {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No upcoming matches.</p>';
   }
+  html += '</div>';
   container.innerHTML = html;
   document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.remove('active');
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.add('active');
   document.getElementById('subNavChampions').classList.remove('active');
+}
+
+function renderUpcomingCard(tmpl, s, roundLabel, m, matchId, isFixture, sportIcons) {
+  const n1 = pName(m.p1, s.participants);
+  const n2 = pName(m.p2, s.participants);
+  let roundCls = '';
+  const roundKey = m.round === 'Final' ? 'Final' : m.round === 'SF' ? 'Semi Final' : m.round === 'QF' ? 'Quarter Final' : roundLabel;
+  if (roundKey === 'Final') roundCls = ' round-final';
+  else if (roundKey === 'Semi Final') roundCls = ' round-sf';
+  else if (roundKey === 'Quarter Final') roundCls = ' round-qf';
+
+  let html = '<div class="match-schedule-row' + roundCls + '">'
+    + '<div class="meta-tags-block">'
+    + '<span class="division-label-string">' + (sportIcons[tmpl.sport] || '🏸') + ' ' + escapeHtml(tmpl.name) + '</span>'
+    + '<span class="stage-badge-tag">' + escapeHtml(roundKey) + '</span>'
+    + '</div>'
+    + '<div class="competitors-versus-block">'
+    + '<span>' + escapeHtml(n1) + '</span>'
+    + '<span class="vs-separator-label">vs</span>'
+    + '<span>' + escapeHtml(n2) + '</span>'
+    + '</div>'
+    + '<div class="actions-schedule-wrapper">';
+  if (isAdmin()) {
+    html += '<button class="btn-action-start" onclick="startUpcomingMatch(\'' + tmpl.id + '\',\'' + matchId + '\')">▶️ Start</button>';
+  }
+  html += '</div></div>';
+  return html;
 }
 
 function startUpcomingMatch(catId, id) {
