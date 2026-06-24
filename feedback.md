@@ -16,11 +16,11 @@ Goal: Event-level Live / Upcoming / Champions that aggregate ALL categories in t
 - [x] Render grouped by category with category name
 - [x] ▶ Start Match button (admin only) — needs catId to find match
 
-### 3. Tab bar: 3 tabs (remove 📖 Results)
-- [x] Remove 📖 Results from index.html tab bar
-- [x] Remove renderResultsArchive() from app.js
-- [x] Remove from switchMatchView dispatcher
-- [x] Tab bar: 🔥 Live | 📅 Upcoming | 🏆 Champions
+### 3. Tab bar: 4 tabs (Live → Recent Results → Upcoming → Champions)
+- [x] Add 📖 Recent Results tab to index.html (between Live and Upcoming)
+- [x] Add renderRecentResults() — last 10 completed matches, sorted by time, across all categories
+- [x] Shows "Showing last 10 of N" when more exist
+- [x] Add to switchMatchView dispatcher
 
 ### 4. Update showResultsPage() for event-level
 - [x] No longer category-specific
