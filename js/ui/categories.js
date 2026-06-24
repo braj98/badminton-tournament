@@ -233,6 +233,7 @@ async function switchCategory(catId) {
     }
   }
   AppState.view = AppState.tournament.phase;
+  console.log('DEBUG switchCategory done: cat=' + catId + ' phase=' + AppState.tournament.phase + ' fixtures=' + (AppState.tournament.fixtures||[]).length + ' knockout=' + (AppState.tournament.knockout||[]).length);
   navigateTo(AppState.tournament.phase);
 }
 

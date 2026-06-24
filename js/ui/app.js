@@ -497,6 +497,7 @@ function showResultsPage() {
   updateNavigationVisibility();
   renderCategoryBar();
   updateHeader();
+  console.log('DEBUG showResultsPage: category=' + AppState.category + ' phase=' + (AppState.tournament ? AppState.tournament.phase : 'no-tournament'));
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
