@@ -1188,31 +1188,6 @@ body.dark-mode .image-uploader-dropzone:hover {
 .group-card li { padding: 4px 0; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
 .group-card li:last-child { border-bottom: none; }
 
-/* Drag-and-drop feedback */
-.group-card.drag-over {
-  border: 2px dashed var(--primary) !important;
-  background: var(--primary-light);
-}
-
-body.dark-mode .group-card.drag-over {
-  border-color: #60a5fa !important;
-  background: #1e293b;
-}
-
-.group-card li[draggable="true"] {
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.group-card li[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-.group-card li.dragging {
-  opacity: 0.4;
-}
-
 /* ===== HOME PAGE ===== */
 .home-event { margin-bottom: 24px; }
 .home-event h2 {
