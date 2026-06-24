@@ -5,6 +5,7 @@ Standalone browser-based tournament manager for local apartment tournaments. No 
 ## Features
 
 - **Multiple sports**: Badminton, Table Tennis, Chess (singles + doubles where applicable)
+- **Events + Templates**: Events hold competition templates. Same template reusable across events.
 - **Dynamic categories**: Add/delete tournament categories (Junior, Sr Boys, Sr Dbls, etc.)
 - **Tournament flow**: Setup → Groups → Fixtures + Standings → Knockout → Champion
 - **Scoring**: Group/SF = single set first to 13; Final = Best of 3 first to 11 per set (configurable per sport)
@@ -52,12 +53,21 @@ Users without admin login see a read-only UI — score inputs hidden, navigation
 ```
 js/
   engine/       — Pure business logic. No DOM, no storage.
-  models/       — Domain types + sport configuration.
-  storage/      — Persistence (localStorage + Supabase).
+  models/       — Domain types (event, template, tournament, participant, match) + sport config.
+  storage/      — Persistence (localStorage + Supabase). Templates/events synced to cloud.
   ui/           — DOM rendering + event handling.
 ```
 
 UI code calls only the public API in `engine/tournamentEngine.js`.
+
+### Data Model
+
+```
+Events ─── templateIds ──→ Templates (competition types)
+                              │
+                              ├─ each has: {id, name, sport, type}
+                              └─ linked to tournament state via template.id = category key
+```
 
 ## Testing
 
@@ -65,7 +75,7 @@ UI code calls only the public API in `engine/tournamentEngine.js`.
 node js/test/runner.js
 ```
 
-275 tests covering full tournament flow.
+278 tests covering full tournament flow + event/template model.
 
 ## Configuration
 

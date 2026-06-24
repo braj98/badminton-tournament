@@ -20,16 +20,33 @@ Each sport has configurable settings via `SPORT_CONFIG`:
 - Number of sets in final
 - Group thresholds and counts
 
-## Tournament Categories
+## Events + Templates
 
-Categories are dynamic — users can add/delete categories via the Manage panel.
+### Structure
+```
+Events ─── templateIds ──→ Templates (competition types)
+```
 
-Default factory categories:
-- Junior (Singles)
-- Junior Doubles
-- Senior Boys (Singles)
-- Senior Girls (Singles)
-- Senior Doubles
+- **Events** are top-level containers (e.g., "Summer Tournament 2026"). Users create/rename/delete events.
+- **Templates** define a competition type: `{id, name, sport, type}`. Templates belong to events via `templateIds` array.
+- Same template can be linked to multiple events.
+- `getCategories()` is a computed view — derived from events + templates, not stored independently.
+
+### Navigation Flow
+```
+Home → Event → Sport → Category (competition) → Tournament (setup/groups/fixtures/knockout/champion)
+```
+
+### Default Factory Data (created on first load when no events/templates exist)
+- Events: 1 default event ("BREN AVALON SPORTS MEET 2026")
+- Templates (7):
+  - Junior (Singles, Badminton)
+  - Junior Doubles (Doubles, Badminton)
+  - Senior Boys (Singles, Badminton)
+  - Senior Girls (Singles, Badminton)
+  - Senior Doubles (Doubles, Badminton)
+  - TT Singles (Singles, Table Tennis)
+  - TT Doubles (Doubles, Table Tennis)
 
 Players may participate in multiple categories (e.g., same player in Senior Boys + Senior Doubles).
 
@@ -50,21 +67,17 @@ The application generates groups, fixtures, standings, qualification, knockout r
 - Save and resume tournament progress (localStorage + cloud)
 - Champion and runner-up photos (optional)
 
-## Tournament Categories
+## Competition (Category) Types
 
-All categories share the same tournament engine (groups, round-robin, standings, knockout). The only difference is the unit of entry:
+All competitions share the same tournament engine (groups, round-robin, standings, knockout). The only difference is the unit of entry:
 
-| Category | Type | Unit |
-|---|---|---|
-| Junior | Singles | Individual player |
-| Junior Doubles | Doubles | Team of 2 players |
-| Senior Boys | Singles | Individual player |
-| Senior Girls | Singles | Individual player |
-| Senior Doubles | Doubles | Team of 2 players |
+| Type | Unit |
+|---|---|
+| Singles | Individual player |
+| Doubles | Team of 2 players |
 
-- Junior/Senior is a label only — no age validation.
-- Each category stores its own state independently in localStorage.
-- Player can appear in multiple categories (e.g., Senior Boys + Senior Doubles) — names are re-entered per category.
+- Each competition stores its own state independently in localStorage under key `btm_state_{eventId}_{templateId}`.
+- Player can appear in multiple competitions — names are re-entered per competition.
 
 ## Tournament Formats
 
@@ -253,7 +266,7 @@ Persist:
 ### Cloud Storage (Optional)
 - Supabase integration for cross-device sync
 - Per-category state stored in `state` table with key `btm_state_{catId}`
-- Categories stored in `state` table with key `btm_categories`
+- Templates + Events stored in `state` table with keys `btm_templates` and `btm_events`
 - Real-time updates via Supabase Realtime (guarded by `_lastSave` timestamp)
 - Session auto-refresh via `onAuthStateChange()` listener keeps `AppState.user` in sync
 - 500ms debounce on cloud upsert to prevent save storms
@@ -293,15 +306,17 @@ js/
 ### AppState Structure
 ```js
 AppState = {
-  user,           // { role: 'admin' } or null (single source of truth)
-  event,          // Current event name
-  sport,          // Current sport (badminton/tableTennis/chess)
-  category,       // Current category ID
-  view,           // Current view (home/event/sport/setup/groups/fixtures/knockout/champion)
-  tournament,     // Current tournament state
+  user,              // { role: 'admin' } or null (single source of truth)
+  event,             // Current event name (display)
+  eventId,           // Current event ID (stable identifier)
+  sport,             // Current sport (badminton/tableTennis/chess)
+  category,          // Current category ID
+  loadingCategory,   // Guard against stale async category switches
+  view,              // Current view (home/event/sport/setup/groups/fixtures/knockout/champion)
+  tournament,        // Current tournament state
   ui: {
-    showingResults,     // Results overlay visibility
-    managePanelOpen     // Manage panel visibility
+    showingResults,  // Results overlay visibility
+    managePanelOpen  // Manage panel visibility
   }
 }
 ```
@@ -360,10 +375,12 @@ Home → Event → Sport → Category (breadcrumb always visible)
 ```
 
 - **Breadcrumb** always rendered (never hidden), shows full path: Home › Event › Sport › Category
+- **Sport bar** shows sports available in the current event, hidden on home/results
+- **Event bar** shows all events, always visible below breadcrumb in tournament views
 - **Category bar** hidden on Home/Event/Sport pages, visible in tournament views
 - **Tournament tabs** shown during tournament (Groups, Fixtures, Knockout, Champion)
 - **Action bar** hidden on Home/Event/Sport/Results, shown in tournament views
-- Navigation and UI visibility centralized in `updateGlobalNavigation()`
+- Navigation and UI visibility centralized in `updateNavigationVisibility()`
 
 ### Category Status Badges (on Sport page)
 - ⚪ Not Started — phase is `setup`
@@ -384,7 +401,7 @@ Home → Event → Sport → Category (breadcrumb always visible)
 
 ### Testing
 - Node.js test runner at `js/test/runner.js`
-- 275 tests covering full tournament flow: groups, fixtures, qualification, knockout, champion
+- 278 tests covering full tournament flow + event/template model: groups, fixtures, qualification, knockout, champion, event CRUD, template CRUD
 - Run via `node js/test/runner.js`
 
 ### App Configuration
