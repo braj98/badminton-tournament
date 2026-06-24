@@ -603,11 +603,10 @@ function renderChampionsView() {
   const templates = getTemplates();
   const events = getEvents();
   const container = document.getElementById('resultsList');
-  let html = '';
+  let html = '<div class="champions-grid-stack">';
   let hasContent = false;
   const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
   for (const ev of filteredEvents) {
-    const evChampions = [];
     for (const tmplId of ev.templateIds) {
       const tmpl = templates.find(t => t.id === tmplId);
       if (!tmpl) continue;
@@ -620,25 +619,33 @@ function renderChampionsView() {
       const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
       const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
       const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
-      evChampions.push({ catLabel: tmpl.name, champion: chName, runnerUp: ruName, championPhoto: s.championPhoto, runnerUpPhoto: s.runnerUpPhoto });
-    }
-    if (evChampions.length === 0) continue;
-    html += '<div class="results-cards">';
-    for (const c of evChampions) {
-      html += '<div class="champion-card">'
-        + '<div class="trophy">🏆</div>'
-        + '<div class="crown">' + escapeHtml(c.catLabel) + '</div>'
-        + '<div class="name">' + escapeHtml(c.champion) + '</div>'
-        + (c.championPhoto ? '<img src="' + c.championPhoto + '" class="champion-photo">' : '')
-        + '<div class="runner-up">Runner-up: <strong>' + escapeHtml(c.runnerUp) + '</strong></div>'
-        + (c.runnerUpPhoto ? '<img src="' + c.runnerUpPhoto + '" class="runnerup-photo">' : '')
+      html += '<div class="division-block-container">'
+        + '<span class="division-header-badge">' + escapeHtml(tmpl.name) + '</span>'
+        + '<div class="podium-split-row">'
+        + '<div class="placement-sub-card rank-gold">'
+        + '<div class="medal-emblem-badge">🥇</div>'
+        + '<div class="winner-text-details">'
+        + '<h4>Tournament Champion</h4>'
+        + '<p>' + escapeHtml(chName) + '</p>'
+        + '</div>'
+        + (s.championPhoto ? '<img src="' + s.championPhoto + '" class="champion-podium-photo" alt="">' : '')
+        + '</div>'
+        + '<div class="placement-sub-card rank-silver">'
+        + '<div class="medal-emblem-badge">🥈</div>'
+        + '<div class="winner-text-details">'
+        + '<h4>Runner-Up</h4>'
+        + '<p>' + escapeHtml(ruName) + '</p>'
+        + '</div>'
+        + (s.runnerUpPhoto ? '<img src="' + s.runnerUpPhoto + '" class="champion-podium-photo" alt="">' : '')
+        + '</div>'
+        + '</div>'
         + '</div>';
     }
-    html += '</div>';
   }
   if (!hasContent) {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No champions yet.</p>';
   }
+  html += '</div>';
   container.innerHTML = html;
   document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.remove('active');

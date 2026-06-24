@@ -1236,6 +1236,115 @@ body.dark-mode .feed-badge.champion { background: #422006; color: #fbbf24; }
   color: var(--primary);
 }
 
+/* ===== CHAMPIONS PODIUM ===== */
+.champions-grid-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.division-block-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.division-header-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: #eff6ff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+body.dark-mode .division-header-badge {
+  background: #1e3a5f;
+}
+
+.podium-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 500px) {
+  .podium-split-row { grid-template-columns: 1fr; }
+}
+
+.placement-sub-card {
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.placement-sub-card.rank-gold {
+  background: #fef9c3;
+  border: 1px solid #fef08a;
+}
+
+body.dark-mode .placement-sub-card.rank-gold {
+  background: #422006;
+  border-color: #78350f;
+}
+
+.placement-sub-card.rank-silver {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+body.dark-mode .placement-sub-card.rank-silver {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.medal-emblem-badge {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.winner-text-details h4 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.1rem;
+}
+
+.rank-gold .winner-text-details h4 { color: #854d0e; }
+.rank-silver .winner-text-details h4 { color: #334155; }
+
+body.dark-mode .rank-gold .winner-text-details h4 { color: #fbbf24; }
+body.dark-mode .rank-silver .winner-text-details h4 { color: #94a3b8; }
+
+.winner-text-details p {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.champion-podium-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.placement-sub-card .photo-stack {
+  display: flex;
+  gap: 0.35rem;
+}
+
 /* ===== EMPTY STATE ===== */
 .empty-state-card {
   background: var(--bg-card);
