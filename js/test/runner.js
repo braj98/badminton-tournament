@@ -341,6 +341,50 @@ function testEventModel(ctx) {
   const afterCleanup = ctx.getEvents();
   a(afterCleanup.length === 1, 'Cleanup: only Event B remains');
 
+  // === deleteEvent edge cases ===
+  ctx.localStorage.clear();
+  ctx.createEvent('Event A');
+  ctx.createEvent('Event B');
+  ctx.addTemplateToEvent('event_a', 'tmpl_1');
+
+  a(ctx.getEvents().length === 2, 'deleteEvent setup: 2 events exist');
+
+  // Deleting last event should fail
+  ctx.saveEvents([{ id: 'only_event', name: 'Only Event', templateIds: [], createdAt: 1 }]);
+  ctx.AppState.event = 'Only Event';
+  ctx.AppState.eventId = 'only_event';
+  var r1 = ctx.deleteEvent('only_event');
+  let onlyEvents = ctx.getEvents();
+  a(onlyEvents.length === 1, 'Cannot delete last event');
+  a(onlyEvents[0].name === 'Only Event', 'Last event preserved');
+
+  // Deleting event with active tournament should fail
+  ctx.createEvent('Event A');
+  ctx.createEvent('Event B');
+  ctx.addTemplateToEvent('event_a', 'tmpl_1');
+  ctx.localSave('tmpl_1', { phase: 'groups', players: ['P1'], participants: [{ id: 'p1', name: 'P1' }] });
+  ctx.AppState.eventId = 'event_a';
+  var r2 = ctx.deleteEvent('event_a');
+  a(!!ctx.getEvents().find(function(e) { return e.id === 'event_a'; }), 'Cannot delete event with active tournament');
+
+  // Delete event with templates (no active tournament) should succeed
+  ctx.localSave('tmpl_1', { phase: 'setup', players: [], participants: [] });
+  ctx.deleteEvent('event_a');
+  a(!ctx.getEvents().find(function(e) { return e.id === 'event_a'; }), 'Delete event with setup-phase templates succeeds');
+  a(ctx.localLoad('tmpl_1') === null, 'Template state cleared after event deletion');
+
+  // Delete active event should switch to remaining
+  ctx.localStorage.clear();
+  ctx.createEvent('Event A');
+  ctx.createEvent('Event B');
+  ctx.AppState.event = 'Event A';
+  ctx.AppState.eventId = 'event_a';
+  ctx.deleteEvent('event_a');
+  a(ctx.AppState.event === 'Event B', 'Active event switched to remaining');
+  a(ctx.AppState.eventId === 'event_b', 'Active eventId switched to remaining');
+
+  ctx.AppState.event = null;
+  ctx.AppState.eventId = null;
   ctx.localStorage.clear();
   console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);
   return f === 0;

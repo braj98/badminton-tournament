@@ -1,4 +1,4 @@
-const AppState = {
+var AppState = {
   user: { role: 'viewer' },
   event: null,
   eventId: null,
