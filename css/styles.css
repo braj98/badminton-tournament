@@ -1344,16 +1344,24 @@ body.dark-mode .rank-silver .winner-text-details h4 { color: #94a3b8; }
   }
 }
 
-.timeline-row-card.is-live {
-  border-left: 4px solid var(--danger);
+.timeline-row-card.round-final {
+  border-left: 4px solid #ca8a04;
 }
 
-.timeline-row-card.is-next {
-  border-left: 4px solid var(--warning);
+body.dark-mode .timeline-row-card.round-final {
+  border-left-color: #fbbf24;
 }
 
-body.dark-mode .timeline-row-card.is-next {
-  border-left-color: #d97706;
+.timeline-row-card.round-sf {
+  border-left: 4px solid var(--primary);
+}
+
+.timeline-row-card.round-qf {
+  border-left: 4px solid #94a3b8;
+}
+
+body.dark-mode .timeline-row-card.round-qf {
+  border-left-color: #64748b;
 }
 
 .timeline-row-card.is-champion {

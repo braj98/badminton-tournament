@@ -152,16 +152,17 @@ function renderTournamentFeed() {
 }
 
 function renderFeedItem(item) {
-  let badge, typeClass, isChamp = false, isNext = false, isLive = false;
-  if (item.type === 'live') { badge = '🔴 LIVE'; typeClass = 'type-live'; isLive = true; }
+  let badge, typeClass;
+  if (item.type === 'live') { badge = '🔴 LIVE'; typeClass = 'type-live'; }
   else if (item.type === 'result') { badge = '📖 Result'; typeClass = 'type-result'; }
-  else if (item.type === 'next') { badge = '📅 Next Match'; typeClass = 'type-next'; isNext = true; }
-  else { badge = '🏆 Champion'; typeClass = 'type-champion'; isChamp = true; }
+  else if (item.type === 'next') { badge = '📅 Next Match'; typeClass = 'type-next'; }
+  else { badge = '🏆 Champion'; typeClass = 'type-champion'; }
 
   let cardCls = 'timeline-row-card';
-  if (isLive) cardCls += ' is-live';
-  else if (isNext) cardCls += ' is-next';
-  else if (isChamp) cardCls += ' is-champion';
+  if (item.round === 'Final') cardCls += ' round-final';
+  else if (item.round === 'Semi Final') cardCls += ' round-sf';
+  else if (item.round === 'Quarter Final') cardCls += ' round-qf';
+  if (item.type === 'champion') cardCls += ' is-champion';
 
   let html = '<div class="' + cardCls + '">'
     + '<div class="badge-column">'
