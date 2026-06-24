@@ -1,5 +1,7 @@
 // ===================== GROUPS =====================
 let _editMode = false;
+let _dragPlayerIdx = -1;
+let _dragSourceGroup = '';
 
 function renderGroups() {
   clearDisabled();
@@ -8,10 +10,16 @@ function renderGroups() {
   const tm = AppState.tournament.teamMembers || [];
   const groupKeys = Object.keys(AppState.tournament.groups);
   if (!isAdmin()) _editMode = false;
+
+  let html = '';
+  if (isAdmin()) {
+    html += '<div style="margin-bottom:12px;font-size:.8rem;color:var(--text-muted);text-align:center;">↕ Drag players between groups, or use ↔ menu</div>';
+  }
+
   for (const key of groupKeys) {
-    const card = document.createElement('div');
-    card.className = 'group-card';
-    let items = '';
+    html += '<div class="group-card" data-group="' + key + '">'
+      + '<h3>Group ' + key + '</h3><ul>';
+
     const otherGroups = groupKeys.filter(g => g !== key);
     for (const p of AppState.tournament.groups[key]) {
       const idx = AppState.tournament.participants ? AppState.tournament.participants.findIndex(pt => pt.id === p) : AppState.tournament.players.indexOf(p);
@@ -21,7 +29,7 @@ function renderGroups() {
       for (const g of otherGroups) {
         moveBtns += '<button class="btn admin-only btn-secondary" style="padding:2px 10px;font-size:.75rem;" onclick="movePlayerToGroup(' + idx + ',\'' + g + '\')">' + g + '</button>';
       }
-      items += '<li>'
+      html += '<li draggable="' + (isAdmin() ? 'true' : 'false') + '" data-idx="' + idx + '" data-group="' + key + '">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;">'
         + '<div>' + escapeHtml(pName(p)) + (_editMode ? '<button class="btn admin-only btn-secondary" style="padding:1px 5px;font-size:.65rem;margin-left:4px;" onclick="promptRename(' + idx + ')">✏️</button>' : '')
         + (m ? '<br><span class="text-muted" style="font-size:.75rem;">' + escapeHtml(m.a) + ' & ' + escapeHtml(m.b) + '</span>' : '') + '</div>'
@@ -31,9 +39,69 @@ function renderGroups() {
         + moveBtns
         + '</div></span></div></li>';
     }
-    card.innerHTML = '<h3>Group ' + key + '</h3><ul>' + items + '</ul>';
-    container.appendChild(card);
+    html += '</ul></div>';
   }
+
+  container.innerHTML = html;
+
+  if (isAdmin()) {
+    setupDragAndDrop(groupKeys);
+  }
+}
+
+function setupDragAndDrop(groupKeys) {
+  for (const key of groupKeys) {
+    var card = document.querySelector('.group-card[data-group="' + key + '"]');
+    if (!card) continue;
+    card.addEventListener('dragover', onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop', onDrop);
+  }
+  var items = document.querySelectorAll('.group-card li[draggable="true"]');
+  for (var i = 0; i < items.length; i++) {
+    items[i].addEventListener('dragstart', onDragStart);
+    items[i].addEventListener('dragend', onDragEnd);
+  }
+}
+
+function onDragStart(event) {
+  _dragPlayerIdx = parseInt(event.target.closest('li').getAttribute('data-idx'));
+  _dragSourceGroup = event.target.closest('li').getAttribute('data-group');
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', String(_dragPlayerIdx));
+  var li = event.target.closest('li');
+  li.classList.add('dragging');
+}
+
+function onDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+  var card = event.currentTarget.closest('.group-card');
+  if (card) card.classList.add('drag-over');
+}
+
+function onDragLeave(event) {
+  var card = event.currentTarget.closest('.group-card');
+  if (card) card.classList.remove('drag-over');
+}
+
+function onDrop(event) {
+  event.preventDefault();
+  var card = event.currentTarget.closest('.group-card');
+  if (card) card.classList.remove('drag-over');
+  if (_dragPlayerIdx < 0) return;
+  var targetGroup = card.getAttribute('data-group');
+  if (_dragSourceGroup === targetGroup) return;
+  movePlayerToGroup(_dragPlayerIdx, targetGroup);
+}
+
+function onDragEnd(event) {
+  _dragPlayerIdx = -1;
+  _dragSourceGroup = '';
+  var cards = document.querySelectorAll('.group-card.drag-over');
+  for (var i = 0; i < cards.length; i++) cards[i].classList.remove('drag-over');
+  var dragging = document.querySelectorAll('.group-card li.dragging');
+  for (var i = 0; i < dragging.length; i++) dragging[i].classList.remove('dragging');
 }
 
 function movePlayerToGroup(playerIdx, targetGroup) {
