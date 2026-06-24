@@ -1,358 +1,408 @@
-Tournament Manager UX Improvement - Match Status & Results Redesign
-Objective
+Think About The User
 
-Simplify tournament navigation by separating:
+There are two very different users.
 
-Current Matches
-Upcoming Matches
-Completed Matches
-Champions
+User 1 - Resident / Spectator
 
-Instead of combining everything under a single "Results" page.
+They don't care about:
 
-This approach aligns with how spectators, players, and organizers naturally think during a tournament.
+Senior Doubles only
 
-Problem Statement
+They care about:
 
-Current Results page attempts to show:
+What is happening in the tournament right now?
 
-Live matches
-Upcoming matches
-Completed matches
-Champions
-Tournament summary
+For them:
 
-This mixes:
-
-Past
-Present
-Future
-
-into a single view.
-
-Result:
-
-Harder navigation
-User confusion
-More complex UI logic
-Difficult to scale as tournaments grow
-User Mental Model
-
-Most users ask one of four questions:
-
-Question 1
-
-What is happening right now?
-
-Answer:
-
-LIVE MATCHES
-
-Question 2
-
-What match is next?
-
-Answer:
-
-UPCOMING MATCHES
-
-Question 3
-
-Who won?
-
-Answer:
-
-CHAMPIONS
-
-Question 4
-
-What were the previous match results?
-
-Answer:
-
-RESULTS ARCHIVE
-
-Proposed Navigation
-
-Replace current Results-centric approach with:
-
-🏆 Champions
 🔥 Live
-📅 Upcoming
-📖 Results
-1. Champions Page
 
-Purpose:
-
-Show completed tournament winners.
-
-This page becomes available once a competition is completed.
-
-Example
-🏆 Senior Doubles
-
-Champion
-Amit / Rajesh
-
-Runner Up
-Kiran / Deepak
-
-Status:
-Completed
-Characteristics
-Static
-Read-only
-No frequent updates
-2. Live Matches Page
-
-Purpose:
-
-Display matches currently being played.
-
-This becomes the primary spectator screen during tournament day.
-
-Example
-🔥 LIVE
-
-Court 1
-
-Amit / Rajesh
-21
-
-vs
-
-Kiran / Deepak
-18
-
-Game 2
-Characteristics
-Real-time updates
-Visible to all users
-Highest spectator usage
-Admin Controls
-
-Add explicit match status controls.
-
-Start Match
-▶ Start Match
-
-Changes:
-
-UPCOMING
-   ↓
-LIVE
-Complete Match
-☑ Match Completed
-
-Changes:
-
-LIVE
-   ↓
-COMPLETED
-Why Explicit Status Is Better
-
-Avoids guessing based on scores.
+should show all live matches across all categories.
 
 Example:
 
-Bad Approach:
+🔥 LIVE
 
-Score entered
-→ Assume match completed
-
-Problems:
-
-Partial scores
-Corrections
-Walkovers
-Interrupted matches
-
-Recommended:
-
-Admin explicitly confirms completion.
-
-☑ Match Completed
-3. Upcoming Matches Page
-
-Purpose:
-
-Show future matches.
-
-Example
-📅 Upcoming
-
-Semi Final
-
-Amit / Rajesh
-
-vs
-
-Kiran / Deepak
-
-Court 1
-10:30 AM
-Characteristics
-Static
-Easy to scan
-Useful for players waiting for their turn
-Admin Controls
-▶ Start Match
-
-Moves match to:
-
-LIVE
-
-4. Results Archive
-
-Purpose:
-
-Historical record of completed matches.
-
-Example
-📖 Results
-
-Quarter Final
-
-Amit / Rajesh
-21-18
-
-Kiran / Deepak
-17-21
-
-Winner:
-Amit / Rajesh
-Characteristics
-Read-only
-Historical reference
-Searchable in future
-Match State Model
-
-Each match should have an explicit status.
-
-Match Status Values
-UPCOMING
-LIVE
-COMPLETED
-State Transitions
-UPCOMING
-   ↓ Start Match
-
-LIVE
-   ↓ Match Completed
-
-COMPLETED
-Tournament Status Model
-
-Tournament itself should have status.
-
-Tournament Status Values
-NOT_STARTED
-IN_PROGRESS
-COMPLETED
-Example
-Senior Doubles
-
-🟢 IN PROGRESS
-Competition Card Improvements
-
-Competition cards should display status.
-
-Example
 🏸 Senior Doubles
+Court 1
 
-12 Teams
+Amit/Rajesh
+vs
+Kiran/Deepak
 
-🟢 In Progress
-
-Another example:
+----------------
 
 🏸 Junior Singles
+Court 2
 
-16 Players
+Arjun
+vs
+Rahul
 
-🏆 Completed
-Viewer Navigation
+This is the tournament dashboard.
 
-Viewer Mode
+User 2 - Player
 
-🏆 Champions
+A player in:
+
+Senior Doubles
+
+doesn't care about:
+
+Junior Singles
+
+They care about:
+
+their category
+
+So when they enter:
+
+Senior Doubles
+
+they should see:
+
 🔥 Live
 📅 Upcoming
 📖 Results
+🏆 Champion
 
-No management options visible.
+filtered to Senior Doubles.
 
-Admin Navigation
+What I Would Build
+Home Level
+Sports Meet 2026
 
-Admin Mode
+Tabs:
 
+🔥 Live
+📅 Upcoming
 🏆 Champions
+
+These are:
+
+ALL categories
+Example
+🔥 LIVE
+
+🏸 Senior Doubles
+Court 1
+
+🏸 Junior Singles
+Court 2
+
+🏓 TT Open
+Court 3
+Category Level
+
+User clicks:
+
+Senior Doubles
+
+Now:
+
 🔥 Live
 📅 Upcoming
 📖 Results
-⚙ Manage
+🏆 Champion
 
-Additional controls available.
+show only:
 
-Benefits
-Better User Experience
+Senior Doubles
 
-Separates:
+matches.
 
-Past
-Present
-Future
+Champions
 
-into dedicated views.
+I would definitely show:
 
-Easier Navigation
+ALL Champions
 
-Users immediately know where to look.
+at Event level.
 
-Better Spectator Experience
+Example:
 
-Most spectators only need:
+🏆 Champions
 
+Senior Doubles
+Amit / Rajesh
+
+Junior Singles
+Arjun
+
+Senior Girls
+Priya
+
+This becomes the final event summary.
+
+Upcoming
+
+Same idea.
+
+Event level:
+
+Next 5 matches
+
+across all categories.
+
+Example:
+
+📅 Upcoming
+
+Senior Doubles SF
+10:00
+
+Junior Singles Final
+10:30
+
+TT Open Final
+11:00
+
+Very useful during tournament day.
+
+My Recommended Hierarchy
+Event Dashboard
 🔥 Live
 📅 Upcoming
 🏆 Champions
-Cleaner Code
 
-Match status becomes explicit.
+Across all sports and categories.
 
-No score-based inference required.
-
-Easier Multi-Sport Support
-
-Works equally well for:
-
-Badminton
-Table Tennis
-Chess
-Carrom
-
-without additional design changes.
-
-Recommendation
-
-Implement explicit match status:
-
-UPCOMING
-LIVE
-COMPLETED
-
-Add:
-
-▶ Start Match
-☑ Match Completed
-
-for administrators.
-
-Replace the current Results-centric approach with four dedicated views:
-
-🏆 Champions
+Competition Dashboard
 🔥 Live
 📅 Upcoming
 📖 Results
+🏆 Champion
 
-This will significantly improve usability, simplify state management, and better support future tournament growth
+Filtered to that competition.
+
+If I Had To Choose Only One
+
+If you want the simplest V1:
+
+Event Level
+
+shows:
+
+🔥 Live
+📅 Upcoming
+🏆 Champions
+
+across all categories.
+
+Then inside each category keep the existing:
+
+Fixtures
+Groups
+Knockout
+Champion
+
+This gives maximum value with minimum code.
+
+My final recommendation
+
+Event Dashboard
+
+🔥 Live (all categories)
+📅 Upcoming (all categories)
+🏆 Champions (all completed categories)
+
+Category Dashboard
+
+Groups
+Fixtures
+Knockout
+Champion
+
+I would not initially build separate category-level Live/Upcoming pages. The event-level dashboard gives spectators what they want, while category pages already provide detailed competition-specific information. That's the highest value-to-effort ratio for your current stage.
+
+-----
+second feedback on misunderstood recent results 
+Actually, I would not remove Results.
+
+I think I explained it poorly earlier.
+
+What I meant was:
+
+Results should not be the only page
+
+not
+
+Results should disappear
+
+In fact, for spectators, recent results are extremely important.
+
+Think Like a Viewer
+
+Suppose I open the tournament app at 11 AM.
+
+First thing I want to know:
+
+Who is playing now?
+
+→ Live
+
+Second:
+
+What happened recently?
+
+→ Results
+
+Third:
+
+What is next?
+
+→ Upcoming
+
+Fourth:
+
+Who won the category?
+
+→ Champions
+
+What I Would Build
+Event Dashboard
+🔥 Live
+📖 Recent Results
+📅 Upcoming
+🏆 Champions
+
+Notice:
+
+Results
+
+is still there.
+
+Results Should Mean
+
+Not:
+
+All results since tournament start
+
+because that becomes huge.
+
+Instead:
+
+Recent Results
+Example
+📖 Recent Results
+
+Senior Doubles SF
+
+Amit/Rajesh
+21-18
+
+Kiran/Deepak
+
+------------------
+
+Junior Singles
+
+Arjun
+21-17
+
+Rahul
+
+Maybe last:
+
+5
+10
+20
+
+completed matches.
+
+Event Dashboard Priority
+
+Personally I'd order it like this:
+
+🔥 Live
+📖 Recent Results
+📅 Upcoming
+🏆 Champions
+
+because during tournament day:
+
+Live
+Recent Results
+
+are used far more than:
+
+Champions
+
+which only becomes relevant near the end.
+
+Category View
+
+Inside:
+
+Senior Doubles
+
+I would show:
+
+Groups
+Fixtures
+Knockout
+Results
+Champion
+
+which you already mostly have.
+
+No major changes needed.
+
+My Refined Recommendation
+Event Level
+🔥 Live
+📖 Recent Results
+📅 Upcoming
+🏆 Champions
+
+Across all categories.
+
+Category Level
+Groups
+Fixtures
+Knockout
+Results
+Champion
+
+For that category only.
+
+One Extra Thing I Like
+
+You already have event → sport → competition hierarchy.
+
+For the Event Dashboard I would create:
+
+Tournament Feed
+
+Example:
+
+🔥 LIVE
+Senior Doubles Final
+
+📖 RESULT
+Junior Singles completed
+
+📅 NEXT
+Senior Girls Final
+
+🏆 CHAMPION
+TT Open completed
+
+A timeline/feed style view is often more engaging than forcing users to switch tabs.
+
+If this were my app
+
+I would eventually have:
+
+🏠 Event Dashboard
+    ├── Live
+    ├── Recent Results
+    ├── Upcoming
+    └── Champions
+
+🏸 Competition
+    ├── Groups
+    ├── Fixtures
+    ├── Results
+    └── Champion
+
+So yes, keep Results. I would actually rename it to Recent Results at the event level, becau

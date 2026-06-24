@@ -382,7 +382,6 @@ function renderAll() {
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
     document.getElementById('subNavLive').classList.add('active');
     document.getElementById('subNavUpcoming').classList.remove('active');
-    document.getElementById('subNavResults').classList.remove('active');
     document.getElementById('subNavChampions').classList.remove('active');
     if (!isAdmin()) applyViewerMode();
     return;
@@ -517,7 +516,6 @@ function renderMatchView() {
   clearDisabled();
   if (_currentMatchView === 'live') { renderLiveView(); return; }
   if (_currentMatchView === 'upcoming') { renderUpcomingView(); return; }
-  if (_currentMatchView === 'results') { renderResultsArchive(); return; }
   if (_currentMatchView === 'champions') { renderChampionsView(); return; }
 }
 
@@ -525,77 +523,6 @@ function closeResults() {
   AppState.ui.showingResults = false;
   document.getElementById('screen-results').classList.remove('active');
   renderAll();
-}
-
-function renderResultsArchive() {
-  const templates = getTemplates();
-  const events = getEvents();
-  const roundLabel = { 'QF': 'Quarter Final', 'SF': 'Semi Final', 'Final': 'Final' };
-  const container = document.getElementById('resultsList');
-  let html = '';
-  let hasContent = false;
-  const filteredEvents = events.filter(function(ev) { return ev.id === AppState.eventId; });
-  for (const ev of filteredEvents) {
-    const evMatchData = [];
-    for (const tmplId of ev.templateIds) {
-      const tmpl = templates.find(t => t.id === tmplId);
-      if (!tmpl) continue;
-      const s = localLoad(tmpl.id);
-      if (!s || (s.phase !== 'knockout' && s.phase !== 'champion') || !s.knockout) continue;
-      migrateMatchStatus(s);
-      for (const m of s.knockout) {
-        if (m.status !== 'COMPLETED') continue;
-        const _participants = s.participants;
-        const resolve = function(id) { return _participants ? participantName(_participants, id) || id || 'TBD' : id || 'TBD'; };
-        const p1 = resolve(m.p1);
-        const p2 = resolve(m.p2);
-        const winnerName = resolve(m.winner);
-        let score = '';
-        if (m.round === 'Final' && m.sets) {
-          const parts = [];
-          for (const set of m.sets) {
-            if (set.s1 !== null && set.s2 !== null) parts.push(set.s1 + '-' + set.s2);
-          }
-          score = parts.join(' / ');
-        } else if (m.s1 !== null && m.s2 !== null) {
-          score = m.s1 + '-' + m.s2;
-        }
-        evMatchData.push({
-          catLabel: tmpl.name,
-          round: roundLabel[m.round] || m.round,
-          p1: p1, p2: p2,
-          score: score || '—',
-          done: m.done,
-          winner: winnerName,
-          updatedAt: m.updatedAt || 0
-        });
-        hasContent = true;
-      }
-    }
-    if (evMatchData.length === 0) continue;
-    evMatchData.sort((a, b) => b.updatedAt - a.updatedAt);
-    html += '<div class="results-cards">';
-    for (const m of evMatchData) {
-      html += '<div class="result-card result-done">'
-        + '<div class="result-card-header">'
-        + '<span class="result-cat">' + escapeHtml(m.catLabel) + '</span>'
-        + '<span class="result-round">' + m.round + '</span>'
-        + '</div>'
-        + '<div class="result-match">' + escapeHtml(m.p1) + ' <span class="vs">vs</span> ' + escapeHtml(m.p2) + '</div>'
-        + '<div class="result-score">' + escapeHtml(m.score) + '</div>'
-        + '<div class="result-status">✓ ' + escapeHtml(m.winner) + '</div>'
-        + '</div>';
-    }
-    html += '</div>';
-  }
-  if (!hasContent) {
-    html += '<p class="text-muted text-center" style="padding:32px 0;">No completed matches yet.</p>';
-  }
-  container.innerHTML = html;
-  document.getElementById('subNavLive').classList.remove('active');
-  document.getElementById('subNavUpcoming').classList.remove('active');
-  document.getElementById('subNavResults').classList.add('active');
-  document.getElementById('subNavChampions').classList.remove('active');
 }
 
 function renderChampionsView() {
@@ -641,7 +568,6 @@ function renderChampionsView() {
   container.innerHTML = html;
   document.getElementById('subNavLive').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
-  document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavChampions').classList.add('active');
 }
 
