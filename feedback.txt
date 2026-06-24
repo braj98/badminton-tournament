@@ -1,288 +1,87 @@
-Think About The User
+Problem Statement
 
-There are two very different users.
-
-User 1 - Resident / Spectator
-
-They don't care about:
-
-Senior Doubles only
-
-They care about:
-
-What is happening in the tournament right now?
-
-For them:
-
-🔥 Live
-
-should show all live matches across all categories.
+Current navigation is competition-centric.
 
 Example:
 
-🔥 LIVE
-
-🏸 Senior Doubles
-Court 1
-
-Amit/Rajesh
-vs
-Kiran/Deepak
-
-----------------
-
-🏸 Junior Singles
-Court 2
-
-Arjun
-vs
-Rahul
-
-This is the tournament dashboard.
-
-User 2 - Player
-
-A player in:
-
 Senior Doubles
+→ Fixtures
+→ Results
+→ Champion
 
-doesn't care about:
+This works for players.
 
-Junior Singles
+However spectators typically want:
 
-They care about:
+What is happening now?
+What just finished?
+What is next?
+Who already won?
 
-their category
+They should not have to open every competition.
 
-So when they enter:
+Recommended Event Dashboard
 
-Senior Doubles
+Event Dashboard becomes the landing page.
 
-they should see:
+Example:
 
-🔥 Live
-📅 Upcoming
-📖 Results
-🏆 Champion
-
-filtered to Senior Doubles.
-
-What I Would Build
-Home Level
 Sports Meet 2026
 
-Tabs:
-
 🔥 Live
+
+📖 Recent Results
+
 📅 Upcoming
+
 🏆 Champions
+Section 1 - Live Matches
 
-These are:
+Purpose:
 
-ALL categories
-Example
+Show matches currently being played.
+
+Example:
+
 🔥 LIVE
 
-🏸 Senior Doubles
-Court 1
+🏸 Senior Doubles SF
+Amit/Rajesh vs Kiran/Deepak
 
-🏸 Junior Singles
-Court 2
+🏸 Junior Singles Final
+Arjun vs Rahul
+Match State
 
-🏓 TT Open
-Court 3
-Category Level
+Each match should have:
 
-User clicks:
+UPCOMING
+LIVE
+COMPLETED
+Admin Controls
 
-Senior Doubles
+Start Match
 
-Now:
+▶ Start Match
 
-🔥 Live
-📅 Upcoming
-📖 Results
-🏆 Champion
+Changes:
 
-show only:
+UPCOMING → LIVE
 
-Senior Doubles
+Complete Match
 
-matches.
+☑ Match Completed
 
-Champions
+Changes:
 
-I would definitely show:
+LIVE → COMPLETED
+Section 2 - Recent Results
 
-ALL Champions
+Purpose:
 
-at Event level.
-
-Example:
-
-🏆 Champions
-
-Senior Doubles
-Amit / Rajesh
-
-Junior Singles
-Arjun
-
-Senior Girls
-Priya
-
-This becomes the final event summary.
-
-Upcoming
-
-Same idea.
-
-Event level:
-
-Next 5 matches
-
-across all categories.
+Show recently completed matches.
 
 Example:
 
-📅 Upcoming
-
-Senior Doubles SF
-10:00
-
-Junior Singles Final
-10:30
-
-TT Open Final
-11:00
-
-Very useful during tournament day.
-
-My Recommended Hierarchy
-Event Dashboard
-🔥 Live
-📅 Upcoming
-🏆 Champions
-
-Across all sports and categories.
-
-Competition Dashboard
-🔥 Live
-📅 Upcoming
-📖 Results
-🏆 Champion
-
-Filtered to that competition.
-
-If I Had To Choose Only One
-
-If you want the simplest V1:
-
-Event Level
-
-shows:
-
-🔥 Live
-📅 Upcoming
-🏆 Champions
-
-across all categories.
-
-Then inside each category keep the existing:
-
-Fixtures
-Groups
-Knockout
-Champion
-
-This gives maximum value with minimum code.
-
-My final recommendation
-
-Event Dashboard
-
-🔥 Live (all categories)
-📅 Upcoming (all categories)
-🏆 Champions (all completed categories)
-
-Category Dashboard
-
-Groups
-Fixtures
-Knockout
-Champion
-
-I would not initially build separate category-level Live/Upcoming pages. The event-level dashboard gives spectators what they want, while category pages already provide detailed competition-specific information. That's the highest value-to-effort ratio for your current stage.
-
------
-second feedback on misunderstood recent results 
-Actually, I would not remove Results.
-
-I think I explained it poorly earlier.
-
-What I meant was:
-
-Results should not be the only page
-
-not
-
-Results should disappear
-
-In fact, for spectators, recent results are extremely important.
-
-Think Like a Viewer
-
-Suppose I open the tournament app at 11 AM.
-
-First thing I want to know:
-
-Who is playing now?
-
-→ Live
-
-Second:
-
-What happened recently?
-
-→ Results
-
-Third:
-
-What is next?
-
-→ Upcoming
-
-Fourth:
-
-Who won the category?
-
-→ Champions
-
-What I Would Build
-Event Dashboard
-🔥 Live
-📖 Recent Results
-📅 Upcoming
-🏆 Champions
-
-Notice:
-
-Results
-
-is still there.
-
-Results Should Mean
-
-Not:
-
-All results since tournament start
-
-because that becomes huge.
-
-Instead:
-
-Recent Results
-Example
 📖 Recent Results
 
 Senior Doubles SF
@@ -300,109 +99,198 @@ Arjun
 21-17
 
 Rahul
+Recommendation
 
-Maybe last:
+Show only:
 
-5
-10
-20
+Last 5 to 10 completed matches.
 
-completed matches.
+Do NOT show entire history.
 
-Event Dashboard Priority
+Reason:
 
-Personally I'd order it like this:
+Easier for spectators
+Smaller data set
+Faster rendering
+Section 3 - Upcoming Matches
 
-🔥 Live
-📖 Recent Results
-📅 Upcoming
-🏆 Champions
+Purpose:
 
-because during tournament day:
-
-Live
-Recent Results
-
-are used far more than:
-
-Champions
-
-which only becomes relevant near the end.
-
-Category View
-
-Inside:
-
-Senior Doubles
-
-I would show:
-
-Groups
-Fixtures
-Knockout
-Results
-Champion
-
-which you already mostly have.
-
-No major changes needed.
-
-My Refined Recommendation
-Event Level
-🔥 Live
-📖 Recent Results
-📅 Upcoming
-🏆 Champions
-
-Across all categories.
-
-Category Level
-Groups
-Fixtures
-Knockout
-Results
-Champion
-
-For that category only.
-
-One Extra Thing I Like
-
-You already have event → sport → competition hierarchy.
-
-For the Event Dashboard I would create:
-
-Tournament Feed
+Show matches that will happen next.
 
 Example:
 
-🔥 LIVE
-Senior Doubles Final
+📅 Upcoming
 
-📖 RESULT
-Junior Singles completed
-
-📅 NEXT
 Senior Girls Final
+10:00 AM
 
-🏆 CHAMPION
-TT Open completed
+Junior Doubles SF
+10:30 AM
+Recommendation
 
-A timeline/feed style view is often more engaging than forcing users to switch tabs.
+Show:
 
-If this were my app
+Next 5 matches.
 
-I would eventually have:
+Not the full schedule.
 
-🏠 Event Dashboard
-    ├── Live
-    ├── Recent Results
-    ├── Upcoming
-    └── Champions
+Section 4 - Champions
 
-🏸 Competition
-    ├── Groups
-    ├── Fixtures
-    ├── Results
-    └── Champion
+Purpose:
 
-So yes, keep Results. I would actually rename it to Recent Results at the event level, becau
+Show completed competitions.
+
+Example:
+
+🏆 Champions
+
+Senior Doubles
+Amit / Rajesh
+
+Junior Singles
+Arjun
+
+Senior Girls
+Priya
+Feed Design
+
+Instead of building a separate feed table:
+
+Use existing tournament data.
+
+Feed should be generated from:
+
+Match Status
+Match Completion Time
+Competition Status
+Example Feed Entries
+
+When match starts:
+
+{
+  "type": "MATCH_STARTED",
+  "competition": "Senior Doubles",
+  "timestamp": "..."
+}
+
+When match completes:
+
+{
+  "type": "MATCH_COMPLETED",
+  "competition": "Senior Doubles",
+  "winner": "Amit/Rajesh",
+  "timestamp": "..."
+}
+
+When competition completes:
+
+{
+  "type": "COMPETITION_COMPLETED",
+  "competition": "Senior Doubles",
+  "champion": "Amit/Rajesh"
+}
+Supabase Load Analysis
+Bad Design
+
+Every viewer:
+
+Every 5 seconds
+
+loads:
+
+All categories
+All matches
+All tournaments
+
+With:
+
+100 viewers
+
+This becomes expensive.
+
+Recommended Design
+
+Load event data once.
+
+Compute:
+
+Live Matches
+Recent Results
+Upcoming Matches
+Champions
+
+in browser memory.
+
+Even Better
+
+Whenever admin updates:
+
+Match Started
+Match Completed
+Champion Declared
+
+save once.
+
+Viewers receive update through Supabase realtime.
+
+Result:
+
+1 write
+Many listeners
+
+instead of:
+
+100 viewers polling
+Additional Optimization
+
+Maintain:
+
+event_dashboard
+
+object.
+
+Example:
+
+{
+  "live": [],
+  "recentResults": [],
+  "upcoming": [],
+  "champions": []
+}
+
+Update only when tournament state changes.
+
+Recommendation For Current Scale
+
+Current scale:
+
+2-3 admins
+50-200 viewers
+1 active event
+
+Do NOT build a separate feed service.
+
+Do NOT create additional Supabase tables.
+
+Do NOT poll every few seconds.
+
+Instead:
+
+Continue storing tournament state normally.
+Use match status:
+UPCOMING
+LIVE
+COMPLETED
+Build Event Dashboard from existing data.
+Use Supabase realtime updates when state changes.
+Show:
+Live
+Recent Results
+Upcoming
+Champions
+
+This gives the best user experience with minimal additional Supabase load
+
+
+My recommendation is not to build a separate "feed" table right now. Your existing tournament state already contains everything needed. Generate the dashboard from the existing state, and use Supabase realtime only when an admin changes something. That keeps both complexity and Supabase usage very low

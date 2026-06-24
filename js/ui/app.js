@@ -26,8 +26,14 @@ function updateHeader() {
   var sub = document.getElementById('eventSubtitle');
   var tag = document.getElementById('sportTag');
   
-  if (AppState.view === 'home' || AppState.ui.showingResults) {
+  if (AppState.view === 'home') {
     if (sub) sub.classList.add('hidden');
+    if (tag) tag.classList.add('hidden');
+  } else if (AppState.ui.showingResults) {
+    if (sub) {
+      sub.textContent = getCurrentEventName();
+      sub.classList.remove('hidden');
+    }
     if (tag) tag.classList.add('hidden');
   } else if (AppState.view === 'event') {
     if (sub) {
@@ -380,6 +386,7 @@ function renderAll() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-results').classList.add('active');
     document.getElementById('resultsList').innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">No active tournaments yet.</p>';
+    document.getElementById('subNavFeed').classList.remove('active');
     document.getElementById('subNavLive').classList.add('active');
     document.getElementById('subNavResults').classList.remove('active');
     document.getElementById('subNavUpcoming').classList.remove('active');
@@ -582,6 +589,7 @@ function renderRecentResults() {
     }
   }
   container.innerHTML = html;
+  document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.remove('active');
   document.getElementById('subNavResults').classList.add('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
@@ -629,6 +637,7 @@ function renderChampionsView() {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No champions yet.</p>';
   }
   container.innerHTML = html;
+  document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.remove('active');
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
@@ -765,7 +774,12 @@ async function init() {
     if (link) link.classList.remove('hidden');
   }
 
-  navigateTo('home');
+  if (AppState.eventId) {
+    AppState.view = 'home';
+    showResultsPage();
+  } else {
+    navigateTo('home');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function() { init(); });

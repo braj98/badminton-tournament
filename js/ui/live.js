@@ -71,6 +71,7 @@ function renderLiveView() {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No matches currently live.</p>';
   }
   container.innerHTML = html;
+  document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.add('active');
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');

@@ -47,6 +47,7 @@ function renderUpcomingView() {
     html += '<p class="text-muted text-center" style="padding:32px 0;">No upcoming matches.</p>';
   }
   container.innerHTML = html;
+  document.getElementById('subNavFeed').classList.remove('active');
   document.getElementById('subNavLive').classList.remove('active');
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.add('active');
