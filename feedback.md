@@ -32,26 +32,26 @@ Show cards with icon, sport, player count, status badge.
 
 ## Priority 6: eventId instead of event name
 Use `AppState.eventId` instead of `AppState.event` (display name) as identifier.
-- [ ] Store eventId in AppState, resolve name from event object
-- [ ] Update all `c.event === ev.name` comparisons to use IDs
-- [ ] Verify rename doesn't orphen anything
+- [x] Store eventId in AppState, resolve name from event object
+- [x] Update all `c.event === ev.name` comparisons to use IDs
+- [x] Verify rename doesn't orphen anything
 
 ## Priority 7: Template ID stability
 Template IDs are generated from labels on creation, but renaming doesn't change the ID.
-- [ ] Review all template ID generation paths for consistency
-- [ ] Ensure ID never changes after creation
+- [x] Review all template ID generation paths for consistency
+- [x] Ensure ID never changes after creation
 
 ## Priority 8: UI Polish
 Full visual polish pass.
-- [ ] Dark mode completeness — fix hardcoded colors
-- [ ] Confirm dialog styling — inline REMOVE box, RESET/IMPORT modals
-- [ ] Empty state consistency across all views
-- [ ] Button styling consistency
-- [ ] Card spacing alignment
+- [x] Dark mode completeness — fix hardcoded colors
+- [x] Confirm dialog styling — inline REMOVE box, RESET/IMPORT modals
+- [x] Empty state consistency across all views
+- [x] Button styling consistency
+- [x] Card spacing alignment
 
 ## Priority 9: Test Review
 Review engine tests for relevance, add new ones, drop redundant ones.
-- [ ] Audit all 275 test cases for relevance to current model
-- [ ] Check for gaps (user flow, edge cases)
-- [ ] Remove redundant tests
-- [ ] Add new tests for template/event model if needed
+- [x] Audit all 275 test cases for relevance to current model
+- [x] Check for gaps (user flow, edge cases)
+- [x] Remove redundant tests
+- [x] Add new tests for template/event model if needed
