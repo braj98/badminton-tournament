@@ -11,6 +11,8 @@ Standalone browser-based tournament manager for local apartment tournaments. No 
 - **Scoring**: Group/SF = single set first to 13; Final = Best of 3 first to 11 per set (configurable per sport)
 - **Group allocation**: <6 → 1 group, 6–10 → 2 groups, 11–20 → 4 groups
 - **Knockout**: QF → SF → Final (or direct Final for 1–2 groups)
+- **Match status model**: UPCOMING → LIVE → COMPLETED (admin-driven transitions)
+- **Match Views dashboard**: 📰 Feed — 🔴 Live — 📅 Upcoming — 📖 Recent Results — 🏆 Champions (cross-category)
 - **Champion photos**: Optional upload via File API
 - **Persistence**: localStorage + optional Supabase cloud sync
 - **Viewer mode**: Read-only UI when not logged in
@@ -76,7 +78,7 @@ Events ─── templateIds ──→ Templates (competition types)
 node js/test/runner.js
 ```
 
-275 tests covering full tournament flow + event/template model.
+723 tests covering full tournament flow + event/template model + edge cases.
 
 ## Configuration
 

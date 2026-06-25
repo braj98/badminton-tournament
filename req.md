@@ -380,9 +380,22 @@ Home → Event → Sport → Category (breadcrumb always visible)
 - **Event bar** shows all events, always visible below breadcrumb in tournament views
 - **Category bar** hidden on Home/Event/Sport pages, visible in tournament views
 - **Tournament tabs** shown during tournament (Groups, Fixtures, Knockout, Champion)
-- **Match View sub-tabs** available from the results screen: 🔥 Live, 📅 Upcoming, 📖 Results, 🏆 Champions
+- **Match View sub-tabs** available from the results screen: 📰 Feed, 🔴 Live, 📅 Upcoming, 📖 Recent Results, 🏆 Champions
 - **Action bar** hidden on Home/Event/Sport/Results, shown in tournament views
-- Navigation and UI visibility centralized in `updateNavigationVisibility()`
+- **Navigation and UI visibility** centralized in `updateNavigationVisibility()`
+
+### Unified App Bar (Sticky Header)
+The sticky header (`#unified-app-bar`) contains three layout columns:
+
+```
+[ Brand + Event + Sport ]   [ Results Pill ]   [ Admin Dropdown / Viewer Indicator ]
+```
+
+- **Left**: Brand name ("🏆 Tournament") + event/sport subtitles. Subtitles always visible with min-height to prevent layout shift.
+- **Center**: "📊 Results" pill button that opens the Match Views dashboard.
+- **Right**: Admin dropdown (dark button with blue dot, Manage/Logout) or viewer-only indicator ("👁 View Only") for non-admins.
+- Admin menu toggles on click, closes on outside click.
+- Viewer mode is indicated with a light badge (no the admin dropdown).
 
 ### Match Status Model (24 Jun 2026)
 ```
@@ -396,10 +409,11 @@ UPCOMING → (Start Match) → LIVE → (Match Completed) → COMPLETED
 - `startMatch()` sets status to `LIVE`
 
 ### Match Views (replaces single Results page)
-1. **🔥 Live** — shows all LIVE matches (fixtures + knockout), admin can enter/update scores, finalize with "☑ Match Completed"
-2. **📅 Upcoming** — shows all UPCOMING matches, admin can start with "▶ Start Match"
-3. **📖 Results** — shows all COMPLETED knockout matches as read-only archive
-4. **🏆 Champions** — shows champions and runner-ups from completed tournaments
+1. **📰 Feed** — aggregate feed of all match activity (live+completed) across categories
+2. **🔴 Live** — shows all LIVE matches (fixtures + knockout), admin can enter/update scores, finalize with "☑ Match Completed"
+3. **📅 Upcoming** — shows all UPCOMING matches, admin can start with "▶ Start Match"
+4. **📖 Recent Results** — shows all COMPLETED knockout matches as read-only archive
+5. **🏆 Champions** — champions and runner-ups from completed tournaments
 
 Sub-tab bar in the results screen allows switching between views. Filtered to current event.
 
@@ -419,7 +433,7 @@ Replaced by 4-dedicated match views. Legacy `renderResults()` replaced with `ren
 
 ### Testing
 - Node.js test runner at `js/test/runner.js`
-- 278 tests covering full tournament flow + event/template model: groups, fixtures, qualification, knockout, champion, event CRUD, template CRUD
+- 723 tests covering full tournament flow + event/template model + edge cases: groups, fixtures, qualification, knockout, champion, event CRUD, template CRUD, match status transitions, viewer mode, V19 validation
 - Run via `node js/test/runner.js`
 
 ### App Configuration
