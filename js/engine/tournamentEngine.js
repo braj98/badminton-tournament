@@ -46,16 +46,6 @@ function completeMatch(match, participants) {
   }
 }
 
-function revertMatch(match) {
-  match.status = 'UPCOMING';
-  match.done = false;
-  match.winner = null;
-  match.s1 = null;
-  match.s2 = null;
-  match.sets = null;
-  match.updatedAt = Date.now();
-}
-
 function reopenMatch(match) {
   match.status = 'LIVE';
   match.done = false;

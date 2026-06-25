@@ -521,7 +521,6 @@ function showResultsPage() {
   updateNavigationVisibility();
   renderCategoryBar();
   updateHeader();
-  console.log('DEBUG showResultsPage: category=' + AppState.category + ' phase=' + (AppState.tournament ? AppState.tournament.phase : 'no-tournament'));
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
@@ -648,7 +647,7 @@ function renderChampionsView() {
       const tmpl = templates.find(t => t.id === tmplId);
       if (!tmpl) continue;
       const s = localLoad(tmpl.id);
-      if (!s || s.phase !== 'champion' || !s.knockout) continue;
+      if (!s || !s.knockout) continue;
       const _final = s.knockout.find(m => m.id === 'final');
       if (!_final || !_final.done || !_final.winner) continue;
       hasContent = true;

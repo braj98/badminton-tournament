@@ -28,7 +28,7 @@ async function checkSession() {
   if (!_supabase) return;
   try {
     await _supabase.auth.getSession();
-  } catch(e) {}
+  } catch(e) { console.error('checkSession failed:', e); }
 }
 
 async function login() {

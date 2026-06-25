@@ -233,7 +233,6 @@ async function switchCategory(catId) {
     }
   }
   AppState.view = AppState.tournament.phase;
-  console.log('DEBUG switchCategory done: cat=' + catId + ' phase=' + AppState.tournament.phase + ' fixtures=' + (AppState.tournament.fixtures||[]).length + ' knockout=' + (AppState.tournament.knockout||[]).length);
   navigateTo(AppState.tournament.phase);
 }
 
@@ -287,7 +286,7 @@ function resetCategory(catId) {
   if (!isAdmin()) return;
   localClear(catId);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', getStateKey(catId)).then().catch(() => {});
+    _supabase.from('state').delete().eq('key', getStateKey(catId)).then().catch((e) => { console.error('resetCategory delete failed:', e); });
   }
   if (AppState.category === catId) {
     AppState.tournament = defaultState();
@@ -561,7 +560,7 @@ function executeDeleteTemplate(tmplId) {
   // Clear state
   localClear(tmplId);
   if (_supabase) {
-    _supabase.from('state').delete().eq('key', getStateKey(tmplId)).then().catch(function() {});
+    _supabase.from('state').delete().eq('key', getStateKey(tmplId)).then().catch(function(e) { console.error('executeDeleteTemplate delete failed:', e); });
   }
   // Remove from templates list
   const templates = getTemplates();

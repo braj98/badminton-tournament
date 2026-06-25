@@ -26,15 +26,22 @@ function renderKnockout() {
         + '<span class="match-label">' + roundLabels[round] + '</span>';
 
       if (done) {
-        html += '<span class="match-status" style="color:var(--success);">✓ ' + escapeHtml(pName(m.winner)) + '</span>';
+        if (isAdmin()) {
+          html += '<span class="match-status" style="color:var(--success);flex:1;text-align:center;">✓ ' + escapeHtml(pName(m.winner)) + '</span>'
+            + '<button class="btn-go-live" onclick="reopenKnockoutMatch(\'' + m.id + '\')" style="background:#d97706;color:#fff;border:1px solid #d97706;">↩ Reopen</button>';
+        } else {
+          html += '<span class="match-status" style="color:var(--success);flex:1;text-align:center;">✓ ' + escapeHtml(pName(m.winner)) + '</span>';
+        }
       } else if (isWaiting) {
-        html += '<span class="match-status">— Waiting</span>';
+        html += '<span class="match-status" style="flex:1;text-align:center;">— Waiting</span>';
       } else if (isAdmin() && m.status === 'UPCOMING') {
-        html += '<button class="btn-go-live" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Go Live</button>';
+        html += '<span class="match-status" style="flex:1;text-align:center;color:var(--text-muted);">● Ready</span>'
+          + '<button class="btn-go-live" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Go Live</button>';
       } else if (m.status === 'LIVE') {
-        html += '<span class="match-status" style="color:var(--danger);">🔴 LIVE</span>';
+        html += '<span class="match-status" style="color:var(--danger);flex:1;text-align:center;">🔴 LIVE</span>'
+          + (isAdmin() ? '<button class="btn-go-live" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="background:var(--success);color:#fff;border:1px solid var(--success);">☑ Match Completed</button>' : '');
       } else if (canPlay) {
-        html += '<span class="match-status">● Ready</span>';
+        html += '<span class="match-status" style="flex:1;text-align:center;">● Ready</span>';
       }
 
       html += '</div>'
@@ -59,22 +66,7 @@ function renderKnockout() {
             + '<span class="vs">vs</span>'
             + '<input class="score-input ks2" type="number" min="0" max="' + _koCfg.maxScoreInput + '" value="' + (m.s2 ?? '') + '" onchange="enterKnockoutScore(\'' + m.id + '\',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">';
         }
-html += '</div>';
-      if (m.status === 'COMPLETED' && isAdmin()) {
-        html += '<div class="match-controls-inline">';
-        html += '<button class="btn btn-sm btn-outline" onclick="reopenKnockoutMatch(\'' + m.id + '\')" style="color:var(--text-muted);">↩ Reopen Match</button>';
         html += '</div>';
-      } else if (isAdmin()) {
-        html += '<div class="match-controls-inline">';
-          if (m.status === 'UPCOMING') {
-            html += '<button class="btn btn-sm btn-outline" onclick="startKnockoutMatch(\'' + m.id + '\')">▶ Start Match</button>';
-          }
-          if (m.status === 'LIVE') {
-            html += '<button class="btn btn-sm btn-outline" onclick="revertKnockoutMatch(\'' + m.id + '\')" style="color:var(--text-muted);">↩ Revert</button>';
-            html += '<button class="btn btn-sm btn-outline" onclick="completeKnockoutMatch(\'' + m.id + '\')" style="border-color:var(--success);color:var(--success);">☑ Match Completed</button>';
-          }
-          html += '</div>';
-        }
       } else if (canPlay && !isAdmin()) {
         if (isFinal) {
           html += '<div class="match-score-area">' + renderFinalSetText(m) + '</div>';
@@ -182,21 +174,13 @@ function startKnockoutMatch(id) {
   renderKnockout();
 }
 
-function revertKnockoutMatch(id) {
-  if (!isAdmin()) return;
-  if (!confirm('Revert this match to Upcoming? Scores will be cleared.')) return;
-  const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
-  if (!m) return;
-  revertMatch(m);
-  saveState();
-  renderKnockout();
-}
-
 function completeKnockoutMatch(id) {
   if (!isAdmin()) return;
+  if (!confirm('Complete this match? This will finalize the result.')) return;
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   completeMatch(m, AppState.tournament.participants);
+  m.updatedAt = Date.now();
   if (m.round !== 'Final') {
     AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
   } else {
@@ -216,9 +200,11 @@ function reopenKnockoutMatch(id) {
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
   reopenMatch(m);
+  m.updatedAt = Date.now();
   if (m.round === 'Final') {
     AppState.tournament.champion = null;
     AppState.tournament.runnerUp = null;
+    AppState.tournament.phase = 'knockout';
   }
   saveState();
   renderKnockout();

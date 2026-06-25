@@ -15,7 +15,7 @@
   <div class="header">
     <div class="brand">
       <h1 onclick="goHome()">🏆 Tournament Manager</h1>
-      <p class="subtitle" id="eventSubtitle">BREN AVALON SPORTS MEET 2026</p>
+      <p class="subtitle" id="eventSubtitle">Loading...</p>
     </div>
     <div class="header-right">
       <div class="sport-tag hidden" id="sportTag">Badminton</div>
@@ -176,8 +176,10 @@
   <!-- ============ FIXTURES ============ -->
   <div id="screen-fixtures" class="screen">
     <div class="card">
-      <div id="fixtureList"></div>
-      <div id="groupStandings"></div>
+      <div class="fixture-split-grid">
+        <div id="fixtureList"></div>
+        <div id="groupStandings"></div>
+      </div>
       <button id="btnProceedKnockout" class="btn btn-block mt-16 hidden admin-only" onclick="goToKnockout()">Proceed to Knockout →</button>
       <button id="btnViewKnockout" class="btn btn-block mt-16 hidden btn-secondary" data-public="1" onclick="viewKnockout()">View Knockout →</button>
     </div>

@@ -7,19 +7,19 @@ function getCategoriesKey() {
 }
 
 function localSave(catId, data) {
-  try { localStorage.setItem(getStateKey(catId), JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(getStateKey(catId), JSON.stringify(data)); } catch(e) { console.error('localSave failed:', e); }
 }
 
 function localLoad(catId) {
   try {
     const raw = localStorage.getItem(getStateKey(catId));
     if (raw) return JSON.parse(raw);
-  } catch(e) {}
+  } catch(e) { console.error('localLoad failed:', e); }
   return null;
 }
 
 function localClear(catId) {
-  try { localStorage.removeItem(getStateKey(catId)); } catch(e) {}
+  try { localStorage.removeItem(getStateKey(catId)); } catch(e) { console.error('localClear failed:', e); }
 }
 
 function getCategories() {
