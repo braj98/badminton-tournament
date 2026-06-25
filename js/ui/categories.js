@@ -24,22 +24,14 @@ function migrateCategorySports() {
 
 // ===================== AUTH UI =====================
 function updateBanners() {
-  const ab = document.getElementById('adminBanner');
-  if (ab) {
-    if (isAdmin()) ab.classList.remove('hidden');
-    else ab.classList.add('hidden');
-  }
-  const mb = document.getElementById('modeBanner');
-  if (mb) {
-    if (isAdmin()) {
-      mb.textContent = '🔧 Admin Mode';
-      mb.classList.add('mode-admin');
-      mb.classList.remove('mode-viewer');
-    } else {
-      mb.textContent = '👁 Viewer Mode';
-      mb.classList.add('mode-viewer');
-      mb.classList.remove('mode-admin');
-    }
+  const adminCluster = document.getElementById('headerAdminCluster');
+  const viewerInd = document.getElementById('viewerIndicator');
+  if (isAdmin()) {
+    if (adminCluster) adminCluster.classList.remove('hidden');
+    if (viewerInd) viewerInd.classList.add('hidden');
+  } else {
+    if (adminCluster) adminCluster.classList.add('hidden');
+    if (viewerInd) viewerInd.classList.remove('hidden');
   }
 }
 
@@ -219,13 +211,13 @@ async function switchCategory(catId) {
   if (AppState.loadingCategory !== catId) return;
   if (serverState) {
     AppState.tournament = serverState;
-    migrateMatchStatus();
+    syncTournamentState(AppState.tournament);
     localSave(catId, AppState.tournament);
   } else {
     const saved = localLoad(catId);
     if (saved && saved.phase && saved.phase !== 'setup') {
       AppState.tournament = saved;
-      migrateMatchStatus();
+      syncTournamentState(AppState.tournament);
     } else {
       AppState.tournament = defaultState();
       if (tmpl) AppState.tournament.sport = tmpl.sport;
@@ -636,7 +628,7 @@ function resumeTournament() {
   const saved = localLoad(AppState.category);
   if (saved && saved.phase !== 'setup') {
     AppState.tournament = saved;
-    migrateMatchStatus();
+    syncTournamentState(AppState.tournament);
     navigateTo(AppState.tournament.phase);
   }
 }

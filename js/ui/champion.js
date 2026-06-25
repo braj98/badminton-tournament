@@ -2,24 +2,13 @@
 let photoTarget = null;
 
 function viewChampion() {
-  const final = AppState.tournament.knockout.find(m => m.id === 'final');
-  if (final && final.done && final.winner) {
-    AppState.tournament.champion = final.winner;
-    AppState.tournament.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
-  }
+  syncTournamentState(AppState.tournament);
   navigateTo('champion');
 }
 
 function showResults() {
   if (!isAdmin()) return;
-  const final = AppState.tournament.knockout.find(m => m.id === 'final');
-  if (!final || !final.done) return;
-  AppState.tournament.champion = final.winner;
-  AppState.tournament.runnerUp = final.winner === final.p1 ? final.p2 : final.p1;
-  AppState.tournament.phase = 'champion';
-  AppState.tournament.completedAt = Date.now();
-  saveState();
-  renderAll();
+  viewChampion();
 }
 
 function showNewTournamentConfirm() {
@@ -116,6 +105,69 @@ function showPhoto(which, dataUrl) {
     if (placeholder) placeholder.style.display = '';
     zone.classList.remove('has-photo');
   }
+}
+
+function showCompleteConfirm(match, onConfirm) {
+  function _(s) { return escapeHtml(pName(s)); }
+  var p1Name = _(match.p1);
+  var p2Name = _(match.p2);
+  var isFinal = match.round === 'Final';
+  var scoresHtml = '';
+
+  if (isFinal && match.sets) {
+    var parts = [];
+    for (var i = 0; i < match.sets.length; i++) {
+      var s = match.sets[i];
+      if (s && s.s1 !== null && s.s2 !== null) {
+        parts.push('S' + (i+1) + ': ' + escapeHtml(s.s1) + '-' + escapeHtml(s.s2));
+      } else {
+        parts.push('S' + (i+1) + ': —');
+      }
+    }
+    scoresHtml = parts.join(' | ');
+  } else if (match.s1 !== null && match.s2 !== null) {
+    scoresHtml = escapeHtml(match.s1) + ' - ' + escapeHtml(match.s2);
+  } else {
+    scoresHtml = '<span style="color:var(--text-muted)">No scores yet</span>';
+  }
+
+  var predicted = null;
+  if (isFinal && match.sets) {
+    var w1 = 0, w2 = 0;
+    for (var i = 0; i < match.sets.length; i++) {
+      var s = match.sets[i];
+      if (s && s.s1 !== null && s.s2 !== null) {
+        if (s.s1 > s.s2) w1++; else if (s.s2 > s.s1) w2++;
+      }
+    }
+    if (w1 !== w2) predicted = w1 > w2 ? p1Name : p2Name;
+  } else if (match.s1 !== null && match.s2 !== null && match.s1 !== match.s2) {
+    predicted = match.s1 > match.s2 ? p1Name : p2Name;
+  }
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = '<div class="card modal-card" style="max-width:420px;">'
+    + '<button class="modal-close" id="_confirmClose">✕</button>'
+    + '<h3 style="margin:0 0 16px 0;font-size:1.1rem;">Complete Match</h3>'
+    + '<div style="margin-bottom:16px;">'
+    + '<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;font-size:.95rem;">'
+    + '<span>' + p1Name + '</span><span style="color:var(--text-muted);">vs</span><span>' + p2Name + '</span>'
+    + '</div>'
+    + '<div style="text-align:center;padding:10px 0;font-size:1.1rem;font-weight:700;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">'
+    + scoresHtml
+    + '</div>'
+    + (predicted ? '<div style="text-align:center;padding:8px 0;color:var(--success);font-weight:600;font-size:.85rem;">➜ ' + predicted + ' wins</div>' : '<div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:.8rem;">No winner — tied or incomplete</div>')
+    + '</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<button class="btn btn-secondary" id="_confirmCancel" style="flex:1;">Cancel</button>'
+    + '<button class="btn" id="_confirmComplete" style="flex:1;">Complete</button>'
+    + '</div>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('_confirmClose').onclick = function() { overlay.remove(); };
+  document.getElementById('_confirmCancel').onclick = function() { overlay.remove(); };
+  document.getElementById('_confirmComplete').onclick = function() { overlay.remove(); onConfirm(); };
 }
 
 function pickPhoto(which) {

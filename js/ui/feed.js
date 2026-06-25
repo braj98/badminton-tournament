@@ -21,7 +21,7 @@ function renderTournamentFeed() {
     if (!tmpl) continue;
     const s = localLoad(tmpl.id);
     if (!s || s.phase === 'setup') continue;
-    migrateMatchStatus(s);
+    syncTournamentState(s);
 
     const sportIcon = s.sport === 'tableTennis' ? '🏓' : s.sport === 'chess' ? '♟' : '🏸';
     const catName = tmpl.name;

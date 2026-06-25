@@ -1,69 +1,11 @@
 // ===================== APP STATE =====================
 // AppState is defined in js/models/appState.js and loaded before this script.
 
-// ===================== MIGRATIONS =====================
-function migrateMatchStatus(state) {
-  state = state || AppState.tournament;
-  if (!state) return;
-  var didMigrate = false;
-  for (var _k in state) {
-    if (_k === 'fixtures' || _k === 'knockout') {
-      var arr = state[_k];
-      if (!arr || !arr.length) continue;
-      for (var _i = 0; _i < arr.length; _i++) {
-        if (!arr[_i].status) {
-          arr[_i].status = arr[_i].done ? 'COMPLETED' : 'UPCOMING';
-          didMigrate = true;
-        }
-      }
-    }
-  }
-  var champ = syncChampion(state.participants, state.knockout);
-  if (champ.champion && !state.champion) {
-    state.champion = champ.champion;
-    state.runnerUp = champ.runnerUp;
-    didMigrate = true;
-  }
-  if (!champ.champion && state.champion && state.knockout) {
-    var finalMatch = state.knockout.find(function(m) { return m.id === 'final'; });
-    if (!finalMatch || !finalMatch.done) {
-      state.champion = null;
-      state.runnerUp = null;
-      didMigrate = true;
-    }
-  }
-  return didMigrate;
-}
-
 // ===================== HEADER + ACTION BAR =====================
 function updateHeader() {
   var sub = document.getElementById('eventSubtitle');
-  var tag = document.getElementById('sportTag');
-  
-  if (AppState.ui.showingResults) {
-    if (sub) {
-      sub.textContent = getCurrentEventName();
-      sub.classList.remove('hidden');
-    }
-    if (tag) tag.classList.add('hidden');
-  } else if (AppState.view === 'home') {
-    if (sub) sub.classList.add('hidden');
-    if (tag) tag.classList.add('hidden');
-  } else if (AppState.view === 'event') {
-    if (sub) {
-      sub.textContent = getCurrentEventName();
-      sub.classList.remove('hidden');
-    }
-    if (tag) tag.classList.add('hidden');
-  } else {
-    if (sub) {
-      sub.textContent = getCurrentEventName();
-      sub.classList.remove('hidden');
-    }
-    if (tag) {
-      tag.textContent = getSportLabel(AppState.sport);
-      tag.classList.remove('hidden');
-    }
+  if (sub) {
+    sub.textContent = getCurrentEventName() || '';
   }
 }
 
@@ -82,6 +24,26 @@ function renderActionBar() {
       + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">🏆 Champion</button>';
   }
 }
+// ===================== ADMIN DROPDOWN =====================
+function toggleAdminMenu() {
+  var m = document.getElementById('adminDropdownMenu');
+  if (m) m.classList.toggle('show-menu');
+}
+
+function closeAdminMenu() {
+  var m = document.getElementById('adminDropdownMenu');
+  if (m) m.classList.remove('show-menu');
+}
+
+// Close dropdown on outside click (delegated)
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('adminDropdownMenu');
+  var btn = document.getElementById('adminMenuBtn');
+  if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('show-menu');
+  }
+});
+
 // ===================== SAVE (orchestrates storage) =====================
 function saveState() {
   if (!AppState.category) return;
@@ -94,6 +56,16 @@ function saveState() {
 }
 
 // ===================== RENDER CYCLE =====================
+// ===================== TOAST NOTIFICATION =====================
+function showToast(html, duration) {
+  duration = duration || 4000;
+  var t = document.createElement('div');
+  t.className = 'toast-notification';
+  t.innerHTML = html;
+  document.body.appendChild(t);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, duration);
+}
+
 // ===================== HOME PAGE =====================
 function goHome() {
   navigateTo('home');
@@ -413,7 +385,7 @@ function renderAll() {
   }
 
   if (!AppState.tournament) { AppState.tournament = defaultState(); }
-  migrateMatchStatus();
+  syncTournamentState(AppState.tournament);
   renderCategoryBar();
   updateHeader();
   renderActionBar();
@@ -521,19 +493,24 @@ function showResultsPage() {
   updateNavigationVisibility();
   renderCategoryBar();
   updateHeader();
+  updateBanners();
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
   renderMatchView();
-  applyViewerMode();
-  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  if (!isAdmin()) {
+    applyViewerMode();
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  }
 }
 
 function switchMatchView(view) {
   _currentMatchView = view;
   renderMatchView();
-  applyViewerMode();
-  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  if (!isAdmin()) {
+    applyViewerMode();
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  }
 }
 
 function renderMatchView() {
@@ -568,7 +545,7 @@ function renderRecentResults() {
     if (!tmpl) continue;
     const s = localLoad(tmpl.id);
     if (!s) continue;
-    migrateMatchStatus(s);
+    syncTournamentState(s);
     const resolve = function(id) { return s.participants ? participantName(s.participants, id) || id || 'TBD' : id || 'TBD'; };
     for (const m of (s.knockout || [])) {
       if (m.status !== 'COMPLETED') continue;
@@ -648,13 +625,11 @@ function renderChampionsView() {
       if (!tmpl) continue;
       const s = localLoad(tmpl.id);
       if (!s || !s.knockout) continue;
-      const _final = s.knockout.find(m => m.id === 'final');
-      if (!_final || !_final.done || !_final.winner) continue;
+      syncTournamentState(s);
+      if (!s.champion) continue;
       hasContent = true;
-      const chId = _final.winner;
-      const ruId = _final.winner === _final.p1 ? _final.p2 : _final.p1;
-      const chName = s.participants ? participantName(s.participants, chId) || chId : chId;
-      const ruName = s.participants ? participantName(s.participants, ruId) || ruId || '—' : ruId || '—';
+      const chName = s.champion;
+      const ruName = s.runnerUp || '—';
       html += '<div class="division-block-container">'
         + '<span class="division-header-badge">' + escapeHtml(tmpl.name) + '</span>'
         + '<div class="podium-split-row">'
@@ -803,14 +778,14 @@ async function init() {
     AppState.tournament = defaultState();
   }
 
-  migrateMatchStatus();
+  syncTournamentState(AppState.tournament);
 
   // Supabase-first for current category state
   if (_supabase) {
     const serverState = await fetchState(AppState.category).catch(() => null);
     if (serverState && serverState._lastSave > (AppState.tournament._lastSave || 0)) {
       AppState.tournament = serverState;
-      migrateMatchStatus();
+      syncTournamentState(AppState.tournament);
       localSave(AppState.category, AppState.tournament);
     }
   }

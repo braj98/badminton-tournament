@@ -176,22 +176,24 @@ function startKnockoutMatch(id) {
 
 function completeKnockoutMatch(id) {
   if (!isAdmin()) return;
-  if (!confirm('Complete this match? This will finalize the result.')) return;
   const m = AppState.tournament.knockout.find(function(mm) { return mm.id === id; });
   if (!m) return;
-  completeMatch(m, AppState.tournament.participants);
-  m.updatedAt = Date.now();
-  if (m.round !== 'Final') {
-    AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
-  } else {
-    AppState.tournament.phase = 'champion';
-    AppState.tournament.completedAt = Date.now();
-  }
-  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
-  AppState.tournament.champion = champ.champion;
-  AppState.tournament.runnerUp = champ.runnerUp;
-  saveState();
-  renderKnockout();
+  showCompleteConfirm(m, function() {
+    var wasFinal = m.round === 'Final';
+    completeMatch(m, AppState.tournament.participants, getCurrentConfig().finalSets);
+    m.updatedAt = Date.now();
+    if (m.round !== 'Final') {
+      AppState.tournament.knockout = advanceWinner(AppState.tournament.knockout);
+    }
+    syncTournamentState(AppState.tournament);
+    saveState();
+    if (wasFinal && AppState.tournament.champion) {
+      var tmpl = getTemplates().find(function(t) { return t.id === AppState.category; });
+      var catLabel = tmpl ? tmpl.name : '';
+      showToast('🏆 <strong>' + escapeHtml(AppState.tournament.champion) + '</strong> is Champion!<br><span style="font-size:.8rem;opacity:.8;">' + escapeHtml(catLabel) + '</span>');
+    }
+    renderKnockout();
+  });
 }
 
 function reopenKnockoutMatch(id) {
@@ -201,11 +203,7 @@ function reopenKnockoutMatch(id) {
   if (!m) return;
   reopenMatch(m);
   m.updatedAt = Date.now();
-  if (m.round === 'Final') {
-    AppState.tournament.champion = null;
-    AppState.tournament.runnerUp = null;
-    AppState.tournament.phase = 'knockout';
-  }
+  syncTournamentState(AppState.tournament);
   saveState();
   renderKnockout();
 }

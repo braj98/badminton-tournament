@@ -150,29 +150,26 @@ function revertFixtureMatch(id) {
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;
   AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
-  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
-  AppState.tournament.champion = champ.champion;
-  AppState.tournament.runnerUp = champ.runnerUp;
+  syncTournamentState(AppState.tournament);
   saveState();
   renderFixtures();
 }
 
 function completeFixtureMatch(id) {
   if (!isAdmin()) return;
-  if (!confirm('Complete this match? This will finalize the result.')) return;
   const f = AppState.tournament.fixtures.find(m => m.id === id);
   if (!f) return;
-  completeMatch(f);
-  f.updatedAt = Date.now();
-  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
-  AppState.tournament.standings = result.standings;
-  AppState.tournament.qualifiers = result.qualifiers;
-  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
-  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
-  AppState.tournament.champion = champ.champion;
-  AppState.tournament.runnerUp = champ.runnerUp;
-  saveState();
-  renderFixtures();
+  showCompleteConfirm(f, function() {
+    completeMatch(f);
+    f.updatedAt = Date.now();
+    const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+    AppState.tournament.standings = result.standings;
+    AppState.tournament.qualifiers = result.qualifiers;
+    AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+    syncTournamentState(AppState.tournament);
+    saveState();
+    renderFixtures();
+  });
 }
 
 function reopenFixtureMatch(id) {
@@ -186,9 +183,7 @@ function reopenFixtureMatch(id) {
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;
   AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
-  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
-  AppState.tournament.champion = champ.champion;
-  AppState.tournament.runnerUp = champ.runnerUp;
+  syncTournamentState(AppState.tournament);
   saveState();
   renderFixtures();
 }
@@ -205,6 +200,7 @@ function enterFixtureScore(id, s1, s2) {
   AppState.tournament.standings = result.standings;
   AppState.tournament.qualifiers = result.qualifiers;
   AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+  syncTournamentState(AppState.tournament);
   saveState();
   renderFixtures();
 }

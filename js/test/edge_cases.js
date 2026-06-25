@@ -1399,23 +1399,17 @@ function testHeaderContent() {
   let pass = true;
 
   var badge = document.getElementById('eventSubtitle');
-  var tag = document.getElementById('sportTag');
   pass &= assert(!!badge, 'eventSubtitle exists');
-  pass &= assert(!!tag, 'sportTag exists');
 
-  if (badge && tag) {
+  if (badge) {
     const _origEvent = AppState.event;
-    const _origSport = AppState.sport;
 
     AppState.event = 'Test Event XYZ';
-    AppState.sport = 'chess';
     updateHeader();
     pass &= assert(badge.textContent === 'Test Event XYZ', 'Header subtitle = "Test Event XYZ" (got "' + badge.textContent + '")');
-    pass &= assert(tag.textContent === 'Chess', 'Header tag = "Chess" (got "' + tag.textContent + '")');
+    pass &= assert(badge.classList.contains('hidden') === false, 'Header subtitle visible');
 
     AppState.event = _origEvent;
-    AppState.sport = _origSport;
-    updateHeader();
   }
 
   console.log(pass ? '  >>> ALL PASS <<<' : '  >>> SOME FAILURES <<<');

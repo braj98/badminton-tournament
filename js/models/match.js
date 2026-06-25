@@ -2,7 +2,7 @@ let _mid = 0;
 
 function createMatch(p1, p2, round, group, id) {
   return {
-    id: id !== undefined ? id : _mid++,
+    id: id !== undefined ? id : 'm' + _mid++,
     p1: p1,
     p2: p2,
     round: round || 'group',
