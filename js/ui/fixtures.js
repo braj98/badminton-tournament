@@ -1,106 +1,196 @@
 function renderFixtures() {
   clearDisabled();
-  const container = document.getElementById('fixtureList');
-  const groups = Object.keys(AppState.tournament.groups);
-  const fixtures = AppState.tournament.fixtures;
-  let html = '';
-  for (const key of groups) {
-    const gf = fixtures.filter(f => f.group === key);
-    if (gf.length === 0) continue;
-    const playerCount = (AppState.tournament.groups[key] || []).length;
-    const doneCount = gf.filter(f => f.done).length;
-    html += '<div class="fixture-panel">'
-      + '<div class="fixture-panel-header">'
-      + '<span class="fixture-panel-title">Group ' + escapeHtml(key) + '</span>'
-      + '<span class="fixture-panel-meta">' + doneCount + '/' + gf.length + ' done · ' + playerCount + ' players</span>'
+  var _cfg = getCurrentConfig();
+  var container = document.getElementById('fixtureList');
+  var standingsContainer = document.getElementById('groupStandings');
+  var fixtures = AppState.tournament.fixtures || [];
+  var groups = AppState.tournament.groups || {};
+  var standings = AppState.tournament.standings || {};
+  var groupKeys = Object.keys(groups);
+
+  if (groupKeys.length === 0) {
+    container.innerHTML = '<p class="text-muted">No fixtures to display.</p>';
+    standingsContainer.innerHTML = '';
+    return;
+  }
+
+  var fixturesHtml = '';
+  var standingsHtml = '';
+
+  for (var _g = 0; _g < groupKeys.length; _g++) {
+    var key = groupKeys[_g];
+    var groupFixtures = fixtures.filter(function(f) { return f.group === key; });
+    var groupStanding = standings[key] || [];
+
+    fixturesHtml += '<div class="fixture-group-card">'
+      + '<div class="fixture-group-header">'
+      + '<span class="fixture-group-label">Group ' + escapeHtml(key) + '</span>'
+      + '<span class="fixture-group-count">' + (groups[key] ? groups[key].length : 0) + ' players</span>'
       + '</div>'
-      + '<div class="fixture-split-grid">'
-      + '<div class="fixture-matches-stack">';
+      + '<div class="fixture-group-matches">';
 
-    for (const f of gf) {
-      const done = f.done;
-      const n1 = pName(f.p1), n2 = pName(f.p2);
-      const i1 = getInitials(f.p1), i2 = getInitials(f.p2);
-      const winnerIsP1 = done && f.s1 !== null && f.s2 !== null && f.s1 > f.s2;
-      const winnerIsP2 = done && f.s1 !== null && f.s2 !== null && f.s2 > f.s1;
+    if (groupFixtures.length === 0) {
+      fixturesHtml += '<div class="fixture-match-row"><span class="text-muted" style="grid-column:1/-1;text-align:center;">No matches.</span></div>';
+    } else {
+      for (var _f = 0; _f < groupFixtures.length; _f++) {
+        var f = groupFixtures[_f];
+        var done = f.done;
+        var canPlay = f.p1 && f.p2;
+        var winnerIsP1 = done && f.winner && f.winner === f.p1;
+        var i1 = getInitials(f.p1);
+        var i2 = getInitials(f.p2);
+        var rowCls = 'fixture-match-row';
+        if (done) rowCls += ' match-done';
 
-      html += '<div class="fixture-match-row' + (done ? ' match-done' : '') + '">'
-        + '<div class="fixture-team' + (winnerIsP1 ? ' is-winner' : '') + '">'
-        + '<span class="fixture-avatar">' + escapeHtml(i1) + '</span>'
-        + escapeHtml(n1)
-        + '</div>';
-
-      // Score area
-      html += '<div class="fixture-score-area">';
-      if (isAdmin()) {
-        var _max = getCurrentConfig().maxScoreInput;
-        html += '<input class="score-input s-first" type="number" min="0" max="' + _max + '" value="' + (f.s1 ?? '') + '" '
-          + 'onchange="enterFixtureScore(' + f.id + ',this.value,this.parentElement.querySelector(\'.s2\').value)" '
-          + 'onfocus="this.select()">'
-          + '<span class="vs" style="font-size:.65rem;color:var(--text-muted);"> - </span>'
-          + '<input class="score-input s2" type="number" min="0" max="' + _max + '" value="' + (f.s2 ?? '') + '" '
-          + 'onchange="enterFixtureScore(' + f.id + ',this.parentElement.querySelector(\'.s-first\').value,this.value)" '
-          + 'onfocus="this.select()">';
-      } else {
-        html += '<span class="fixture-score-pill">' + (done && f.s1 !== null ? f.s1 + ' - ' + f.s2 : '—') + '</span>';
-      }
-      html += '</div>';
-
-      html += '<div class="fixture-team align-right' + (winnerIsP2 ? ' is-winner' : '') + '">'
-        + '<span class="fixture-avatar">' + escapeHtml(i2) + '</span>'
-        + escapeHtml(n2)
-        + '</div>'
-        + '<div class="fixture-status-badge' + (done ? '' : (f.status === 'LIVE' ? ' is-live' : ' is-pending')) + '">'
-        + (done ? '✓ Completed' : (f.status === 'LIVE' ? '🔴 LIVE' : '⏳ Pending'))
-        + '</div>'
-        + '</div>';
-
-      // Controls row
-      if (isAdmin() && f.p1 && f.p2 && f.status !== 'COMPLETED') {
-        html += '<div class="fixture-controls-row">';
-        if (f.status === 'UPCOMING') {
-          html += '<button class="btn btn-sm btn-outline" onclick="startFixtureMatch(' + f.id + ')">▶ Start Match</button>';
+        var badge = '';
+        if (done) {
+          badge = '<span class="fixture-status-badge">Done</span>';
+        } else if (!canPlay) {
+          badge = '<span class="fixture-status-badge is-pending">Waiting</span>';
+        } else if (f.status === 'LIVE') {
+          badge = '<span class="fixture-status-badge is-live">LIVE</span>';
+        } else {
+          badge = '<span class="fixture-status-badge is-pending">Upcoming</span>';
         }
-        if (f.status === 'LIVE') {
-          html += '<button class="btn btn-sm btn-outline" onclick="revertFixtureMatch(' + f.id + ')" style="color:var(--text-muted);">↩ Revert</button>';
-          html += '<button class="btn btn-sm btn-outline" onclick="completeFixtureMatch(' + f.id + ')" style="border-color:var(--success);color:var(--success);">☑ Complete Match</button>';
+
+        fixturesHtml += '<div class="' + rowCls + '">'
+          + '<div class="fixture-team' + (winnerIsP1 ? ' is-winner' : '') + '">'
+          + '<span class="fixture-avatar">' + escapeHtml(i1) + '</span>'
+          + '<span>' + escapeHtml(pName(f.p1)) + '</span>'
+          + '</div>';
+
+        if (canPlay) {
+          if (isAdmin()) {
+            fixturesHtml += '<div class="fixture-score-area">'
+              + '<input class="score-input" type="number" min="0" max="' + _cfg.maxScoreInput + '" value="' + (f.s1 ?? '') + '" onchange="enterFixtureScore(' + f.id + ',this.value,this.parentElement.querySelector(\'.fs2\').value)" onfocus="this.select()">'
+              + '<span class="vs">vs</span>'
+              + '<input class="score-input fs2" type="number" min="0" max="' + _cfg.maxScoreInput + '" value="' + (f.s2 ?? '') + '" onchange="enterFixtureScore(' + f.id + ',this.parentElement.querySelector(\'.score-input\').value,this.value)" onfocus="this.select()">'
+              + '</div>';
+          } else if (f.s1 !== null && f.s2 !== null) {
+            fixturesHtml += '<div class="fixture-score-area">'
+              + '<span class="score-text">' + escapeHtml(f.s1) + '</span><span class="vs">vs</span><span class="score-text">' + escapeHtml(f.s2) + '</span>'
+              + '</div>';
+          } else {
+            fixturesHtml += '<div class="fixture-score-area"><span class="vs">vs</span></div>';
+          }
+        } else {
+          fixturesHtml += '<div class="fixture-score-area"><span class="vs">vs</span></div>';
         }
-        html += '</div>';
+
+        fixturesHtml += '<div class="fixture-team' + (done && f.winner && f.winner === f.p2 ? ' is-winner align-right' : ' align-right') + '">'
+          + '<span>' + escapeHtml(pName(f.p2)) + '</span>'
+          + '<span class="fixture-avatar">' + escapeHtml(i2) + '</span>'
+          + '</div>'
+          + '</div>';
+
+        if (canPlay && isAdmin()) {
+          var btns = '';
+          if (f.status === 'UPCOMING' || !f.status) {
+            btns += '<button class="btn btn-sm btn-go-live" onclick="startFixtureMatch(' + f.id + ')">▶ Go Live</button>';
+          } else if (f.status === 'LIVE') {
+            btns += '<button class="btn btn-sm btn-outline" onclick="revertFixtureMatch(' + f.id + ')">↩ Revert</button>'
+              + '<button class="btn btn-sm btn-outline" onclick="completeFixtureMatch(' + f.id + ')">☑ Complete</button>';
+          } else if (f.status === 'COMPLETED') {
+            btns += '<button class="btn btn-sm btn-outline" onclick="reopenFixtureMatch(' + f.id + ')">↩ Reopen</button>';
+          }
+          if (btns) fixturesHtml += '<div class="fixture-controls-row">' + btns + '</div>';
+        }
       }
     }
+    fixturesHtml += '</div></div>';
 
-    html += '</div>'; // fixture-matches-stack
+    standingsHtml += '<div class="fixture-sidebar">'
+      + '<h4 style="font-size:0.8rem;font-weight:700;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);">Group ' + escapeHtml(key) + ' Standings</h4>';
 
-    // Standings sidebar
-    const rows = AppState.tournament.standings[key];
-    html += '<div class="fixture-sidebar">';
-    if (rows && rows.length > 0) {
-      html += '<table class="fixture-standings-table">'
-        + '<thead><tr>'
-        + '<th>#</th><th>Player</th><th class="cell-center">P</th><th class="cell-center">W</th><th class="cell-center">L</th><th class="cell-center">PD</th>'
-        + '</tr></thead><tbody>';
-      for (const r of rows) {
-        html += '<tr' + (r.rank <= 2 ? ' class="qualified-row"' : '') + '>'
-          + '<td><span class="fixture-rank-pill">' + (r.rank || (rows.indexOf(r) + 1)) + '</span></td>'
-          + '<td class="fixture-player-name">' + escapeHtml(r.name) + '</td>'
-          + '<td class="cell-center">' + r.played + '</td>'
-          + '<td class="cell-center">' + r.won + '</td>'
-          + '<td class="cell-center">' + r.lost + '</td>'
-          + '<td class="cell-center">' + (r.pd > 0 ? '+' : '') + r.pd + '</td>'
+    if (groupStanding.length === 0) {
+      standingsHtml += '<p class="text-muted" style="font-size:0.8rem;">No results yet.</p>';
+    } else {
+      standingsHtml += '<table class="fixture-standings-table">'
+        + '<thead><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>PD</th></tr></thead>'
+        + '<tbody>';
+      for (var _s = 0; _s < groupStanding.length; _s++) {
+        var s = groupStanding[_s];
+        var isQ = _s < 2;
+        standingsHtml += '<tr class="' + (isQ ? 'qualified-row' : '') + '">'
+          + '<td><span class="fixture-rank-pill">' + (_s + 1) + '</span></td>'
+          + '<td><span class="fixture-player-name">' + escapeHtml(s.name || s.id) + '</span></td>'
+          + '<td>' + s.played + '</td>'
+          + '<td>' + s.won + '</td>'
+          + '<td>' + s.lost + '</td>'
+          + '<td>' + s.pf + '</td>'
+          + '<td>' + s.pa + '</td>'
+          + '<td>' + (s.pd >= 0 ? '+' : '') + s.pd + '</td>'
           + '</tr>';
       }
-      html += '</tbody></table>';
-    } else {
-      html += '<p class="text-muted" style="font-size:.85rem;padding:1rem 0;text-align:center;">No standings data</p>';
+      standingsHtml += '</tbody></table>';
     }
-    html += '</div>'; // fixture-sidebar
-
-    html += '</div></div>'; // fixture-split-grid, fixture-panel
+    standingsHtml += '</div>';
   }
-  container.innerHTML = html;
-  document.getElementById('groupStandings').innerHTML = '';
-  const allDone = fixtures.filter(f => f.done).length === fixtures.length;
-  document.getElementById('btnProceedKnockout').classList.toggle('hidden', !allDone);
+
+  container.innerHTML = fixturesHtml;
+  standingsContainer.innerHTML = standingsHtml;
+
+  var allDone = fixtures.length > 0 && fixtures.every(function(f) { return f.done || !f.p1; });
+  document.getElementById('btnProceedKnockout').classList.toggle('hidden', !(allDone && AppState.tournament.knockout.length > 0 && isAdmin()));
+  document.getElementById('btnViewKnockout').classList.toggle('hidden', !(allDone && AppState.tournament.knockout.length > 0));
+}
+
+function revertFixtureMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Revert this match to Upcoming? All scores will be cleared.')) return;
+  var f = AppState.tournament.fixtures.find(function(m) { return m.id === id; });
+  if (!f) return;
+  f.s1 = null;
+  f.s2 = null;
+  f.done = false;
+  f.winner = null;
+  f.status = 'UPCOMING';
+  f.updatedAt = Date.now();
+  var result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
+  AppState.tournament.champion = champ.champion;
+  AppState.tournament.runnerUp = champ.runnerUp;
+  saveState();
+  renderFixtures();
+}
+
+function completeFixtureMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Complete this match? This will finalize the result.')) return;
+  const f = AppState.tournament.fixtures.find(m => m.id === id);
+  if (!f) return;
+  completeMatch(f);
+  f.updatedAt = Date.now();
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
+  AppState.tournament.champion = champ.champion;
+  AppState.tournament.runnerUp = champ.runnerUp;
+  saveState();
+  renderFixtures();
+}
+
+function reopenFixtureMatch(id) {
+  if (!isAdmin()) return;
+  if (!confirm('Reopen this match? It will go back to live with scores preserved.')) return;
+  const f = AppState.tournament.fixtures.find(m => m.id === id);
+  if (!f) return;
+  reopenMatch(f);
+  f.updatedAt = Date.now();
+  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
+  AppState.tournament.standings = result.standings;
+  AppState.tournament.qualifiers = result.qualifiers;
+  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
+  var champ = syncChampion(AppState.tournament.participants, AppState.tournament.knockout);
+  AppState.tournament.champion = champ.champion;
+  AppState.tournament.runnerUp = champ.runnerUp;
+  saveState();
+  renderFixtures();
 }
 
 function enterFixtureScore(id, s1, s2) {
@@ -125,33 +215,6 @@ function startFixtureMatch(id) {
   const f = AppState.tournament.fixtures.find(m => m.id === id);
   if (!f) return;
   startMatch(f);
-  saveState();
-  renderFixtures();
-}
-
-function revertFixtureMatch(id) {
-  if (!isAdmin()) return;
-  if (!confirm('Revert this match to Upcoming? Scores will be cleared.')) return;
-  const f = AppState.tournament.fixtures.find(m => m.id === id);
-  if (!f) return;
-  revertMatch(f);
-  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
-  AppState.tournament.standings = result.standings;
-  AppState.tournament.qualifiers = result.qualifiers;
-  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
-  saveState();
-  renderFixtures();
-}
-
-function completeFixtureMatch(id) {
-  if (!isAdmin()) return;
-  const f = AppState.tournament.fixtures.find(m => m.id === id);
-  if (!f) return;
-  completeMatch(f);
-  const result = computeStandings(AppState.tournament.groups, AppState.tournament.fixtures, AppState.tournament.participants);
-  AppState.tournament.standings = result.standings;
-  AppState.tournament.qualifiers = result.qualifiers;
-  AppState.tournament.knockout = createKnockoutBracket(AppState.tournament.qualifiers);
   saveState();
   renderFixtures();
 }

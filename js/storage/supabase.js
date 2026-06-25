@@ -15,7 +15,7 @@ function initSupabase() {
       AppState.user = session ? { role: 'admin', email: session.user.email, loggedInAt: Date.now() } : { role: 'viewer' };
       updateBanners();
     });
-  } catch(e) { }
+  } catch(e) { console.error('Supabase init failed:', e); }
 }
 
 async function upsertState(catId, data) {

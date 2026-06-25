@@ -109,7 +109,7 @@ function renderTournamentFeed() {
     }
 
     // CHAMPIONS
-    if (s.phase === 'champion' && s.champion) {
+    if (s.champion) {
       feedItems.push({
         type: 'champion', sportIcon, catName,
         champion: resolve(participants, s.champion),

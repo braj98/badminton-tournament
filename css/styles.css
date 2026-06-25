@@ -2490,3 +2490,132 @@ body.dark-mode .btn-action-score:hover {
   background: var(--primary-hover);
 }
 
+/* ===== MOBILE SCORE ENTRY UX IMPROVEMENTS ===== */
+@media (max-width: 600px) {
+  /* Base score input - larger on mobile */
+  .score-input {
+    width: 64px !important;
+    min-height: 48px;
+    padding: 0.4rem 0.35rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Fixture score area - bigger touch targets */
+  .fixture-score-area {
+    gap: 0.5rem;
+  }
+
+  .fixture-score-area .score-input {
+    width: 72px !important;
+    min-height: 52px;
+    padding: 0.45rem 0.4rem !important;
+    font-size: 1.1rem !important;
+  }
+
+  .fixture-score-area .vs {
+    font-size: 0.85rem !important;
+  }
+
+  /* Fixtures match row - more breathing room */
+  .fixture-match-row {
+    padding: 0.75rem 0.75rem !important;
+    gap: 0.5rem;
+  }
+
+  /* Live tab score area - bigger inputs */
+  .score-live-wrapper {
+    gap: 0.5rem;
+  }
+
+  .score-live-wrapper .score-input {
+    width: 72px !important;
+    min-height: 52px;
+    padding: 0.45rem 0.4rem !important;
+    font-size: 1.1rem !important;
+  }
+
+  .score-sep-live {
+    font-size: 1rem !important;
+  }
+
+  /* Live match row - larger on mobile */
+  .live-match-row {
+    padding: 0.85rem 1rem !important;
+    gap: 0.75rem;
+  }
+
+  /* Knockout bracket - bigger inputs */
+  .match-card .match-score-area {
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+  }
+
+  .match-card .match-score-area .score-input {
+    width: 64px !important;
+    min-height: 48px;
+    padding: 0.4rem 0.35rem !important;
+    font-size: 1rem !important;
+  }
+
+  .match-card .match-score-area .vs {
+    font-size: 0.8rem !important;
+  }
+
+  /* Final set inputs - bigger on mobile */
+  .final-set-group {
+    gap: 0.3rem;
+  }
+
+  .final-set-group .score-input {
+    width: 60px !important;
+    min-height: 48px;
+    padding: 0.4rem 0.3rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Final sets inline - wrap if needed */
+  .final-sets-inline {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Knockout match card - more space */
+  .match-versus-row {
+    padding: 0.3rem 0;
+    gap: 0.75rem;
+  }
+
+  /* Team player name - slightly smaller on very small screens */
+  .fixture-team,
+  .team-horizontal .player-name,
+  .live-match-row .competitors-versus-block {
+    font-size: 0.85rem;
+  }
+
+  /* Score pill for viewers - readable on mobile */
+  .fixture-score-pill {
+    min-width: 80px;
+    font-size: 0.95rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  /* Score display live */
+  .score-display-live {
+    font-size: 1.1rem;
+    padding: 0.4rem 0.9rem;
+  }
+}
+
+/* Extra small screens - even bigger inputs */
+@media (max-width: 380px) {
+  .score-input,
+  .fixture-score-area .score-input,
+  .score-live-wrapper .score-input,
+  .match-card .match-score-area .score-input {
+    width: 80px !important;
+    min-height: 56px;
+    font-size: 1.2rem !important;
+  }
+}
+

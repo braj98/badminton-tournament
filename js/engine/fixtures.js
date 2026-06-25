@@ -17,7 +17,7 @@ function generateFixtures(groups) {
   for (let i = 0; i < maxLen; i++) {
     for (const key of groupKeys) {
       if (byGroup[key][i]) {
-        byGroup[key][i].id = scheduled.length;
+        byGroup[key][i].id = 'fixture_' + scheduled.length;
         scheduled.push(byGroup[key][i]);
       }
     }

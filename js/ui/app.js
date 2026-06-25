@@ -18,6 +18,20 @@ function migrateMatchStatus(state) {
       }
     }
   }
+  var champ = syncChampion(state.participants, state.knockout);
+  if (champ.champion && !state.champion) {
+    state.champion = champ.champion;
+    state.runnerUp = champ.runnerUp;
+    didMigrate = true;
+  }
+  if (!champ.champion && state.champion && state.knockout) {
+    var finalMatch = state.knockout.find(function(m) { return m.id === 'final'; });
+    if (!finalMatch || !finalMatch.done) {
+      state.champion = null;
+      state.runnerUp = null;
+      didMigrate = true;
+    }
+  }
   return didMigrate;
 }
 
@@ -507,7 +521,6 @@ function showResultsPage() {
   updateNavigationVisibility();
   renderCategoryBar();
   updateHeader();
-  console.log('DEBUG showResultsPage: category=' + AppState.category + ' phase=' + (AppState.tournament ? AppState.tournament.phase : 'no-tournament'));
   var _sh = document.getElementById('screen-home'); if (_sh) _sh.classList.remove('active');
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
@@ -634,7 +647,7 @@ function renderChampionsView() {
       const tmpl = templates.find(t => t.id === tmplId);
       if (!tmpl) continue;
       const s = localLoad(tmpl.id);
-      if (!s || s.phase !== 'champion' || !s.knockout) continue;
+      if (!s || !s.knockout) continue;
       const _final = s.knockout.find(m => m.id === 'final');
       if (!_final || !_final.done || !_final.winner) continue;
       hasContent = true;
