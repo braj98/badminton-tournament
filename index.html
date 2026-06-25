@@ -12,21 +12,28 @@
 </head>
 <body>
 <div id="app">
-  <div class="header">
-    <div class="brand">
-      <h1 onclick="goHome()">🏆 Tournament Manager</h1>
-      <p class="subtitle" id="eventSubtitle">Loading...</p>
-    </div>
-    <div class="header-right">
-      <div class="sport-tag hidden" id="sportTag">Badminton</div>
-      <div class="header-actions">
-        <button class="btn-header admin-only" onclick="toggleManagePanel()">⚙️ Manage</button>
-        <button class="btn-header" data-public="1" onclick="showResultsPage()">📊 Results</button>
-        <span id="adminBanner" class="hidden admin-tag">✅ Admin — <a href="#" style="color:#dc2626;font-weight:600;" onclick="logout()">Logout</a></span>
-        <span id="modeBanner" class="mode-tag"></span>
+  <header class="unified-app-bar">
+    <div class="header-brand-cluster">
+      <div class="brand-meta">
+        <h1 onclick="goHome()">🏆 Tournament</h1>
+        <p id="eventSubtitle">Loading...</p>
       </div>
     </div>
-  </div>
+    <div class="header-view-pills">
+      <button class="btn-view-pill" data-public="1" onclick="showResultsPage()">📊 Results</button>
+    </div>
+    <div class="header-admin-cluster admin-only" id="headerAdminCluster">
+      <button class="admin-profile-trigger" id="adminMenuBtn" onclick="toggleAdminMenu()">
+        <span>⚙️ Admin</span>
+        <div class="admin-dot"></div>
+      </button>
+      <div class="admin-dropdown-menu" id="adminDropdownMenu">
+        <button class="dropdown-menu-item" onclick="toggleManagePanel(); closeAdminMenu();">🛠️ Manage</button>
+        <button class="dropdown-menu-item logout-action" onclick="logout(); closeAdminMenu();">🚪 Logout</button>
+      </div>
+    </div>
+    <div id="viewerIndicator" class="viewer-eye-icon hidden">👁 View Only</div>
+  </header>
 
   <!-- ============ MANAGE PANEL (MODAL OVERLAY) ============ -->
   <div id="managePanel" class="hidden modal-overlay">

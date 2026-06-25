@@ -22,28 +22,41 @@ function advanceWinner(knockout) {
 }
 
 function startMatch(match) {
+  if (match.status === 'COMPLETED' || match.done) { alert('Cannot start a completed match.'); return false; }
+  if (match.status === 'LIVE') { alert('Match is already live.'); return false; }
   match.status = 'LIVE';
   match.updatedAt = Date.now();
+  return true;
 }
 
-function completeMatch(match, participants) {
+function completeMatch(match, participants, finalSets) {
+  if (match.status === 'COMPLETED') { alert('Match is already completed.'); return false; }
+  var w1 = 0, w2 = 0;
+  if (match.round === 'Final' && match.sets && finalSets > 0) {
+    var needed = Math.ceil(finalSets / 2);
+    for (var i = 0; i < match.sets.length; i++) {
+      var set = match.sets[i];
+      if (set && set.s1 !== null && set.s2 !== null) {
+        if (set.s1 > set.s2) w1++;
+        else if (set.s2 > set.s1) w2++;
+      }
+    }
+    if (w1 < needed && w2 < needed) {
+      alert('A player must win at least ' + needed + ' sets to complete the match.');
+      return false;
+    }
+  }
   match.done = true;
   match.status = 'COMPLETED';
   match.updatedAt = Date.now();
   if (match.round === 'Final' && match.sets) {
-    let w1 = 0, w2 = 0;
-    for (const s of match.sets) {
-      if (s.s1 !== null && s.s2 !== null) {
-        if (s.s1 > s.s2) w1++;
-        else if (s.s2 > s.s1) w2++;
-      }
-    }
     match.winner = w1 >= w2 ? match.p1 : match.p2;
     match.s1 = w1;
     match.s2 = w2;
   } else if (match.s1 !== null && match.s2 !== null && match.s1 !== match.s2 && match.p1 && match.p2) {
     match.winner = match.s1 > match.s2 ? match.p1 : match.p2;
   }
+  return true;
 }
 
 function reopenMatch(match) {
@@ -54,7 +67,7 @@ function reopenMatch(match) {
 }
 
 function syncChampion(participants, knockout) {
-  const finalMatch = knockout.find(m => m.id === 'final');
+  const finalMatch = knockout ? knockout.find(m => m.id === 'final') : null;
   if (finalMatch && finalMatch.done && finalMatch.winner) {
     participants = participants || [];
     const winnerName = participants.length > 0
@@ -67,4 +80,38 @@ function syncChampion(participants, knockout) {
     return { champion: winnerName, runnerUp: loserName };
   }
   return { champion: null, runnerUp: null };
+}
+
+function syncTournamentState(state) {
+  if (!state) return;
+  // 1. Migrate match status (folds old migrateMatchStatus logic)
+  ['fixtures', 'knockout'].forEach(function(key) {
+    var arr = state[key];
+    if (!arr || !arr.length) return;
+    for (var i = 0; i < arr.length; i++) {
+      if (!arr[i].status) {
+        arr[i].status = arr[i].done ? 'COMPLETED' : 'UPCOMING';
+      }
+    }
+  });
+  // 2. Sync champion/runnerUp/phase/completedAt
+  var champ = syncChampion(state.participants, state.knockout);
+  state.champion = champ.champion;
+  state.runnerUp = champ.runnerUp;
+  if (champ.champion) {
+    state.phase = 'champion';
+    state.completedAt = state.completedAt || Date.now();
+  } else if (state.phase === 'champion') {
+    state.phase = 'knockout';
+    state.completedAt = null;
+  } else if (state.phase === 'setup' || !state.phase || state.phase === 'groups' || state.phase === 'fixtures') {
+    // Phase is correctly reflecting current tournament stage — no change needed
+  } else if ((!state.knockout || state.knockout.length === 0) && state.fixtures && state.fixtures.length > 0) {
+    // Round-robin only (no knockout): check if all fixtures done
+    var allDone = state.fixtures.every(function(f) { return f.done || !f.p1; });
+    if (allDone && state.fixtures.length > 0) {
+      state.phase = 'champion';
+      state.completedAt = state.completedAt || Date.now();
+    }
+  }
 }

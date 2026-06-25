@@ -1,296 +1,262 @@
-Problem Statement
+Remaining Issues
+Issue 1 (High)
 
-Current navigation is competition-centric.
+syncTournamentState() is Still Too Small
 
-Example:
+Current responsibilities:
 
-Senior Doubles
-→ Fixtures
-→ Results
-→ Champion
+Champion
+Runner-Up
+Phase
+CompletedAt
 
-This works for players.
+It does NOT appear to synchronize:
 
-However spectators typically want:
+Feed refresh
+Knockout consistency
+Live match count
+Upcoming match count
 
-What is happening now?
-What just finished?
-What is next?
-Who already won?
+Recommendation:
 
-They should not have to open every competition.
-
-Recommended Event Dashboard
-
-Event Dashboard becomes the landing page.
+Expand this function into the single place responsible for tournament consistency.
 
 Example:
 
-Sports Meet 2026
+syncTournamentState()
 
-🔥 Live
+    Champion
+    Runner-Up
+    Tournament Phase
+    CompletedAt
+    Match Status Validation
+    Feed Consistency
+Issue 2 (High)
 
-📖 Recent Results
+startMatch() Has No Validation
 
-📅 Upcoming
+Current:
 
-🏆 Champions
-Section 1 - Live Matches
+startMatch(match)
 
-Purpose:
+simply sets:
 
-Show matches currently being played.
+status = LIVE
 
-Example:
+Potential issue:
 
-🔥 LIVE
+Two admins could accidentally start:
 
-🏸 Senior Doubles SF
-Amit/Rajesh vs Kiran/Deepak
+two Finals
+duplicate matches
+already completed matches
 
-🏸 Junior Singles Final
-Arjun vs Rahul
-Match State
+Recommendation:
 
-Each match should have:
+Validate before starting.
+
+Examples:
+
+Match already completed?
+Match already live?
+Previous knockout round finished?
+Issue 3 (Medium)
+
+completeMatch() Updates Status Before Validation
+
+Current order appears to be:
+
+status = COMPLETED
+updatedAt = now
+
+↓
+
+validate final sets
+
+If validation fails, the match may already have been modified.
+
+Recommendation:
+
+Validate first.
+
+Only after successful validation:
+
+status = COMPLETED
+winner
+updatedAt
+syncTournamentState()
+Issue 4 (Medium)
+
+Tournament Phase Logic
+
+Current:
+
+Champion Exists
+
+↓
+
+Phase = champion
+
+Else:
+
+knockout
+
+Potential edge case:
+
+Round Robin tournament.
+
+No knockout.
+
+Champion determined directly.
+
+Recommendation:
+
+Determine phase from tournament structure rather than only champion existence.
+
+Issue 5 (Medium)
+
+updatedAt
+
+Good that match updates modify:
+
+updatedAt
+
+Verify every operation updates it.
+
+Especially:
+
+score edit
+reopen
+winner correction
+BYE handling
+UX Improvements
+Match Lifecycle
+
+Current model is now good.
 
 UPCOMING
+
+↓
+
 LIVE
+
+↓
+
 COMPLETED
-Admin Controls
 
-Start Match
+↓
 
-▶ Start Match
+REOPEN
 
-Changes:
+↓
 
-UPCOMING → LIVE
+LIVE
+
+I would keep this.
+
+Confirmation Dialog
+
+Keep confirmation for:
 
 Complete Match
+Reopen Match
 
-☑ Match Completed
+These are the highest-risk actions.
 
-Changes:
+Champion Notification
 
-LIVE → COMPLETED
-Section 2 - Recent Results
+After final completion:
 
-Purpose:
+Display:
 
-Show recently completed matches.
-
-Example:
-
-📖 Recent Results
-
-Senior Doubles SF
-
-Amit/Rajesh
-21-18
-
-Kiran/Deepak
-
-------------------
-
-Junior Singles
-
-Arjun
-21-17
-
-Rahul
-Recommendation
-
-Show only:
-
-Last 5 to 10 completed matches.
-
-Do NOT show entire history.
-
-Reason:
-
-Easier for spectators
-Smaller data set
-Faster rendering
-Section 3 - Upcoming Matches
-
-Purpose:
-
-Show matches that will happen next.
-
-Example:
-
-📅 Upcoming
-
-Senior Girls Final
-10:00 AM
-
-Junior Doubles SF
-10:30 AM
-Recommendation
-
-Show:
-
-Next 5 matches.
-
-Not the full schedule.
-
-Section 4 - Champions
-
-Purpose:
-
-Show completed competitions.
-
-Example:
-
-🏆 Champions
+🏆 Champion Updated
 
 Senior Doubles
+
 Amit / Rajesh
 
-Junior Singles
-Arjun
+Small UX improvement.
 
-Senior Girls
-Priya
-Feed Design
+Feed Review
 
-Instead of building a separate feed table:
+Current structure:
 
-Use existing tournament data.
+🔥 Live
+📖 Recent Results
+📅 Upcoming
+🏆 Champions
 
-Feed should be generated from:
+I still believe this is the correct design.
 
-Match Status
-Match Completion Time
-Competition Status
-Example Feed Entries
+Do not merge these sections.
 
-When match starts:
+Architecture Suggestion
 
-{
-  "type": "MATCH_STARTED",
-  "competition": "Senior Doubles",
-  "timestamp": "..."
-}
+Eventually make:
 
-When match completes:
+syncTournamentState()
 
-{
-  "type": "MATCH_COMPLETED",
-  "competition": "Senior Doubles",
-  "winner": "Amit/Rajesh",
-  "timestamp": "..."
-}
+the only function allowed to update:
 
-When competition completes:
+Champion
+Runner-Up
+Tournament Phase
+CompletedAt
+Feed State
 
-{
-  "type": "COMPETITION_COMPLETED",
-  "competition": "Senior Doubles",
-  "champion": "Amit/Rajesh"
-}
-Supabase Load Analysis
-Bad Design
+Everything else should only modify matches.
 
-Every viewer:
+Testing Checklist
 
-Every 5 seconds
+Perform these scenarios:
 
-loads:
+Final
+Start
+Complete
+Reopen
+Complete Again
 
-All categories
-All matches
-All tournaments
+Verify:
 
-With:
+Champion
+Feed
+Phase
+Knockout
 
-100 viewers
+Quarter Final
 
-This becomes expensive.
+↓
 
-Recommended Design
+Semi Final Generated
 
-Load event data once.
+↓
 
-Compute:
+Quarter Final Reopened
 
-Live Matches
-Recent Results
-Upcoming Matches
-Champions
+Verify bracket consistency.
 
-in browser memory.
+Feed
 
-Even Better
+Verify movement:
 
-Whenever admin updates:
-
-Match Started
-Match Completed
-Champion Declared
-
-save once.
-
-Viewers receive update through Supabase realtime.
-
-Result:
-
-1 write
-Many listeners
-
-instead of:
-
-100 viewers polling
-Additional Optimization
-
-Maintain:
-
-event_dashboard
-
-object.
-
-Example:
-
-{
-  "live": [],
-  "recentResults": [],
-  "upcoming": [],
-  "champions": []
-}
-
-Update only when tournament state changes.
-
-Recommendation For Current Scale
-
-Current scale:
-
-2-3 admins
-50-200 viewers
-1 active event
-
-Do NOT build a separate feed service.
-
-Do NOT create additional Supabase tables.
-
-Do NOT poll every few seconds.
-
-Instead:
-
-Continue storing tournament state normally.
-Use match status:
-UPCOMING
-LIVE
-COMPLETED
-Build Event Dashboard from existing data.
-Use Supabase realtime updates when state changes.
-Show:
-Live
-Recent Results
 Upcoming
-Champions
 
-This gives the best user experience with minimal additional Supabase load
+↓
 
+Live
 
-My recommendation is not to build a separate "feed" table right now. Your existing tournament state already contains everything needed. Generate the dashboard from the existing state, and use Supabase realtime only when an admin changes something. That keeps both complexity and Supabase usage very low
+↓
+
+Recent Results
+
+↓
+
+Champion
+Viewer
+
+Ensure viewer cannot access:
+
+Start
+Complete
+Reopen
+Delete

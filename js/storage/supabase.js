@@ -109,7 +109,7 @@ function subscribeToChanges() {
       const newData = payload.new ? payload.new.data : null;
       if (newData && catId === AppState.category && newData._lastSave > AppState.tournament._lastSave) {
         AppState.tournament = newData;
-        if (typeof migrateMatchStatus === 'function') migrateMatchStatus();
+        if (typeof syncTournamentState === 'function') syncTournamentState(AppState.tournament);
         localSave(catId, AppState.tournament);
         if (AppState.ui.showingResults) {
           showResultsPage();
