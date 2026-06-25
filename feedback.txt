@@ -1,239 +1,365 @@
-Issue 2
-completeMatch()
+What Each Key Represents
+1. Metadata
+btm_metadata
 
-Current order
+I think this is becoming your application configuration.
 
-status = COMPLETED
+Examples:
 
-↓
+organization
+version
+createdBy
+current event
+UI preferences
 
-winner
+I like this.
 
-↓
+2. Events
+btm_events
 
-syncTournamentState()
+Contains
 
-Recommendation
+Sports Meet 2026
 
-Validation should happen first.
+Sports Meet 2027
+
+...
+
+Excellent.
+
+3. Templates
+btm_templates
+
+Contains reusable competition definitions.
 
 Example
 
-Validate
+Junior Singles
+
+Senior Boys
+
+Senior Doubles
+
+Adult Doubles
+
+These are independent of tournaments.
+
+Good separation.
+
+4. Categories
+btm_categories
+
+This one is interesting.
+
+Originally it contained:
+
+Event
+
+Sport
+
+Competition
+
+Today I think it is becoming
+
+Competition Instances
+
+which is okay.
+
+5. Tournament States
+
+Every competition has:
+
+btm_state_xxx
+
+Example
+
+btm_state_junior
+
+btm_state_senior_boys
+
+btm_state_adult_dbls
+
+These contain:
+
+players
+fixtures
+knockout
+champion
+feed
+UI state
+
+I actually like this.
+
+What Happens Today
+
+Suppose:
+
+Sports Meet 2026
 
 ↓
 
-Determine Winner
+Badminton
 
 ↓
 
-status = COMPLETED
+Senior Boys
+
+App builds
+
+stateKey
 
 ↓
 
-syncTournamentState()
+btm_state_senior_boys
+
+and loads one JSON document.
+
+Very efficient.
+
+But I See One Limitation
+
+Suppose tomorrow you create
+
+Sports Meet 2027
+
+and again have
+
+Senior Boys
+
+Current key becomes
+
+btm_state_senior_boys
+
+Oops.
+
+Collision.
+
+Now you cannot keep:
+
+2026
+
+and
+
+2027
+
+simultaneously.
+
+I Think This Is Your Biggest Remaining Data Model Issue
+
+Right now your key is essentially
+
+Sport
++
+Competition
+
+It is missing Event.
+
+Instead I would eventually move to
+
+btm_state_<eventId>_<competitionId>
+
+Example
+
+btm_state_sportsmeet2026_seniorboys
+
+btm_state_sportsmeet2027_seniorboys
+
+or even
+
+btm_state_evt123_cmp456
+
+Much safer.
+
+Another Future Issue
+
+Today
+
+btm_state_junior
+
+means
+
+Badminton
+
+implicitly.
+
+Tomorrow
+
+Table Tennis
+
+also has
+
+Junior
+
+Now:
+
+btm_state_junior
+
+becomes ambiguous.
+
+So eventually your key should include
+
+Event
+
+Sport
+
+Competition
+
+Conceptually
+
+btm_state
+      ↓
+Event
+      ↓
+Sport
+      ↓
+Competition
+If I Were Designing V2
+
+Instead of
+
+btm_state_junior
+
+I'd probably generate
+
+btm_state
 
 ↓
 
-Save
+eventId
 
-Never modify state before validation succeeds.
+↓
 
-Issue 3
-Final Set Validation
+competitionId
 
-Current validation counts winning sets.
+The actual key could look like
 
-Good.
+btm_state_evt001_cmp005
 
-Still verify:
+Notice:
 
-no tied sets
-incomplete third/fifth set
-invalid scores
+No labels.
 
-before allowing completion.
+No names.
 
-Medium Priority Issues
-Issue 4
-syncTournamentState()
+Only IDs.
 
-Current responsibilities:
+Now:
 
-Champion
-Runner-Up
-Phase
+Rename
 
-Recommendation
+Senior Boys
 
-Expand gradually to include:
+↓
 
-tournament status
-feed consistency
-validation warnings
+Open Boys
 
-Do not make UI functions calculate these independently.
+Nothing changes.
 
-Issue 5
-updatedAt Consistency
+Current Use Cases
 
-Current implementation is much better.
+Your current model handles these very well.
 
-Audit every operation.
+One Organization
 
-These should all update:
+✔
 
-score edit
-start match
-complete match
-reopen
-winner correction
+One Active Event
 
-Otherwise feed ordering may become inconsistent.
+✔
 
-Issue 6
-Match State
+Multiple Sports
 
-Currently storing:
+✔
 
-status
-done
-winner
+because templates already carry
 
-Potential redundancy.
+sport
+Multiple Competitions
 
-Eventually consider using:
+✔
 
-status
-winner
+Viewer/Admin
 
-where:
-
-status == COMPLETED
-
-already implies:
-
-done == true
-
-Not urgent.
-
-UX Improvements
-Live Screen
-
-Very good.
-
-I like:
-
-🏸 Category
-
-🔴 Round
-
-Player A
-
-vs
-
-Player B
-
-Easy to read.
+✔
 
 Feed
 
-Keep:
-
-🔥 Live
-
-📖 Recent Results
-
-📅 Upcoming
-
-🏆 Champions
-
-Do not merge these sections.
-
-Admin Actions
-
-Continue to hide:
-
-Start
-Complete
-Reopen
-
-from viewers.
-
-Current approach is correct.
-
-Testing Checklist
-Group Stage
-Start
-Score Update
-Complete
-Reopen
-Complete Again
-Knockout
-
-Quarter Final
-
-↓
-
-Semi Final Generated
-
-↓
-
-Quarter Final Reopened
-
-Verify:
-
-bracket
-feed
-champion
-Final
-
-Start
-
-↓
-
-Score
-
-↓
-
-Complete
-
-↓
+✔
 
 Champion
 
-↓
+✔
 
-Reopen
+Where It Will Break
 
-↓
+Not today.
 
-Champion Removed
+Maybe six months from now.
 
-↓
+Examples:
 
-Complete Again
+Sports Meet 2026
 
-↓
+Sports Meet 2027
 
-Champion Restored
+simultaneously.
 
-Viewer
+or
 
-Verify viewer never sees:
+Badminton
 
-buttons
-score inputs
-admin dialogs
-Future Improvements
+Junior
 
-Not for current release.
+Table Tennis
 
-Competition Rules Engine
-Sport Default Rules
-Competition Rule Overrides
-Walkovers
-Advanced Tie-Break Rules
-Statistics Dashboard
+Junior
 
-These should wait until after real tournament usage.
+or
+
+History
+
+Last Year
+
+Current Year
+My Recommendation
+
+I would not change anything today.
+
+Seriously.
+
+Because changing every key now will touch almost every part of your application.
+
+Instead I'd add this to your backlog:
+
+Future Migration (V2)
+
+Current:
+
+btm_state_<competitionName>
+
+Future:
+
+btm_state_<eventId>_<competitionId>
+
+This will support:
+
+Multiple events
+Multiple sports
+Historical tournaments
+Duplicate competition names
+Multi-organization
+
+without any collisions.
+
+Overall Feedback
+
+If you had shown me this schema two months ago, I would probably have suggested redesigning it.
+
+Today, after seeing the evolution of your app, I think you've arrived at a surprisingly clean architecture for a JSON-backed tournament platform.
+
+I'd rate the current data model:
+
+Current requirements: 9.8/10
+Future scalability: 8.5/10
+
+The only significant weakness I still see is that your state keys are name-based rather than identity-based. When you eventually move them to eventId + competitionId (or similar immutable IDs), I thin
