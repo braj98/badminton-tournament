@@ -43,9 +43,17 @@ function flushCloudSave() {
 
 async function fetchState(catId) {
   if (!_supabase) return null;
-  const { data, error } = await _supabase.from('state').select('data').eq('key', getStateKey(catId)).maybeSingle();
+  const newKey = getStateKey(catId);
+  let { data, error } = await _supabase.from('state').select('data').eq('key', newKey).maybeSingle();
   if (error && error.code !== 'PGRST116') { console.warn('Supabase fetch failed:', error.message); return null; }
-  return data ? data.data : null;
+  if (data) return data.data;
+  // Fallback: try old-style key (pre-migration)
+  const oldKey = 'btm_state_' + catId;
+  if (oldKey !== newKey) {
+    const { data: oldData } = await _supabase.from('state').select('data').eq('key', oldKey).maybeSingle();
+    if (oldData) return oldData.data;
+  }
+  return null;
 }
 
 function scheduleCloudSave(catId, data) {
@@ -103,9 +111,13 @@ function subscribeToChanges() {
   _realtimeChannel = _supabase.channel('btm-state-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'state' }, payload => {
       const key = payload.new ? payload.new.key : null;
-      const stateKeyPrefix = getStateKey('');
-      if (!key || !key.startsWith(stateKeyPrefix)) return;
-      const catId = key.replace(stateKeyPrefix, '');
+      if (!key || !key.startsWith('btm_state_')) return;
+      // Extract catId: new format = btm_state_<eventId>_<catId>, old format = btm_state_<catId>
+      const rest = key.slice('btm_state_'.length);
+      let catId = rest;
+      if (AppState.eventId && rest.startsWith(AppState.eventId + '_')) {
+        catId = rest.slice(AppState.eventId.length + 1);
+      }
       const newData = payload.new ? payload.new.data : null;
       if (newData && catId === AppState.category && newData._lastSave > AppState.tournament._lastSave) {
         AppState.tournament = newData;

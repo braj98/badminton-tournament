@@ -687,6 +687,7 @@ async function init() {
   }
 
   runMigration();
+  runStateKeyMigration();
 
   // Sync metadata to cloud
   if (_supabase && isAdmin()) {
