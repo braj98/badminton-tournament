@@ -2,7 +2,7 @@
 
 Generated from `feedback.txt` V18 review. Each item analyzed against current codebase and marked as **Deferred** or **Completed** based on action taken.
 
-**Build Date:** 25 Jun 2026 — all feedback.txt items addressed.
+**Build Date:** 25 Jun 2026 — all feedback.txt items addressed. V19 items analyzed and fixed 25 Jun 2026.
 
 ---
 
@@ -257,6 +257,102 @@ function syncTournamentState(state) {
 
 ---
 
+## V19 Issue 2: completeMatch() Order (Validate → Determine Winner → Set Status)
+
+**Status: ✅ COMPLETED — Full restructure**
+
+**Analysis:** `completeMatch()` in `tournamentEngine.js:32` previously validated before setting status, but determined winner AFTER setting status. Per recommendation, the order is now: **Validate → Determine Winner → Set Status**. Winner is computed during validation (step 1), then stored after status is set (step 3). State is never modified before validation succeeds.
+
+**Changes:**
+- Winner determination moved into the validation block (before status mutation).
+- `match.done = true` / `match.status = 'COMPLETED'` set only after winner is computed.
+- `syncTournamentState()` + `saveState()` are called by the caller after `completeMatch()` returns `true`.
+
+---
+
+## V19 Issue 3: Final Set Validation (Tied Sets, Incomplete Sets, Invalid Scores)
+
+**Status: ✅ COMPLETED — Reject tied/incomplete/invalid sets**
+
+**Analysis:** Previous validation only checked that `w1 < needed && w2 < needed` (enough sets won). It silently ignored tied sets, incomplete sets, and negative scores.
+
+**Changes** (`tournamentEngine.js:36-48`):
+- **Rejects tied sets**: `if (set.s1 === set.s2)` → alert + `return false`
+- **Rejects incomplete sets**: `if (!set || set.s1 === null || set.s2 === null)` → alert + `return false`
+- **Rejects negative scores**: `if (set.s1 < 0 || set.s2 < 0)` → alert + `return false`
+- Each failing condition returns an explicit error message.
+- Only sets that pass all checks are counted toward `w1`/`w2`.
+
+---
+
+## V19 Issue 4: syncTournamentState() Expansion
+
+**Status: ✅ IN PROGRESS — Gradual expansion as recommended**
+
+**Current coverage:**
+- Match status migration (folds old `migrateMatchStatus()`)
+- Champion/runnerUp sync
+- Phase validation + round-robin edge case
+- Auto-phase transitions (champion/knockout/setup)
+
+**Ongoing:** Will continue to fold feed consistency and validation warnings into `syncTournamentState()` as patterns emerge. UI functions should not calculate tournament state independently.
+
+---
+
+## V19 Issue 5: updatedAt Consistency
+
+**Status: ✅ COMPLETED — Already audited and verified**
+
+**Evidence:** See Medium Issue 2 audit above. All 12 mutation operations set `updatedAt = Date.now()`.
+
+---
+
+## V19 Issue 6: Match State Redundancy
+
+**Status: ⏳ DEFERRED — Low impact, clean up in future**
+
+**Observation:** Currently storing `status`, `done`, and `winner` where `status === 'COMPLETED'` already implies `done === true`. The `done` field is kept for backward compatibility (standings, knockout logic).
+
+**Action:** Remove `done` field once all engine functions are updated to check `status` instead. Not urgent — requires careful review of all `f.done` / `m.done` references across engine, standings, and knockout logic.
+
+---
+
+## V19 UX: Live Screen / Feed / Admin Actions
+
+**Status: ✅ ACKNOWLEDGED — Current approach is correct**
+
+**Review:**
+- Live screen format (🏸 Category, 🔴 Round, Player A vs Player B) — keep as-is.
+- Feed sections (🔥 Live, 📖 Recent Results, 📅 Upcoming, 🏆 Champions) — keep separate, do not merge.
+- Admin actions (Start, Complete, Reopen) — continue hiding from viewers. Current approach is correct.
+
+---
+
+## V19 Testing Checklist
+
+**Status: 📋 NOTED — Test plan for manual verification**
+
+**Group Stage:** Start → Score Update → Complete → Reopen → Complete Again
+**Knockout:** QF → SF Generated → QF Reopened → verify bracket/feed/champion
+**Final:** Start → Score → Complete → Champion → Reopen → Champion Removed → Complete Again → Champion Restored
+**Viewer:** Verify viewer never sees buttons, score inputs, or admin dialogs.
+
+---
+
+## V19 Future Improvements (Deferred)
+
+**Status: ⏳ DEFERRED — Not for current release**
+
+Items to revisit after real tournament usage:
+- Competition Rules Engine
+- Sport Default Rules
+- Competition Rule Overrides
+- Walkovers
+- Advanced Tie-Break Rules
+- Statistics Dashboard
+
+---
+
 ## Summary
 
 | # | Issue | Priority | Status |
@@ -279,3 +375,10 @@ function syncTournamentState(state) {
 | F4 | Tournament phase logic (round-robin edge case) | M | ✅ Completed |
 | F5 | updatedAt verification audit | M | ✅ Completed |
 | UX4 | Champion notification toast | L | ✅ Completed |
+| V19-2 | completeMatch() order (validate→determine→set) | H | ✅ Completed |
+| V19-3 | Final set validation (tied/incomplete/invalid) | H | ✅ Completed |
+| V19-4 | syncTournamentState() gradual expansion | M | ✅ In Progress |
+| V19-5 | updatedAt consistency (re-verify) | M | ✅ Completed |
+| V19-6 | Match state redundancy (done vs status) | L | ⏳ Deferred |
+| V19-T | Testing checklist (manual) | — | 📋 Noted |
+| V19-F | Future improvements (post-release) | — | ⏳ Deferred |

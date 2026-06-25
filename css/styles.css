@@ -91,13 +91,11 @@ body {
   padding: 0.65rem 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   margin-bottom: 1.25rem;
-  gap: 12px;
 }
 
 .header-brand-cluster {
@@ -105,6 +103,7 @@ body {
   align-items: center;
   gap: 1rem;
   min-width: 0;
+  flex: 0 1 auto;
 }
 
 .brand-meta h1 {
@@ -136,6 +135,9 @@ body {
 .header-view-pills {
   display: flex;
   align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .btn-view-pill {
@@ -160,6 +162,7 @@ body {
 .header-admin-cluster {
   position: relative;
   display: inline-block;
+  margin-left: auto;
 }
 
 .admin-profile-trigger {
@@ -244,6 +247,7 @@ body {
   gap: 0.35rem;
   white-space: nowrap;
   user-select: none;
+  margin-left: auto;
 }
 
 /* Dark mode variants */
@@ -304,6 +308,11 @@ body.dark-mode .viewer-eye-icon {
   align-items: center;
   margin-bottom: 1rem;
   gap: 8px;
+}
+.tournament-tabs.hidden + .action-bar {
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
 }
 
 .stage-title {
@@ -1547,6 +1556,27 @@ body.dark-mode .toast-notification {
 }
 .tab-btn.hidden { display: none !important; }
 
+/* ===== MATCH VIEW TAB BAR ===== */
+.match-view-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.match-view-tabs::-webkit-scrollbar { display: none; }
+@media (max-width: 600px) {
+  .match-view-tabs {
+    flex-wrap: nowrap;
+    gap: 2px;
+  }
+  .match-view-tabs .tab-btn {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.75rem;
+  }
+}
+
 .live-pulse-dot {
   width: 6px;
   height: 6px;
@@ -1760,6 +1790,15 @@ body.dark-mode .toast-notification {
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
 .justify-between { justify-content: space-between; }
+
+@media (max-width: 500px) {
+  .justify-between { flex-wrap: wrap; gap: 8px; }
+}
+@media (max-width: 400px) {
+  .confirm-box .confirm-actions { flex-direction: column; gap: 6px; }
+  .confirm-box .confirm-actions .confirm-btn,
+  .confirm-box .confirm-actions .btn-secondary { width: 100%; }
+}
 
 /* ===== EVENTS LIST & CARDS ===== */
 .home-events-list {

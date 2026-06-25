@@ -31,30 +31,43 @@ function startMatch(match) {
 
 function completeMatch(match, participants, finalSets) {
   if (match.status === 'COMPLETED') { alert('Match is already completed.'); return false; }
-  var w1 = 0, w2 = 0;
+  var w1 = 0, w2 = 0, winner = null;
   if (match.round === 'Final' && match.sets && finalSets > 0) {
     var needed = Math.ceil(finalSets / 2);
     for (var i = 0; i < match.sets.length; i++) {
       var set = match.sets[i];
-      if (set && set.s1 !== null && set.s2 !== null) {
-        if (set.s1 > set.s2) w1++;
-        else if (set.s2 > set.s1) w2++;
+      if (!set || set.s1 === null || set.s2 === null) {
+        alert('All sets must have scores entered before completing the Final.');
+        return false;
       }
+      if (set.s1 < 0 || set.s2 < 0) {
+        alert('Scores cannot be negative.');
+        return false;
+      }
+      if (set.s1 === set.s2) {
+        alert('Sets cannot be tied. Each set must have a winner.');
+        return false;
+      }
+      if (set.s1 > set.s2) w1++;
+      else w2++;
     }
     if (w1 < needed && w2 < needed) {
       alert('A player must win at least ' + needed + ' sets to complete the match.');
       return false;
     }
+    winner = w1 >= w2 ? match.p1 : match.p2;
+  } else if (match.s1 !== null && match.s2 !== null && match.s1 !== match.s2 && match.p1 && match.p2) {
+    winner = match.s1 > match.s2 ? match.p1 : match.p2;
   }
   match.done = true;
   match.status = 'COMPLETED';
   match.updatedAt = Date.now();
   if (match.round === 'Final' && match.sets) {
-    match.winner = w1 >= w2 ? match.p1 : match.p2;
+    match.winner = winner;
     match.s1 = w1;
     match.s2 = w2;
-  } else if (match.s1 !== null && match.s2 !== null && match.s1 !== match.s2 && match.p1 && match.p2) {
-    match.winner = match.s1 > match.s2 ? match.p1 : match.p2;
+  } else {
+    match.winner = winner || null;
   }
   return true;
 }

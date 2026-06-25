@@ -1,226 +1,174 @@
-Remaining Issues
-Issue 1 (High)
+Issue 2
+completeMatch()
 
-syncTournamentState() is Still Too Small
+Current order
+
+status = COMPLETED
+
+↓
+
+winner
+
+↓
+
+syncTournamentState()
+
+Recommendation
+
+Validation should happen first.
+
+Example
+
+Validate
+
+↓
+
+Determine Winner
+
+↓
+
+status = COMPLETED
+
+↓
+
+syncTournamentState()
+
+↓
+
+Save
+
+Never modify state before validation succeeds.
+
+Issue 3
+Final Set Validation
+
+Current validation counts winning sets.
+
+Good.
+
+Still verify:
+
+no tied sets
+incomplete third/fifth set
+invalid scores
+
+before allowing completion.
+
+Medium Priority Issues
+Issue 4
+syncTournamentState()
 
 Current responsibilities:
 
 Champion
 Runner-Up
 Phase
-CompletedAt
 
-It does NOT appear to synchronize:
+Recommendation
 
-Feed refresh
-Knockout consistency
-Live match count
-Upcoming match count
+Expand gradually to include:
 
-Recommendation:
+tournament status
+feed consistency
+validation warnings
 
-Expand this function into the single place responsible for tournament consistency.
+Do not make UI functions calculate these independently.
 
-Example:
+Issue 5
+updatedAt Consistency
 
-syncTournamentState()
+Current implementation is much better.
 
-    Champion
-    Runner-Up
-    Tournament Phase
-    CompletedAt
-    Match Status Validation
-    Feed Consistency
-Issue 2 (High)
+Audit every operation.
 
-startMatch() Has No Validation
-
-Current:
-
-startMatch(match)
-
-simply sets:
-
-status = LIVE
-
-Potential issue:
-
-Two admins could accidentally start:
-
-two Finals
-duplicate matches
-already completed matches
-
-Recommendation:
-
-Validate before starting.
-
-Examples:
-
-Match already completed?
-Match already live?
-Previous knockout round finished?
-Issue 3 (Medium)
-
-completeMatch() Updates Status Before Validation
-
-Current order appears to be:
-
-status = COMPLETED
-updatedAt = now
-
-↓
-
-validate final sets
-
-If validation fails, the match may already have been modified.
-
-Recommendation:
-
-Validate first.
-
-Only after successful validation:
-
-status = COMPLETED
-winner
-updatedAt
-syncTournamentState()
-Issue 4 (Medium)
-
-Tournament Phase Logic
-
-Current:
-
-Champion Exists
-
-↓
-
-Phase = champion
-
-Else:
-
-knockout
-
-Potential edge case:
-
-Round Robin tournament.
-
-No knockout.
-
-Champion determined directly.
-
-Recommendation:
-
-Determine phase from tournament structure rather than only champion existence.
-
-Issue 5 (Medium)
-
-updatedAt
-
-Good that match updates modify:
-
-updatedAt
-
-Verify every operation updates it.
-
-Especially:
+These should all update:
 
 score edit
+start match
+complete match
 reopen
 winner correction
-BYE handling
+
+Otherwise feed ordering may become inconsistent.
+
+Issue 6
+Match State
+
+Currently storing:
+
+status
+done
+winner
+
+Potential redundancy.
+
+Eventually consider using:
+
+status
+winner
+
+where:
+
+status == COMPLETED
+
+already implies:
+
+done == true
+
+Not urgent.
+
 UX Improvements
-Match Lifecycle
+Live Screen
 
-Current model is now good.
+Very good.
 
-UPCOMING
+I like:
 
-↓
+🏸 Category
 
-LIVE
+🔴 Round
 
-↓
+Player A
 
-COMPLETED
+vs
 
-↓
+Player B
 
-REOPEN
+Easy to read.
 
-↓
+Feed
 
-LIVE
-
-I would keep this.
-
-Confirmation Dialog
-
-Keep confirmation for:
-
-Complete Match
-Reopen Match
-
-These are the highest-risk actions.
-
-Champion Notification
-
-After final completion:
-
-Display:
-
-🏆 Champion Updated
-
-Senior Doubles
-
-Amit / Rajesh
-
-Small UX improvement.
-
-Feed Review
-
-Current structure:
+Keep:
 
 🔥 Live
-📖 Recent Results
-📅 Upcoming
-🏆 Champions
 
-I still believe this is the correct design.
+📖 Recent Results
+
+📅 Upcoming
+
+🏆 Champions
 
 Do not merge these sections.
 
-Architecture Suggestion
+Admin Actions
 
-Eventually make:
+Continue to hide:
 
-syncTournamentState()
-
-the only function allowed to update:
-
-Champion
-Runner-Up
-Tournament Phase
-CompletedAt
-Feed State
-
-Everything else should only modify matches.
-
-Testing Checklist
-
-Perform these scenarios:
-
-Final
 Start
 Complete
 Reopen
+
+from viewers.
+
+Current approach is correct.
+
+Testing Checklist
+Group Stage
+Start
+Score Update
+Complete
+Reopen
 Complete Again
-
-Verify:
-
-Champion
-Feed
-Phase
 Knockout
 
 Quarter Final
@@ -233,30 +181,59 @@ Semi Final Generated
 
 Quarter Final Reopened
 
-Verify bracket consistency.
+Verify:
 
-Feed
+bracket
+feed
+champion
+Final
 
-Verify movement:
-
-Upcoming
-
-↓
-
-Live
+Start
 
 ↓
 
-Recent Results
+Score
+
+↓
+
+Complete
 
 ↓
 
 Champion
+
+↓
+
+Reopen
+
+↓
+
+Champion Removed
+
+↓
+
+Complete Again
+
+↓
+
+Champion Restored
+
 Viewer
 
-Ensure viewer cannot access:
+Verify viewer never sees:
 
-Start
-Complete
-Reopen
-Delete
+buttons
+score inputs
+admin dialogs
+Future Improvements
+
+Not for current release.
+
+Competition Rules Engine
+Sport Default Rules
+Competition Rule Overrides
+Walkovers
+Advanced Tie-Break Rules
+Statistics Dashboard
+
+These should wait until after real tournament usage.
