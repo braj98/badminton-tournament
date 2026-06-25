@@ -1,5 +1,30 @@
 function getStateKey(catId) {
+  if (catId === '') return 'btm_state_';
+  if (localStorage.getItem('btm_state_key_migrated')) {
+    try {
+      const cats = getCategories();
+      const cat = cats.find(c => c.id === catId);
+      if (cat && cat.eventId) {
+        return 'btm_state_' + cat.eventId + '_' + catId;
+      }
+    } catch(e) {}
+  }
   return 'btm_state_' + catId;
+}
+
+function runStateKeyMigration() {
+  if (localStorage.getItem('btm_state_key_migrated')) return;
+  const cats = getCategories();
+  for (const cat of cats) {
+    if (!cat.eventId) continue;
+    const oldKey = 'btm_state_' + cat.id;
+    const newKey = 'btm_state_' + cat.eventId + '_' + cat.id;
+    const data = localStorage.getItem(oldKey);
+    if (data) {
+      localStorage.setItem(newKey, data);
+    }
+  }
+  localStorage.setItem('btm_state_key_migrated', Date.now().toString());
 }
 
 function getCategoriesKey() {
