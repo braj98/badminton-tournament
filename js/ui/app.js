@@ -19,8 +19,9 @@ function renderActionBar() {
   var titles = { setup: 'Setup', groups: 'Group Allocation', fixtures: 'Group Stage Matches', knockout: 'Knockout Stage', champion: '🏆 Champion' };
   title.textContent = titles[AppState.view] || 'Tournament';
   right.innerHTML = '';
+  right.innerHTML += '<button class="btn btn-secondary btn-sm" onclick="goToTournamentReport()" style="margin-left:4px;">📄 Report</button>';
   if (AppState.view === 'knockout') {
-    right.innerHTML = '<button id="actionBarShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()" style="margin-left:4px;">📊 Results</button>'
+    right.innerHTML += '<button id="actionBarShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()" style="margin-left:4px;">📊 Results</button>'
       + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">🏆 Champion</button>';
   }
 }
@@ -130,10 +131,19 @@ function renderBreadcrumb() {
   }
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'report') {
-    parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
-    parts.push('<span class="bc-sep">›</span>');
-    parts.push('<span class="bc-item bc-current">Report</span>');
+    if (AppState.ui.reportMode === 'tournament') {
+      parts.push('<span class="bc-sep">›</span>');
+      parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
+      parts.push('<span class="bc-sep">›</span>');
+      parts.push('<span class="bc-item bc-current">' + escapeHtml(getCategoryLabel()) + '</span>');
+      parts.push('<span class="bc-sep">›</span>');
+      parts.push('<span class="bc-item bc-current">Report</span>');
+    } else {
+      parts.push('<span class="bc-sep">›</span>');
+      parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
+      parts.push('<span class="bc-sep">›</span>');
+      parts.push('<span class="bc-item bc-current">Report</span>');
+    }
   } else if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');

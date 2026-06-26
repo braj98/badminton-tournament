@@ -1,17 +1,50 @@
-// ===================== EVENT REPORT =====================
+// ===================== EVENT / TOURNAMENT REPORT =====================
 
 function goToReport() {
+  AppState.ui.reportMode = 'event';
+  navigateTo('report');
+}
+
+function goToTournamentReport() {
+  AppState.ui.reportMode = 'tournament';
+  AppState.ui.reportReturnView = AppState.view;
   navigateTo('report');
 }
 
 function closeReport() {
-  navigateTo('event');
+  if (AppState.ui.reportMode === 'tournament' && AppState.ui.reportReturnView) {
+    navigateTo(AppState.ui.reportReturnView);
+  } else {
+    navigateTo('event');
+  }
 }
 
 function renderReport() {
   clearDisabled();
   updateHeader();
   var container = document.getElementById('reportContainer');
+
+  if (AppState.ui.reportMode === 'tournament') {
+    var tmpl = getTemplates().find(function(t) { return t.id === AppState.category; });
+    if (!tmpl) {
+      container.innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">Category not found.</p>';
+      setupReportScreens();
+      return;
+    }
+    var cat = getCategories().find(function(c) { return c.id === tmpl.id; });
+    if (!cat) { cat = { id: tmpl.id, label: tmpl.name, sport: tmpl.sport, eventId: AppState.eventId }; }
+    var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
+    var evName = ev ? ev.name : 'Tournament';
+    var state = localLoad(tmpl.id);
+    var cats = [cat];
+    var stateMap = {};
+    stateMap[tmpl.id] = state;
+    var report = generateEventReport({ id: AppState.eventId, name: evName, templateIds: [tmpl.id] }, cats, stateMap);
+    report.eventName = escapeHtml(cat.label) + ' — Tournament Report';
+    renderReportContent(container, report);
+    setupReportScreens();
+    return;
+  }
 
   var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
   if (!ev) {
