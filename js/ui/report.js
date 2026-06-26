@@ -94,8 +94,8 @@ function renderReport() {
 
   var html = '<div class="report-page">';
 
-  // Admin actions bar
-  if (isAdminUser) {
+  // Admin actions bar (hidden in standalone shareable view)
+  if (!window._reportStandalone && isAdminUser) {
     html += '<div class="report-admin-bar">'
       + '<div class="report-admin-left">';
     if (isPublished) {
@@ -126,14 +126,16 @@ function renderReport() {
   } else {
     if (!isPublished) {
       container.innerHTML = '<div class="report-page"><div class="report-empty"><p>Report not yet published. Check back later.</p>'
-        + '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div></div></div>';
+        + (!window._reportStandalone ? '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>' : '') + '</div></div>';
       setupReportScreens();
       return;
     }
     if (stale) {
       html += '<div class="report-stale-warning">⚠ This report may be out of date. The latest results may differ.</div>';
     }
-    html += '<div style="margin-bottom:12px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>';
+    if (!window._reportStandalone) {
+      html += '<div style="margin-bottom:12px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>';
+    }
   }
 
   // === 1. Event Banner ===
@@ -310,7 +312,7 @@ function renderReport() {
     + '<p>Generated ' + new Date(report.generatedAt).toLocaleDateString()
     + (report.publishedAt ? ' · Published ' + new Date(report.publishedAt).toLocaleDateString() : '')
     + '</p>'
-    + '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>'
+    + (!window._reportStandalone ? '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>' : '')
     + '</div></div>';
 
   container.innerHTML = html;
