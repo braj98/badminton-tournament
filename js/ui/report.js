@@ -277,6 +277,16 @@ function renderReport() {
   }
   html += '</div>';
 
+  // === 11. Until Next Time ===
+  html += '<div class="report-section" style="text-align:center;padding:24px 0 8px;">'
+    + '<div class="report-section-title" style="text-align:center;border:none;">🌟 Until Next Time...</div>'
+    + '<div class="report-quote" style="font-size:0.9rem;line-height:1.7;">'
+    + 'The friendships made, the lessons learned, the victories celebrated, and the spirit of sportsmanship displayed during '
+    + escapeHtml(report.eventName) + ' will remain cherished memories for our community.'
+    + '</div>'
+    + '<p style="margin-top:16px;color:var(--text-muted);font-style:italic;">We look forward to creating many more together.</p>'
+    + '</div>';
+
   // Footer
   html += '<div class="report-footer">'
     + '<p>Generated ' + new Date(report.generatedAt).toLocaleDateString()
