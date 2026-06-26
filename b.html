@@ -3,16 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticker Palette Selection Hub</title>
+    <title>Tournament Manager - Report Hub</title>
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-light: #fef2f2;
             --text-main: #0f172a;
             --text-muted: #475569;
             --bg-page: #f8fafc;
             --bg-card: #ffffff;
             --border: #e2e8f0;
             --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+            /* Selected Electric Amber Track Palette Variables */
+            --amber-bg: #fffbeb;
+            --amber-border: #fcd34d;
+            --amber-text: #78350f;
+            --amber-meta: #b45309;
+            --amber-icon: #d97706;
         }
 
         * {
@@ -25,150 +36,239 @@
         body {
             background-color: var(--bg-page);
             color: var(--text-main);
-            padding: 30px 20px;
+            padding-bottom: 5rem;
         }
 
-        /* CARD HOLDER FOR SELECTED SCHEMES */
-        .theme-selector-card {
-            background-color: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            max-width: 900px;
-            margin: 0 auto 35px auto;
-        }
-
-        .selector-headline {
-            font-size: 0.85rem;
-            font-weight: 800;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-        }
-
-        .radio-options-column {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        /* BASE BUTTON WRAPPER STYLE */
-        .radio-wrapper-label {
+        /* MASTER UNIFIED APP HEADER */
+        .unified-app-bar {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0.65rem 1.5rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .header-brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-meta h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-meta p {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-view-pill {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
             font-weight: 600;
-            font-size: 0.95rem;
             cursor: pointer;
-            padding: 16px 20px;
-            border-radius: 8px;
-            user-select: none;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-            color: #475569;
-            transition: all 0.20s ease-in-out;
         }
 
-        /* Hide default inputs to keep buttons completely clean */
-        .radio-wrapper-label input {
+        .admin-profile-trigger {
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* LOCKED-IN SELECTED ELECTRIC AMBER TICKER TRACK */
+        .amber-ticker-strip {
+            background-color: var(--amber-bg);
+            border-bottom: 1px solid var(--amber-border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .amber-ticker-strip .icon { color: var(--amber-icon); font-size: 0.9rem; }
+        .amber-ticker-strip .meta { color: var(--amber-meta); text-transform: uppercase; font-weight: 700; letter-spacing: 0.03em; }
+        .amber-ticker-strip .names { color: var(--amber-text); font-weight: 700; }
+
+        /* Workspace Main Frame */
+        .workspace-frame {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .breadcrumb-trail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-trail span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* PROFESSIONAL BALANCED ACTION TOOLBAR PANEL */
+        .action-toolbar-panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Creates an intuitive visual split */
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Left Side Cluster: Active Document Creation Controls */
+        .toolbar-primary-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Right Side Cluster: Utilities & Destruction Controls */
+        .toolbar-utility-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* CORE COMPONENT SPECIFIC BUTTON STYLING MATRICES */
+        .btn-core {
+            border: 1px solid transparent;
+            padding: 0.55rem 1.15rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
             cursor: pointer;
-            width: 16px;
-            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.15s ease-in-out;
+            white-space: nowrap;
         }
 
-        /* Text element color variations within labels */
-        .radio-wrapper-label .meta-txt { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; margin-left: 10px; color: inherit; }
-        .radio-wrapper-label .names-txt { font-weight: 700; color: inherit; }
-        .radio-wrapper-label .status-txt { color: inherit; }
-
-        /* ==========================================================================
-           DYNAMIC THEME SWAPPING STATES (Triggers text and background adjustments)
-           ========================================================================== */
-
-        /* OPTION 1 ACTIVE: PREMIUM LIGHT SLATE OVERRIDE */
-        .radio-wrapper-label:has(input[value="light"]:checked) {
-            background-color: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
+        /* Hierarchy 1: Primary Action (Publish Report) */
+        .btn-core.action-publish {
+            background-color: var(--primary);
+            color: #ffffff;
         }
-        .radio-wrapper-label:has(input[value="light"]:checked) .meta-txt { color: #475569 !important; }
-        .radio-wrapper-label:has(input[value="light"]:checked) .names-txt { color: #0f172a !important; }
-        .radio-wrapper-label:has(input[value="light"]:checked) .status-txt { color: #2563eb !important; }
-
-        /* OPTION 2 ACTIVE: DEEP MATTE SLATE OVERRIDE */
-        .radio-wrapper-label:has(input[value="dark"]:checked) {
-            background-color: #1e293b !important;
-            border-color: #0f172a !important;
+        .btn-core.action-publish:hover {
+            background-color: var(--primary-hover);
         }
-        .radio-wrapper-label:has(input[value="dark"]:checked) .meta-txt { color: #94a3b8 !important; }
-        .radio-wrapper-label:has(input[value="dark"]:checked) .names-txt { color: #ffffff !important; }
-        .radio-wrapper-label:has(input[value="dark"]:checked) .status-txt { color: #38bdf8 !important; }
 
-        /* OPTION 3 ACTIVE: BORDERLESS SAAS WHITE OVERRIDE */
-        .radio-wrapper-label:has(input[value="clean"]:checked) {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        /* Hierarchy 2: Secondary Action (Save Draft) */
+        .btn-core.action-save {
+            background-color: var(--primary-light);
+            color: var(--primary);
         }
-        .radio-wrapper-label:has(input[value="clean"]:checked) .meta-txt { color: #64748b !important; }
-        .radio-wrapper-label:has(input[value="clean"]:checked) .names-txt { color: #0f172a !important; }
-        .radio-wrapper-label:has(input[value="clean"]:checked) .status-txt { color: #10b981 !important; }
-
-        /* OPTION 4 ACTIVE: ELECTRIC AMBER HIGHLIGHT OVERRIDE */
-        .radio-wrapper-label:has(input[value="amber"]:checked) {
-            background-color: #fffbeb !important;
-            border-color: #fcd34d !important;
+        .btn-core.action-save:hover {
+            background-color: #dbeafe;
         }
-        .radio-wrapper-label:has(input[value="amber"]:checked) .meta-txt { color: #b45309 !important; }
-        .radio-wrapper-label:has(input[value="amber"]:checked) .names-txt { color: #78350f !important; }
-        .radio-wrapper-label:has(input[value="amber"]:checked) .status-txt { color: #d97706 !important; }
 
+        /* Hierarchy 3: Utilities Outline Styles (Regenerate, Print, Back) */
+        .btn-core.action-utility {
+            background-color: #ffffff;
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+        .btn-core.action-utility:hover {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            border-color: #cbd5e1;
+        }
+
+        /* Hierarchy 4: Destructive Action isolated layout (Delete Draft) */
+        .btn-core.action-delete {
+            background-color: transparent;
+            color: var(--text-muted);
+        }
+        .btn-core.action-delete:hover {
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        /* RESPONSIVE LAYOUT CONSTRAINTS FOR MOBILE DEVICE VIEWPORTS */
+        @media (max-width: 640px) {
+            .action-toolbar-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .toolbar-primary-group, .toolbar-utility-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-core {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="theme-selector-card">
-        <h4 class="selector-headline">Select Ticker Palette Option (Click to preview look & feel):</h4>
-        <div class="radio-options-column">
-            
-            <!-- Option 1 Label Block Frame -->
-            <label class="radio-wrapper-label">
-                <input type="radio" name="tickerPaletteGroup" value="light" checked>
-                <span>Option 1: Premium Light Slate →</span>
-                <span class="status-txt">🕒</span>
-                <span class="meta-txt">Adults single:</span>
-                <span class="names-txt">Deepak vs Archit</span>
-            </label>
-            
-            <!-- Option 2 Label Block Frame -->
-            <label class="radio-wrapper-label">
-                <input type="radio" name="tickerPaletteGroup" value="dark">
-                <span>Option 2: Deep Matte Slate →</span>
-                <span class="status-txt">🕒</span>
-                <span class="meta-txt">Sr Boys:</span>
-                <span class="names-lbl names-txt">Aksaj vs Sidharth</span>
-            </label>
-            
-            <!-- Option 3 Label Block Frame -->
-            <label class="radio-wrapper-label">
-                <input type="radio" name="tickerPaletteGroup" value="clean">
-                <span>Option 3: Borderless SaaS White →</span>
-                <span class="status-txt">✓</span>
-                <span class="meta-txt">Jr Dbls Final:</span>
-                <span class="names-txt">Aarav & Vihaan Won</span>
-            </label>
+    <!-- Unified Master Application Header Row -->
+    <header class="unified-app-bar">
+        <div class="header-brand-cluster">
+            <div class="brand-meta">
+                <h1>🏆 Tournament</h1>
+                <p>Bren Avalon Sports Meet 2026</p>
+            </div>
+        </div>
+        <div><button class="btn-view-pill">📊 Results</button></div>
+        <div><button class="admin-profile-trigger">⚙️ Admin</button></div>
+    </header>
 
-            <!-- Option 4 Label Block Frame -->
-            <label class="radio-wrapper-label">
-                <input type="radio" name="tickerPaletteGroup" value="amber">
-                <span>Option 4: Electric Amber Highlight →</span>
-                <span class="status-txt">🏆</span>
-                <span class="meta-txt">Championship:</span>
-                <span class="names-txt">Satvik vs Jonathan</span>
-            </label>
+    <!-- Hardcoded Selected Amber Ticker Strip -->
+    <div class="amber-ticker-strip">
+        <span class="icon">🏸</span>
+        <span class="meta">Adults single • 📅</span>
+        <span class="names">Deepak vs Archit</span>
+    </div>
+
+    <div class="workspace-frame">
+        
+        <!-- Breadcrumb Tracker elements maps -->
+        <div class="breadcrumb-trail">
+            Home &gt; Bren Avalon Sports Meet 2026 &gt; <span>Report Workspace</span>
+        </div>
+
+        <!-- RE-ENGINEERED PROFESSIONAL ACTION TOOLBAR BAR -->
+        <div class="action-toolbar-panel">
+            
+            <!-- Left aligned: Document Creation Actions -->
+            <div class="toolbar-primary-group">
+                <button class="btn-core action-publish" onclick="alert('Publishing compiled event dashboard records report...')">📢 Publish Report</button>
+                <button class="btn-core action-save" onclick="alert('Saving modified variables drafts context datasets...')">💾 Save Draft</button>
+            </div>
+
+            <!-- Right aligned: Utility Configurations & Destructive nodes -->
+            <div class="toolbar-utility-group">
+                <button class="btn-core action-utility" onclick="alert('Regenerating report content logs...')">🔄 Regenerate</button>
+                <button class="btn-core action-utility" onclick="alert('Triggering printing utility...')">🖨️ Print</button>
+                <button class="btn-core action-utility" onclick="alert('Returning to previous display map...')">← Back</button>
+                <button class="btn-core action-delete" onclick="alert('Warning: Terminating draft session logs...')">🗑️ Delete Draft</button>
+            </div>
 
         </div>
+
     </div>
 
 </body>
