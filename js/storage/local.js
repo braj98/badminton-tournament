@@ -7,6 +7,9 @@ function getStateKey(catId) {
       if (cat && cat.eventId) {
         return 'btm_state_' + cat.eventId + '_' + catId;
       }
+      if (AppState && AppState.eventId) {
+        return 'btm_state_' + AppState.eventId + '_' + catId;
+      }
     } catch(e) {}
   }
   return 'btm_state_' + catId;
