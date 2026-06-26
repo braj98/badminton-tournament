@@ -114,7 +114,15 @@ function renderReport() {
       + (isPublished ? '<button class="report-btn report-btn-utility" onclick="shareReport()" title="Share">🔗</button>' : '')
       + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" title="Delete Draft" style="color:var(--danger);">🗑️</button>' : '')
       + '<button class="report-btn report-btn-utility" onclick="closeReport()" title="Back">←</button>'
-      + '</div></div>';
+      + '</div></div>'
+      + (isPublished ? '<div style="display:flex;align-items:center;gap:6px;margin-bottom:20px;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);font-size:.8rem;">'
+        + '<span style="color:var(--text-muted);white-space:nowrap;">🔗 Share:</span>'
+        + '<input type="text" readonly value="' + (window.location.origin + window.location.pathname + '?report=' + AppState.eventId) + '"'
+        + ' style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:.78rem;background:var(--bg-page);color:var(--text-main);cursor:text;min-width:0;"'
+        + ' onclick="this.select()"'
+        + ' title="Click to select, then copy">'
+        + '<button class="report-btn report-btn-utility" onclick="var i=this.previousElementSibling;navigator.clipboard.writeText(i.value).then(function(){showToast(\'🔗 Copied\')})" style="padding:4px 10px;font-size:.78rem;" title="Copy link">📋</button>'
+        + '</div>' : '');
   } else {
     if (!isPublished) {
       container.innerHTML = '<div class="report-page"><div class="report-empty"><p>Report not yet published. Check back later.</p>'
