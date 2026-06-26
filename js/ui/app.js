@@ -720,6 +720,7 @@ async function renderStandaloneReport(eventId) {
     + '</div></div>';
   var container = document.getElementById('reportContainer');
   if (container.parentNode) container.parentNode.insertBefore(shareBar, container);
+  window._reportStandalone = true;
   renderReport();
 }
 async function init() {
