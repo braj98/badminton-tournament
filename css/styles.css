@@ -2886,6 +2886,10 @@ body.dark-mode .btn-action-score:hover {
   .report-btn {
     justify-content: center;
   }
+  .report-stale-warning {
+    width: 100%;
+    text-align: center;
+  }
 }
 .report-status-badge {
   font-size: 0.7rem;
@@ -2919,7 +2923,7 @@ body.dark-mode .report-status-badge.draft {
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 6px;
-  width: 100%;
+  white-space: nowrap;
 }
 body.dark-mode .report-stale-warning {
   background: #450a0a;
