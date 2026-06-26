@@ -3108,6 +3108,16 @@ body.dark-mode .report-banner {
   font-weight: 600;
   font-size: 0.82rem;
 }
+.tl-input {
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-family: inherit;
+  max-width: 160px;
+}
 
 /* Champions */
 .report-champ-title {
