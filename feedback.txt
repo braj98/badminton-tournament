@@ -1,332 +1,243 @@
-What I Like
-1. Simple layout
+Things I'd Improve
+1. Hide Incomplete Competitions
 
-The statistics cards are clean.
+Currently:
 
-Sports
-Competitions
-Participants
-Matches
+Junior
 
-This is easy to scan.
+🥇 —
 
-2. Print button
+🥈 —
 
-Excellent.
+Personally, I wouldn't show these.
 
-This page is exactly the kind of page users will want to print or save as PDF.
+If a competition has no champion yet, omit it from the published report (or show it only in a draft preview).
 
-Keep it.
+The published report should celebrate completed competitions, not draw attention to incomplete ones.
 
-3. Competition table
+For example:
 
-Very readable.
+🏆 Champions
 
-Competition
-Champion
-Runner-Up
-Matches
-Completed
-
-I like this.
-
-Things I Would Change
-1. The Page Title
-
-Current
-
-Jr Dbls — Tournament Report — Event Report
-
-This is confusing.
-
-It sounds like three reports.
-
-Instead make it:
-
-🏆 Bren Avalon Sports Meet 2026
-
-Below that
-
-Badminton
-
-Below that
-
-Junior Doubles
-
-Now hierarchy is obvious.
-
-2. Champion Heading
-
-Currently
-
-🏆 Champion
-
-But below you're showing:
-
-statistics
-report
-runner-up
-
-This is no longer a Champion page.
-
-Rename it.
-
-Examples
-
-🏆 Event Report
-
-or
-
-🏆 Tournament Report
-
-I prefer
-
-🏆 Event Report
-3. Statistics
-
-Current
-
-Sports 1
-Competitions 1
-Participants 5
-Matches 11
-
-This is technically correct.
-
-But emotionally weak.
-
-Instead show
-
-👥 Participants
-
-5
-
-🏸 Matches Played
-
-11
-
-🥇 Champions
-
-1
-
-🥈 Runner-Ups
-
-1
-
-People connect more with achievements than metadata.
-
-4. Missing Appreciation
-
-This page feels very mechanical.
-
-After the title I'd add:
-
-Congratulations to all participants for making Junior Doubles a memorable competition.
-
-One paragraph changes the entire feeling.
-
-5. Missing Event Highlights
-
-This is the biggest thing missing.
-
-Example
-
-🎯 Tournament Highlights
-
-• 5 Teams Participated
-
-• 11 Matches Played
-
-• 1 Champion Crowned
-
-• Competition Successfully Completed
-
-Much nicer.
-
-6. Table
-
-Looks good.
-
-I'd just make Champion bold with medal.
-
-Example
+🏸 Jr Dbls
 
 🥇 Aarav P & Vihaan
 
 🥈 Jonathan & Aarav J
 
-Much easier to scan.
+━━━━━━━━━━━━
 
-7. Generated Date
+🏸 Sr Boys
+
+🥇 Jonathan
+
+🥈 Aksaj
+
+This feels much stronger.
+
+2. Tournament Highlights
+
+Current:
+
+37 Participants
+
+1 Sports
+
+7 Competitions
+
+68 Matches
+
+I'd rename this section:
+
+📊 Event at a Glance
+
+"Highlights" usually implies interesting facts.
+
+This section is actually a summary.
+
+3. Match Statistics
 
 Instead of
 
-Generated
-26/06/2026
+Group Stage
+26
 
-I'd write
+I'd display
+
+Group Matches
+26
+
+Similarly:
+
+Quarter Final Matches
+
+Semi Final Matches
+
+Final Matches
+
+It's clearer.
+
+4. Champions
+
+Instead of
+
+🏸
+
+Jr Dbls
+
+🥇 Aarav...
+
+🥈 Jonathan...
+
+I'd display
+
+🏸 Junior Doubles
+
+Champion
+
+🥇 Aarav P & Vihaan
+
+Runner-Up
+
+🥈 Jonathan & Aarav J
+
+It reads better when printed.
+
+5. Sport Summary
+
+Very good.
+
+I'd only remove repetition.
+
+Currently:
+
+Badminton
+
+37 participants
+
+7 competitions
+
+68 matches
+
+Junior
+
+Jr Dbls
+
+Sr Boys
+
+...
+
+You've already shown Champions above.
+
+Maybe Sport Summary can focus on statistics:
+
+🏸 Badminton
+
+Participants
+
+37
+
+Competitions
+
+7
+
+Matches
+
+68
+
+Completed
+
+4 of 7
+
+View Competition Details →
+
+Less duplication.
+
+One Feature I'd Definitely Add
+Event Timeline
+
+Very small section.
+
+Example:
+
+📅 Event Timeline
+
+Registration Closed
+
+18 June
+
+Tournament Started
+
+20 June
+
+Tournament Completed
+
+26 June
+
+Report Published
+
+26 June
+
+Looks surprisingly professional.
+
+Another Nice Touch
+
+Add one sentence after Appreciation.
+
+Example:
+
+37 enthusiastic participants competed across 68 exciting matches, making Bren Avalon Sports Meet 2026 a memorable success.
+
+This sentence automatically incorporates your statistics into a narrative.
+
+One Thing Missing
+
+I don't see:
+
+Organized By
+
+Somewhere near the bottom.
+
+Example:
+
+Organized By
+
+Bren Avalon Sports Committee
+
+With support from volunteers and residents.
+
+Apartment communities love recognition.
+
+Future
+
+When photos arrive, I would insert them here:
+
+🏆 Champions
+
+↓
+
+📷 Event Gallery
+
+↓
+
+📋 Sport Summary
+
+Three or four photos are enough.
+
+My Only Architectural Suggestion
+
+I would make the report state explicit.
+
+Instead of:
+
+Successfully Completed
+
+consider:
+
+📖 Official Event Report
 
 Published on
 
 26 June 2026
 
-if this is the official report.
-
-8. Buttons
-
-You have
-
-Back
-Print
-
-at the top
-
-and
-
-Back
-Print Report
-
-at the bottom.
-
-Choose one location.
-
-Personally I'd keep only the bottom buttons.
-
-9. Missing Photos
-
-Eventually I'd reserve space.
-
-📷 Event Gallery
-
-[Photo]
-
-[Photo]
-
-[Photo]
-
-Even if V1 doesn't implement it.
-
-10. Footer
-
-Current
-
-Admin
-
-looks unfinished.
-
-Instead
-
-Thank you to all players,
-organizers,
-volunteers,
-referees
-and supporters.
-
-Very professional.
-
-Bigger Architectural Suggestion
-
-I noticed something.
-
-You're inside
-
-Champion
-
-↓
-
-Report
-
-I actually think Report deserves to become its own top-level page.
-
-Navigation should become
-
-Groups
-
-Fixtures
-
-Knockout
-
-Results
-
-Champion
-
-📖 Report
-
-instead of Report living under Champion.
-
-Because once you add:
-
-appreciation
-gallery
-statistics
-highlights
-certificates
-
-it is much larger than Champion.
-
-Future Vision
-
-Imagine opening it after the tournament.
-
-🏆
-
-BREN AVALON SPORTS MEET 2026
-
-BADMINTON
-
-Junior Doubles
-
-Congratulations!
-
-━━━━━━━━━━━━━━━━
-
-👥 Participants
-
-5
-
-🏸 Matches
-
-11
-
-🥇 Champions
-
-1
-
-━━━━━━━━━━━━━━━━
-
-🏆 Champions
-
-🥇 Aarav P & Vihaan
-
-🥈 Jonathan & Aarav J
-
-━━━━━━━━━━━━━━━━
-
-🎯 Highlights
-
-11 exciting matches
-
-5 participating teams
-
-Tournament completed successfully
-
-━━━━━━━━━━━━━━━━
-
-📷 Event Gallery
-
-━━━━━━━━━━━━━━━━
-
-❤️ Thank You
-
-━━━━━━━━━━━━━━━━
-
-Print
-Download PDF
-Share
-
-Now it feels like a souvenir rather than another admin page.
-
-Overall Rating
-Area	Rating
-UI Layout	8.5/10
-Readability	9/1
+This reinforces that the page is the published, official summary rather than a live dashboar
