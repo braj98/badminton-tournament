@@ -2880,11 +2880,15 @@ body.dark-mode .btn-action-score:hover {
     align-items: stretch;
   }
   .report-admin-left, .report-admin-right {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .report-btn {
-    justify-content: center;
+    padding: 0.5rem 0.65rem;
+  }
+  .btn-label {
+    display: none;
   }
   .report-stale-warning {
     width: 100%;

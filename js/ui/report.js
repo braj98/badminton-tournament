@@ -91,19 +91,19 @@ function renderReport() {
       + '<div class="report-admin-left">';
     if (isPublished) {
       html += '<span class="report-status-badge published">Published</span>'
-        + '<button class="report-btn report-btn-primary" onclick="unpublishReport()">📝 Unpublish</button>';
+        + '<button class="report-btn report-btn-primary" onclick="unpublishReport()" title="Unpublish">📝<span class="btn-label"> Unpublish</span></button>';
     } else {
-      html += '<button class="report-btn report-btn-primary" onclick="publishReport()">📢 Publish Report</button>'
-        + '<button class="report-btn report-btn-save" onclick="saveReportDraft()">💾 Save Draft</button>';
+      html += '<button class="report-btn report-btn-primary" onclick="publishReport()" title="Publish Report">📢<span class="btn-label"> Publish Report</span></button>'
+        + '<button class="report-btn report-btn-save" onclick="saveReportDraft()" title="Save Draft">💾<span class="btn-label"> Save Draft</span></button>';
     }
     html += '</div><div class="report-admin-right">';
     if (stale) {
       html += '<span class="report-stale-warning">⚠ Out of date</span>';
     }
-    html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()">🔄 Regenerate</button>'
-      + '<button class="report-btn report-btn-utility" onclick="window.print()">🖨️ Print</button>'
-      + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" style="color:var(--danger);">🗑️ Delete Draft</button>' : '')
-      + '<button class="report-btn report-btn-utility" onclick="closeReport()">← Back</button>'
+    html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()" title="Regenerate">🔄<span class="btn-label"> Regenerate</span></button>'
+      + '<button class="report-btn report-btn-utility" onclick="window.print()" title="Print">🖨️<span class="btn-label"> Print</span></button>'
+      + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" title="Delete Draft" style="color:var(--danger);">🗑️<span class="btn-label"> Delete Draft</span></button>' : '')
+      + '<button class="report-btn report-btn-utility" onclick="closeReport()" title="Back">←<span class="btn-label"> Back</span></button>'
       + '</div></div>';
   } else {
     if (!isPublished) {
