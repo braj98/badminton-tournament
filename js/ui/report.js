@@ -91,19 +91,19 @@ function renderReport() {
       + '<div class="report-admin-left">';
     if (isPublished) {
       html += '<span class="report-status-badge published">Published</span>'
-        + '<button class="report-btn report-btn-primary" onclick="unpublishReport()">📝 Unpublish</button>';
+        + '<button class="report-btn report-btn-primary" onclick="unpublishReport()" title="Unpublish">📝</button>';
     } else {
-      html += '<button class="report-btn report-btn-primary" onclick="publishReport()">📢 Publish Report</button>'
-        + '<button class="report-btn report-btn-save" onclick="saveReportDraft()">💾 Save Draft</button>';
+      html += '<button class="report-btn report-btn-primary" onclick="publishReport()" title="Publish Report">📢</button>'
+        + '<button class="report-btn report-btn-save" onclick="saveReportDraft()" title="Save Draft">💾</button>';
     }
     html += '</div><div class="report-admin-right">';
     if (stale) {
       html += '<span class="report-stale-warning">⚠ Out of date</span>';
     }
-    html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()">🔄 Regenerate</button>'
-      + '<button class="report-btn report-btn-utility" onclick="window.print()">🖨️ Print</button>'
-      + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" style="color:var(--danger);">🗑️ Delete Draft</button>' : '')
-      + '<button class="report-btn report-btn-utility" onclick="closeReport()">← Back</button>'
+    html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()" title="Regenerate">🔄</button>'
+      + '<button class="report-btn report-btn-utility" onclick="window.print()" title="Print">🖨️</button>'
+      + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" title="Delete Draft" style="color:var(--danger);">🗑️</button>' : '')
+      + '<button class="report-btn report-btn-utility" onclick="closeReport()" title="Back">←</button>'
       + '</div></div>';
   } else {
     if (!isPublished) {
@@ -160,7 +160,9 @@ function renderReport() {
     + '<div class="report-highlight-card"><span class="num">' + (highlights.matches || 0) + '</span><span class="lbl">Matches Played</span></div>'
     + '</div>'
     + '<div class="report-completed-summary">'
-    + (_completedCount) + ' of ' + (highlights.competitions || 0) + ' competitions completed'
+    + '<div class="report-progress-header">🏁 Tournament Progress</div>'
+    + '<div class="report-progress-bar"><span class="report-progress-fill" style="width:' + Math.round((_completedCount / (highlights.competitions || 1)) * 100) + '%;"></span></div>'
+    + '<div class="report-progress-text">' + _completedCount + ' / ' + (highlights.competitions || 0) + ' Completed</div>'
     + '</div></div>';
 
   // === 4. Event Timeline ===
@@ -177,8 +179,8 @@ function renderReport() {
     } else {
       html += _renderTimelineItem('📋 Registration Closed', timeline.registration);
       html += _renderTimelineItem('🏸 Tournament Started', timeline.started);
-      html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed);
-      html += _renderTimelineItem('📖 Report Published', timeline.published);
+      html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed, 'In Progress');
+      html += _renderTimelineItem('📖 Report Published', timeline.published, 'Not Published');
     }
     html += '</div></div>';
   }
@@ -252,7 +254,7 @@ function renderReport() {
     html += '</div></div>';
   } else if (isAdminUser) {
     html += '<div class="report-section report-photo-placeholder"><div class="report-section-title">📸 Photo Gallery</div>'
-      + '<p class="text-muted">Add photos to celebrate the event. (Coming soon)</p></div>';
+      + '<p class="text-muted">No event photos have been added yet.</p></div>';
   }
 
   // === 9. Organized By ===
@@ -287,8 +289,8 @@ function renderReport() {
   setupReportScreens();
 }
 
-function _renderTimelineItem(label, timestamp) {
-  if (!timestamp) return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">—</span></div>';
+function _renderTimelineItem(label, timestamp, fallback) {
+  if (!timestamp) return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">' + (fallback || '—') + '</span></div>';
   return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">' + new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span></div>';
 }
 
