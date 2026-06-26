@@ -1,365 +1,332 @@
-What Each Key Represents
-1. Metadata
-btm_metadata
+What I Like
+1. Simple layout
 
-I think this is becoming your application configuration.
+The statistics cards are clean.
 
-Examples:
+Sports
+Competitions
+Participants
+Matches
 
-organization
-version
-createdBy
-current event
-UI preferences
+This is easy to scan.
 
-I like this.
-
-2. Events
-btm_events
-
-Contains
-
-Sports Meet 2026
-
-Sports Meet 2027
-
-...
+2. Print button
 
 Excellent.
 
-3. Templates
-btm_templates
+This page is exactly the kind of page users will want to print or save as PDF.
 
-Contains reusable competition definitions.
+Keep it.
 
-Example
+3. Competition table
 
-Junior Singles
-
-Senior Boys
-
-Senior Doubles
-
-Adult Doubles
-
-These are independent of tournaments.
-
-Good separation.
-
-4. Categories
-btm_categories
-
-This one is interesting.
-
-Originally it contained:
-
-Event
-
-Sport
+Very readable.
 
 Competition
+Champion
+Runner-Up
+Matches
+Completed
 
-Today I think it is becoming
+I like this.
 
-Competition Instances
+Things I Would Change
+1. The Page Title
 
-which is okay.
+Current
 
-5. Tournament States
+Jr Dbls — Tournament Report — Event Report
 
-Every competition has:
+This is confusing.
 
-btm_state_xxx
+It sounds like three reports.
 
-Example
+Instead make it:
 
-btm_state_junior
+🏆 Bren Avalon Sports Meet 2026
 
-btm_state_senior_boys
-
-btm_state_adult_dbls
-
-These contain:
-
-players
-fixtures
-knockout
-champion
-feed
-UI state
-
-I actually like this.
-
-What Happens Today
-
-Suppose:
-
-Sports Meet 2026
-
-↓
+Below that
 
 Badminton
 
-↓
+Below that
 
-Senior Boys
+Junior Doubles
 
-App builds
+Now hierarchy is obvious.
 
-stateKey
+2. Champion Heading
 
-↓
+Currently
 
-btm_state_senior_boys
+🏆 Champion
 
-and loads one JSON document.
+But below you're showing:
 
-Very efficient.
+statistics
+report
+runner-up
 
-But I See One Limitation
+This is no longer a Champion page.
 
-Suppose tomorrow you create
+Rename it.
 
-Sports Meet 2027
+Examples
 
-and again have
+🏆 Event Report
 
-Senior Boys
+or
 
-Current key becomes
+🏆 Tournament Report
 
-btm_state_senior_boys
+I prefer
 
-Oops.
+🏆 Event Report
+3. Statistics
 
-Collision.
+Current
 
-Now you cannot keep:
+Sports 1
+Competitions 1
+Participants 5
+Matches 11
 
-2026
+This is technically correct.
 
-and
+But emotionally weak.
 
-2027
+Instead show
 
-simultaneously.
+👥 Participants
 
-I Think This Is Your Biggest Remaining Data Model Issue
+5
 
-Right now your key is essentially
+🏸 Matches Played
 
-Sport
-+
-Competition
+11
 
-It is missing Event.
+🥇 Champions
 
-Instead I would eventually move to
+1
 
-btm_state_<eventId>_<competitionId>
+🥈 Runner-Ups
+
+1
+
+People connect more with achievements than metadata.
+
+4. Missing Appreciation
+
+This page feels very mechanical.
+
+After the title I'd add:
+
+Congratulations to all participants for making Junior Doubles a memorable competition.
+
+One paragraph changes the entire feeling.
+
+5. Missing Event Highlights
+
+This is the biggest thing missing.
 
 Example
 
-btm_state_sportsmeet2026_seniorboys
+🎯 Tournament Highlights
 
-btm_state_sportsmeet2027_seniorboys
+• 5 Teams Participated
 
-or even
+• 11 Matches Played
 
-btm_state_evt123_cmp456
+• 1 Champion Crowned
 
-Much safer.
+• Competition Successfully Completed
 
-Another Future Issue
+Much nicer.
 
-Today
+6. Table
 
-btm_state_junior
+Looks good.
 
-means
+I'd just make Champion bold with medal.
 
-Badminton
+Example
 
-implicitly.
+🥇 Aarav P & Vihaan
 
-Tomorrow
+🥈 Jonathan & Aarav J
 
-Table Tennis
+Much easier to scan.
 
-also has
-
-Junior
-
-Now:
-
-btm_state_junior
-
-becomes ambiguous.
-
-So eventually your key should include
-
-Event
-
-Sport
-
-Competition
-
-Conceptually
-
-btm_state
-      ↓
-Event
-      ↓
-Sport
-      ↓
-Competition
-If I Were Designing V2
+7. Generated Date
 
 Instead of
 
-btm_state_junior
+Generated
+26/06/2026
 
-I'd probably generate
+I'd write
 
-btm_state
+Published on
 
-↓
+26 June 2026
 
-eventId
+if this is the official report.
 
-↓
+8. Buttons
 
-competitionId
+You have
 
-The actual key could look like
+Back
+Print
 
-btm_state_evt001_cmp005
+at the top
 
-Notice:
+and
 
-No labels.
+Back
+Print Report
 
-No names.
+at the bottom.
 
-Only IDs.
+Choose one location.
 
-Now:
+Personally I'd keep only the bottom buttons.
 
-Rename
+9. Missing Photos
 
-Senior Boys
+Eventually I'd reserve space.
 
-↓
+📷 Event Gallery
 
-Open Boys
+[Photo]
 
-Nothing changes.
+[Photo]
 
-Current Use Cases
+[Photo]
 
-Your current model handles these very well.
+Even if V1 doesn't implement it.
 
-One Organization
+10. Footer
 
-✔
+Current
 
-One Active Event
+Admin
 
-✔
+looks unfinished.
 
-Multiple Sports
+Instead
 
-✔
+Thank you to all players,
+organizers,
+volunteers,
+referees
+and supporters.
 
-because templates already carry
+Very professional.
 
-sport
-Multiple Competitions
+Bigger Architectural Suggestion
 
-✔
+I noticed something.
 
-Viewer/Admin
-
-✔
-
-Feed
-
-✔
+You're inside
 
 Champion
 
-✔
+↓
 
-Where It Will Break
+Report
 
-Not today.
+I actually think Report deserves to become its own top-level page.
 
-Maybe six months from now.
+Navigation should become
 
-Examples:
+Groups
 
-Sports Meet 2026
+Fixtures
 
-Sports Meet 2027
+Knockout
 
-simultaneously.
+Results
 
-or
+Champion
 
-Badminton
+📖 Report
 
-Junior
+instead of Report living under Champion.
 
-Table Tennis
+Because once you add:
 
-Junior
+appreciation
+gallery
+statistics
+highlights
+certificates
 
-or
+it is much larger than Champion.
 
-History
+Future Vision
 
-Last Year
+Imagine opening it after the tournament.
 
-Current Year
-My Recommendation
+🏆
 
-I would not change anything today.
+BREN AVALON SPORTS MEET 2026
 
-Seriously.
+BADMINTON
 
-Because changing every key now will touch almost every part of your application.
+Junior Doubles
 
-Instead I'd add this to your backlog:
+Congratulations!
 
-Future Migration (V2)
+━━━━━━━━━━━━━━━━
 
-Current:
+👥 Participants
 
-btm_state_<competitionName>
+5
 
-Future:
+🏸 Matches
 
-btm_state_<eventId>_<competitionId>
+11
 
-This will support:
+🥇 Champions
 
-Multiple events
-Multiple sports
-Historical tournaments
-Duplicate competition names
-Multi-organization
+1
 
-without any collisions.
+━━━━━━━━━━━━━━━━
 
-Overall Feedback
+🏆 Champions
 
-If you had shown me this schema two months ago, I would probably have suggested redesigning it.
+🥇 Aarav P & Vihaan
 
-Today, after seeing the evolution of your app, I think you've arrived at a surprisingly clean architecture for a JSON-backed tournament platform.
+🥈 Jonathan & Aarav J
 
-I'd rate the current data model:
+━━━━━━━━━━━━━━━━
 
-Current requirements: 9.8/10
-Future scalability: 8.5/10
+🎯 Highlights
 
-The only significant weakness I still see is that your state keys are name-based rather than identity-based. When you eventually move them to eventId + competitionId (or similar immutable IDs), I thin
+11 exciting matches
+
+5 participating teams
+
+Tournament completed successfully
+
+━━━━━━━━━━━━━━━━
+
+📷 Event Gallery
+
+━━━━━━━━━━━━━━━━
+
+❤️ Thank You
+
+━━━━━━━━━━━━━━━━
+
+Print
+Download PDF
+Share
+
+Now it feels like a souvenir rather than another admin page.
+
+Overall Rating
+Area	Rating
+UI Layout	8.5/10
+Readability	9/1

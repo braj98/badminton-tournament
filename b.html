@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticker Palette Selection Hub</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            padding: 30px 20px;
+        }
+
+        /* CARD HOLDER FOR SELECTED SCHEMES */
+        .theme-selector-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            max-width: 900px;
+            margin: 0 auto 35px auto;
+        }
+
+        .selector-headline {
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .radio-options-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* BASE BUTTON WRAPPER STYLE */
+        .radio-wrapper-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 16px 20px;
+            border-radius: 8px;
+            user-select: none;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #475569;
+            transition: all 0.20s ease-in-out;
+        }
+
+        /* Hide default inputs to keep buttons completely clean */
+        .radio-wrapper-label input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Text element color variations within labels */
+        .radio-wrapper-label .meta-txt { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; margin-left: 10px; color: inherit; }
+        .radio-wrapper-label .names-txt { font-weight: 700; color: inherit; }
+        .radio-wrapper-label .status-txt { color: inherit; }
+
+        /* ==========================================================================
+           DYNAMIC THEME SWAPPING STATES (Triggers text and background adjustments)
+           ========================================================================== */
+
+        /* OPTION 1 ACTIVE: PREMIUM LIGHT SLATE OVERRIDE */
+        .radio-wrapper-label:has(input[value="light"]:checked) {
+            background-color: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+        .radio-wrapper-label:has(input[value="light"]:checked) .meta-txt { color: #475569 !important; }
+        .radio-wrapper-label:has(input[value="light"]:checked) .names-txt { color: #0f172a !important; }
+        .radio-wrapper-label:has(input[value="light"]:checked) .status-txt { color: #2563eb !important; }
+
+        /* OPTION 2 ACTIVE: DEEP MATTE SLATE OVERRIDE */
+        .radio-wrapper-label:has(input[value="dark"]:checked) {
+            background-color: #1e293b !important;
+            border-color: #0f172a !important;
+        }
+        .radio-wrapper-label:has(input[value="dark"]:checked) .meta-txt { color: #94a3b8 !important; }
+        .radio-wrapper-label:has(input[value="dark"]:checked) .names-txt { color: #ffffff !important; }
+        .radio-wrapper-label:has(input[value="dark"]:checked) .status-txt { color: #38bdf8 !important; }
+
+        /* OPTION 3 ACTIVE: BORDERLESS SAAS WHITE OVERRIDE */
+        .radio-wrapper-label:has(input[value="clean"]:checked) {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        }
+        .radio-wrapper-label:has(input[value="clean"]:checked) .meta-txt { color: #64748b !important; }
+        .radio-wrapper-label:has(input[value="clean"]:checked) .names-txt { color: #0f172a !important; }
+        .radio-wrapper-label:has(input[value="clean"]:checked) .status-txt { color: #10b981 !important; }
+
+        /* OPTION 4 ACTIVE: ELECTRIC AMBER HIGHLIGHT OVERRIDE */
+        .radio-wrapper-label:has(input[value="amber"]:checked) {
+            background-color: #fffbeb !important;
+            border-color: #fcd34d !important;
+        }
+        .radio-wrapper-label:has(input[value="amber"]:checked) .meta-txt { color: #b45309 !important; }
+        .radio-wrapper-label:has(input[value="amber"]:checked) .names-txt { color: #78350f !important; }
+        .radio-wrapper-label:has(input[value="amber"]:checked) .status-txt { color: #d97706 !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="theme-selector-card">
+        <h4 class="selector-headline">Select Ticker Palette Option (Click to preview look & feel):</h4>
+        <div class="radio-options-column">
+            
+            <!-- Option 1 Label Block Frame -->
+            <label class="radio-wrapper-label">
+                <input type="radio" name="tickerPaletteGroup" value="light" checked>
+                <span>Option 1: Premium Light Slate →</span>
+                <span class="status-txt">🕒</span>
+                <span class="meta-txt">Adults single:</span>
+                <span class="names-txt">Deepak vs Archit</span>
+            </label>
+            
+            <!-- Option 2 Label Block Frame -->
+            <label class="radio-wrapper-label">
+                <input type="radio" name="tickerPaletteGroup" value="dark">
+                <span>Option 2: Deep Matte Slate →</span>
+                <span class="status-txt">🕒</span>
+                <span class="meta-txt">Sr Boys:</span>
+                <span class="names-lbl names-txt">Aksaj vs Sidharth</span>
+            </label>
+            
+            <!-- Option 3 Label Block Frame -->
+            <label class="radio-wrapper-label">
+                <input type="radio" name="tickerPaletteGroup" value="clean">
+                <span>Option 3: Borderless SaaS White →</span>
+                <span class="status-txt">✓</span>
+                <span class="meta-txt">Jr Dbls Final:</span>
+                <span class="names-txt">Aarav & Vihaan Won</span>
+            </label>
+
+            <!-- Option 4 Label Block Frame -->
+            <label class="radio-wrapper-label">
+                <input type="radio" name="tickerPaletteGroup" value="amber">
+                <span>Option 4: Electric Amber Highlight →</span>
+                <span class="status-txt">🏆</span>
+                <span class="meta-txt">Championship:</span>
+                <span class="names-txt">Satvik vs Jonathan</span>
+            </label>
+
+        </div>
+    </div>
+
+</body>
+</html>
+

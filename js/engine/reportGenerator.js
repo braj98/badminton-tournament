@@ -1,10 +1,11 @@
 function generateEventReport(event, categories, tournamentStateMap) {
   if (!event || !categories || !tournamentStateMap) {
-    return createEmptyReport(event ? event.id : null, event ? event.name : null);
+    return createEventReport(event ? event.id : null, event ? event.name : null);
   }
 
-  var report = createEmptyReport(event.id, event.name);
+  var report = createEventReport(event.id, event.name);
   var sportMap = {};
+  var allChampions = [];
 
   for (var i = 0; i < event.templateIds.length; i++) {
     var tmplId = event.templateIds[i];
@@ -19,14 +20,16 @@ function generateEventReport(event, categories, tournamentStateMap) {
       sportMap[sportName] = createSportSummary(sportName);
     }
 
-    var comp = createCompetitionSummary(tmplId, cat.label);
+    var participants = state.participants || [];
+    var fixtureMatches = state.fixtures || [];
+    var knockoutMatches = state.knockout || [];
+    var allMatches = fixtureMatches.concat(knockoutMatches);
 
     var champion = null;
     var runnerUp = null;
-    var participants = state.participants || [];
 
-    if (state.knockout && state.knockout.length > 0) {
-      var finalMatch = state.knockout.find(function(m) { return m.id === 'final'; });
+    if (knockoutMatches.length > 0) {
+      var finalMatch = knockoutMatches.find(function(m) { return m.id === 'final'; });
       if (finalMatch && finalMatch.done && finalMatch.winner) {
         champion = resolveName(finalMatch.winner, participants);
         runnerUp = resolveName(
@@ -41,19 +44,35 @@ function generateEventReport(event, categories, tournamentStateMap) {
       runnerUp = state.runnerUp || null;
     }
 
-    comp.champion = champion;
-    comp.runnerUp = runnerUp;
+    allChampions.push(createChampionEntry(sportName, cat.label, champion, runnerUp));
 
-    var allMatches = (state.fixtures || []).concat(state.knockout || []);
-    comp.matches = allMatches.length;
-    comp.completed = allMatches.filter(function(m) { return m.done || m.status === 'COMPLETED'; }).length;
+    for (var mi = 0; mi < allMatches.length; mi++) {
+      var m = allMatches[mi];
+      if (m.round === 'group') {
+        report.matchStats.group++;
+      } else if (m.round === 'QF') {
+        report.matchStats.quarterFinal++;
+      } else if (m.round === 'SF') {
+        report.matchStats.semiFinal++;
+      } else if (m.round === 'Final') {
+        report.matchStats.final++;
+      }
+      if (m.done || m.status === 'COMPLETED') {
+        report.matchStats.completed++;
+      }
+      if ((!m.p1 || !m.p2) && !(m.done || m.status === 'COMPLETED')) {
+        report.matchStats.bye++;
+      }
+    }
 
-    sportMap[sportName].competitions.push(comp);
+    sportMap[sportName].competitions.push(cat.label);
     sportMap[sportName].participants += participants.length;
-    sportMap[sportName].totalMatches += comp.matches;
+    sportMap[sportName].matches += allMatches.length;
+    sportMap[sportName].champions.push({ competition: cat.label, champion: champion, runnerUp: runnerUp });
   }
 
   report.sports = Object.keys(sportMap).map(function(key) { return sportMap[key]; });
+  report.champions = allChampions;
 
   var totalParts = 0;
   var totalComps = 0;
@@ -61,12 +80,12 @@ function generateEventReport(event, categories, tournamentStateMap) {
   for (var s = 0; s < report.sports.length; s++) {
     totalParts += report.sports[s].participants;
     totalComps += report.sports[s].competitions.length;
-    totalMatches += report.sports[s].totalMatches;
+    totalMatches += report.sports[s].matches;
   }
-  report.totals = {
+  report.highlights = {
     participants: totalParts,
-    competitions: totalComps,
     sports: report.sports.length,
+    competitions: totalComps,
     matches: totalMatches
   };
 

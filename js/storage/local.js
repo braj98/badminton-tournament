@@ -97,6 +97,26 @@ function saveCategories(cats) {
   saveEvents(Object.values(eventMap));
 }
 
+function getReportKey(eventId) {
+  return 'btm_report_' + eventId;
+}
+
+function saveReport(eventId, report) {
+  try { localStorage.setItem(getReportKey(eventId), JSON.stringify(report)); } catch(e) { console.error('saveReport failed:', e); }
+}
+
+function loadReport(eventId) {
+  try {
+    var raw = localStorage.getItem(getReportKey(eventId));
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function deleteReport(eventId) {
+  try { localStorage.removeItem(getReportKey(eventId)); } catch(e) {}
+}
+
 function runMigration() {
   if (localStorage.getItem('btm_migrated')) return;
   try {

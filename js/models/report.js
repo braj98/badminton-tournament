@@ -1,19 +1,37 @@
-function createEmptyReport(eventId, eventName) {
+function createEventReport(eventId, eventName) {
   return {
     eventId: eventId,
     eventName: eventName,
+    organization: '',
+    eventDates: '',
+    status: 'draft',
+    publishedAt: null,
     generatedAt: Date.now(),
-    appreciation: '',
-    closing: '',
+    appreciation: 'Thank you to every participant, volunteer, referee, organizer and supporter for making this event a memorable success.',
+    closing: 'Congratulations to all winners, runner-ups and participants. We look forward to seeing you again at the next event.',
     photos: [],
-    sports: [],
-    totals: {
+    highlights: {
       participants: 0,
-      competitions: 0,
       sports: 0,
+      competitions: 0,
       matches: 0
-    }
+    },
+    matchStats: {
+      group: 0,
+      quarterFinal: 0,
+      semiFinal: 0,
+      final: 0,
+      bye: 0,
+      completed: 0
+    },
+    champions: [],
+    sports: [],
+    stale: false
   };
+}
+
+function createChampionEntry(sport, competition, champion, runnerUp) {
+  return { sport: sport, competition: competition, champion: champion, runnerUp: runnerUp };
 }
 
 function createSportSummary(name) {
@@ -21,17 +39,7 @@ function createSportSummary(name) {
     name: name,
     competitions: [],
     participants: 0,
-    totalMatches: 0
-  };
-}
-
-function createCompetitionSummary(templateId, label) {
-  return {
-    templateId: templateId,
-    label: label,
-    champion: null,
-    runnerUp: null,
     matches: 0,
-    completed: 0
+    champions: []
   };
 }
