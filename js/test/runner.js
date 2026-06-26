@@ -51,7 +51,7 @@ const context = {
   localStorage: _storage,
   isAdmin: () => true,
   _supabase: null,
-  AppState: { user: { role: 'admin' }, event: null, eventId: null, sport: null, category: null, view: null, tournament: null, ui: { showingResults: false, managePanelOpen: false } },
+  AppState: { user: { role: 'admin' }, event: null, eventId: null, sport: null, category: null, view: null, tournament: null, ui: { showingResults: false, managePanelOpen: false, reportMode: 'event', reportReturnView: null } },
   APP_CONFIG: { defaultEvent: "BREN AVALON SPORTS MEET 2026" },
   DEFAULT_EVENT_ID: "bren_avalon_sports_meet_2026",
   FACTORY_CATEGORIES: [
