@@ -8,6 +8,7 @@ function createEventReport(eventId, eventName) {
     status: 'draft',
     publishedAt: null,
     generatedAt: Date.now(),
+    version: 1,
     appreciation: 'Thank you to every participant, volunteer, referee, organizer and supporter for making this event a memorable success.',
     narrative: '',
     closing: 'Congratulations to all winners, runner-ups and participants. We look forward to seeing you again at the next event.',
@@ -33,8 +34,7 @@ function createEventReport(eventId, eventName) {
       completed: 0
     },
     champions: [],
-    sports: [],
-    stale: false
+    sports: []
   };
 }
 

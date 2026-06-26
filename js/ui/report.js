@@ -23,6 +23,7 @@ function generateDraftReport() {
   var existing = loadReport(AppState.eventId);
   var report = generateEventReport(ev, cats, stateMap);
   if (existing) {
+    report.version = (existing.version || 0) + 1;
     report.appreciation = existing.appreciation || report.appreciation;
     report.organizedBy = existing.organizedBy || report.organizedBy;
     report.closing = existing.closing || report.closing;
@@ -89,9 +90,6 @@ function renderReport() {
   var isAdminUser = isAdmin();
   var isPublished = report.status === 'published';
 
-  // Check stale
-  var stale = checkReportStale(report, ev);
-
   var html = '<div class="report-page">';
 
   // Admin actions bar (hidden in standalone shareable view)
@@ -106,9 +104,6 @@ function renderReport() {
         + '<button class="report-btn report-btn-save" onclick="saveReportDraft()" title="Save Draft">💾</button>';
     }
     html += '</div><div class="report-admin-right">';
-    if (stale) {
-      html += '<span class="report-stale-warning">⚠ Out of date</span>';
-    }
     html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()" title="Regenerate">🔄</button>'
       + '<button class="report-btn report-btn-utility" onclick="window.print()" title="Print">🖨️</button>'
       + (isPublished ? '<button class="report-btn report-btn-utility" onclick="shareReport()" title="Share">🔗</button>' : '')
@@ -129,9 +124,6 @@ function renderReport() {
         + (!window._reportStandalone ? '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>' : '') + '</div></div>';
       setupReportScreens();
       return;
-    }
-    if (stale) {
-      html += '<div class="report-stale-warning">⚠ This report may be out of date. The latest results may differ.</div>';
     }
     if (!window._reportStandalone) {
       html += '<div style="margin-bottom:12px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>';
@@ -354,18 +346,6 @@ function saveTimelineDate(field, value) {
   report.timeline[field] = value ? new Date(value).getTime() : null;
   saveReport(AppState.eventId, report);
   renderReport();
-}
-
-function checkReportStale(report, event) {
-  if (!event || !report) return false;
-  var cats = getCategories().filter(function(c) { return c.eventId === event.id; });
-  for (var i = 0; i < cats.length; i++) {
-    var state = localLoad(cats[i].id);
-    if (state && state._lastSave && report.generatedAt < state._lastSave) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function setupReportScreens() {
