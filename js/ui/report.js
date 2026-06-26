@@ -312,7 +312,6 @@ function renderReport() {
     + '<p>Generated ' + new Date(report.generatedAt).toLocaleDateString()
     + (report.publishedAt ? ' · Published ' + new Date(report.publishedAt).toLocaleDateString() : '')
     + '</p>'
-    + (!window._reportStandalone ? '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>' : '')
     + '</div></div>';
 
   container.innerHTML = html;
