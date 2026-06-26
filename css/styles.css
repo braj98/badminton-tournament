@@ -2816,8 +2816,7 @@ body.dark-mode .btn-action-score:hover {
   position: sticky;
   top: 48px;
   z-index: 998;
-  border-top: 1px solid #fcd34d;
-  border-bottom: 1px solid #fcd34d;
+  border: none;
   cursor: default;
   margin-bottom: 0.5rem;
 }
@@ -2867,8 +2866,6 @@ body.dark-mode .btn-action-score:hover {
 
 body.dark-mode .ticker-bar {
   background: #1c1917;
-  border-top-color: #78350f;
-  border-bottom-color: #78350f;
 }
 body.dark-mode .ticker-item {
   border-right-color: #78350f;
