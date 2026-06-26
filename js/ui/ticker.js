@@ -18,6 +18,9 @@ function getTickerMatches() {
   return matches;
 }
 
+let _tickerAnim = null;
+let _tickerPaused = false;
+
 function renderTicker() {
   const bar = document.getElementById('tickerBar');
   const track = document.getElementById('tickerTrack');
@@ -25,6 +28,7 @@ function renderTicker() {
   const matches = getTickerMatches();
   if (!matches.length) {
     bar.classList.add('hidden');
+    if (_tickerAnim) { cancelAnimationFrame(_tickerAnim); _tickerAnim = null; }
     return;
   }
   bar.classList.remove('hidden');
@@ -53,8 +57,30 @@ function renderTicker() {
       + (isAdmin() ? '<span class="ticker-unpin" onclick="toggleTickerMatch(\'' + cat.id + '\',\'' + m.id + '\')" title="Remove from ticker">✕</span>' : '')
       + '</span>');
   }
-  const content = items.join('');
-  track.innerHTML = content + content;
+  track.innerHTML = items.join('');
+  track.style.transform = 'translateX(0)';
+  if (_tickerAnim) { cancelAnimationFrame(_tickerAnim); _tickerAnim = null; }
+  _tickerPaused = false;
+  bar.onmouseenter = function() { _tickerPaused = true; };
+  bar.onmouseleave = function() { _tickerPaused = false; };
+  startTickerScroll(track, bar);
+}
+
+function startTickerScroll(track, bar) {
+  var pos = 0;
+  var speed = 0.5;
+
+  function step() {
+    if (!bar || !track) return;
+    var barW = bar.offsetWidth;
+    var trackW = track.scrollWidth;
+    if (trackW <= barW) { _tickerAnim = requestAnimationFrame(step); return; }
+    if (!_tickerPaused) pos -= speed;
+    if (pos <= -trackW) pos = 0;
+    track.style.transform = 'translateX(' + pos + 'px)';
+    _tickerAnim = requestAnimationFrame(step);
+  }
+  _tickerAnim = requestAnimationFrame(step);
 }
 
 function toggleTickerMatch(catId, matchId) {

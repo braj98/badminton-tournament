@@ -2823,11 +2823,7 @@ body.dark-mode .btn-action-score:hover {
 .ticker-track {
   display: inline-flex;
   align-items: center;
-  animation: ticker-scroll 40s linear infinite;
   will-change: transform;
-}
-.ticker-bar:hover .ticker-track {
-  animation-play-state: paused;
 }
 .ticker-item {
   display: inline-flex;
@@ -2858,10 +2854,6 @@ body.dark-mode .btn-action-score:hover {
   padding: 0 16px;
   color: #b45309;
   font-style: italic;
-}
-@keyframes ticker-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
 
 body.dark-mode .ticker-bar {
