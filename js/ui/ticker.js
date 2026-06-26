@@ -47,8 +47,10 @@ function renderTicker() {
       ? '<span class="ticker-live">🔴 LIVE</span>'
       : '<span class="ticker-upcoming">📅</span>';
     const score = scoreHtml ? ' (' + scoreHtml + ')' : '';
-    items.push('<span class="ticker-item">' + icon + ' ' + escapeHtml(cat.label) + ': '
-      + statusLabel + ' ' + escapeHtml(n1) + ' vs ' + escapeHtml(n2) + score + '</span>');
+    items.push('<span class="ticker-item">'
+      + '<span class="ticker-cat">' + icon + ' ' + escapeHtml(cat.label) + '</span>'
+      + '<span class="ticker-name">' + statusLabel + ' ' + escapeHtml(n1) + ' vs ' + escapeHtml(n2) + score + '</span>'
+      + '</span>');
   }
   const content = items.join('');
   track.innerHTML = content + content;

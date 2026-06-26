@@ -2804,8 +2804,8 @@ body.dark-mode .btn-action-score:hover {
 
 /* ===== TICKER / SCROLLING BANNER ===== */
 .ticker-bar {
-  background: var(--bg-page);
-  color: var(--text-muted);
+  background: #fffbeb;
+  color: #78350f;
   overflow: hidden;
   white-space: nowrap;
   padding: 0;
@@ -2816,7 +2816,8 @@ body.dark-mode .btn-action-score:hover {
   position: sticky;
   top: 48px;
   z-index: 998;
-  border-bottom: 1px solid var(--border);
+  border-top: 1px solid #fcd34d;
+  border-bottom: 1px solid #fcd34d;
   cursor: default;
   margin-bottom: 0.5rem;
 }
@@ -2835,20 +2836,28 @@ body.dark-mode .btn-action-score:hover {
   gap: 5px;
   padding: 0 20px;
   white-space: nowrap;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid #fcd34d;
   flex-shrink: 0;
 }
-.ticker-item .ticker-live {
-  color: #dc2626;
+.ticker-item .ticker-cat {
+  color: #b45309;
   font-weight: 600;
 }
-.ticker-item .ticker-upcoming {
-  color: var(--text-main);
+.ticker-item .ticker-name {
+  color: #78350f;
   font-weight: 500;
+}
+.ticker-item .ticker-live {
+  color: #d97706;
+  font-weight: 700;
+}
+.ticker-item .ticker-upcoming {
+  color: #d97706;
+  font-weight: 600;
 }
 .ticker-empty {
   padding: 0 16px;
-  color: var(--text-muted);
+  color: #b45309;
   font-style: italic;
 }
 @keyframes ticker-scroll {
@@ -2857,14 +2866,20 @@ body.dark-mode .btn-action-score:hover {
 }
 
 body.dark-mode .ticker-bar {
-  background: var(--bg-card);
-  border-bottom-color: var(--border);
+  background: #1c1917;
+  border-top-color: #78350f;
+  border-bottom-color: #78350f;
 }
 body.dark-mode .ticker-item {
-  border-right-color: var(--border);
+  border-right-color: #78350f;
 }
-body.dark-mode .ticker-pin { color: #64748b; }
-body.dark-mode .ticker-pin.active { color: #38bdf8; }
+body.dark-mode .ticker-item .ticker-cat { color: #fbbf24; }
+body.dark-mode .ticker-item .ticker-name { color: #fde68a; }
+body.dark-mode .ticker-item .ticker-live { color: #f59e0b; }
+body.dark-mode .ticker-item .ticker-upcoming { color: #d97706; }
+body.dark-mode .ticker-empty { color: #fbbf24; }
+body.dark-mode .ticker-pin { color: #78350f; }
+body.dark-mode .ticker-pin.active { color: #f59e0b; }
 
 /* ===== TICKER PIN TOGGLE ===== */
 .ticker-pin {
