@@ -3,18 +3,26 @@ function createEventReport(eventId, eventName) {
     eventId: eventId,
     eventName: eventName,
     organization: '',
+    organizedBy: '',
     eventDates: '',
     status: 'draft',
     publishedAt: null,
     generatedAt: Date.now(),
     appreciation: 'Thank you to every participant, volunteer, referee, organizer and supporter for making this event a memorable success.',
+    narrative: '',
     closing: 'Congratulations to all winners, runner-ups and participants. We look forward to seeing you again at the next event.',
     photos: [],
+    timeline: {
+      registration: null,
+      started: null,
+      completed: null
+    },
     highlights: {
       participants: 0,
       sports: 0,
       competitions: 0,
-      matches: 0
+      matches: 0,
+      completed: 0
     },
     matchStats: {
       group: 0,
@@ -40,6 +48,7 @@ function createSportSummary(name) {
     competitions: [],
     participants: 0,
     matches: 0,
-    champions: []
+    champions: [],
+    completed: 0
   };
 }

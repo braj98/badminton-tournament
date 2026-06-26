@@ -531,6 +531,9 @@ function testReportGenerator(ctx) {
   a(r1.highlights.competitions === 0, 'Empty report has 0 competitions');
   a(r1.highlights.matches === 0, 'Empty report has 0 matches');
   a(r1.highlights.participants === 0, 'Empty report has 0 participants');
+  a(r1.highlights.completed === 0, 'Empty report has 0 completed');
+  a(typeof r1.narrative === 'string', 'Empty report has narrative string');
+  a(typeof r1.timeline === 'object', 'Empty report has timeline object');
   a(typeof r1.generatedAt === 'number', 'Empty report has generatedAt timestamp');
 
   var r2 = ctx.generateEventReport(null, [], {});
@@ -583,6 +586,7 @@ function testReportGenerator(ctx) {
   a(r5.highlights.participants === 3, 'Totals: 3 participants');
   a(r5.highlights.competitions === 1, 'Totals: 1 competition');
   a(r5.highlights.sports === 1, 'Totals: 1 sport');
+  a(r5.highlights.completed === 1, 'Totals: 1 completed competition');
   a(r5.matchStats.semiFinal === 1, '1 SF match');
   a(r5.matchStats.final === 1, '1 Final match');
 
