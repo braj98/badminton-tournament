@@ -103,6 +103,7 @@ function getReportKey(eventId) {
 
 function saveReport(eventId, report) {
   try { localStorage.setItem(getReportKey(eventId), JSON.stringify(report)); } catch(e) { console.error('saveReport failed:', e); }
+  if (typeof upsertReport === 'function') upsertReport(eventId, report);
 }
 
 function loadReport(eventId) {
@@ -111,6 +112,17 @@ function loadReport(eventId) {
     if (raw) return JSON.parse(raw);
   } catch(e) {}
   return null;
+}
+
+async function loadCloudReport(eventId) {
+  if (typeof fetchReport !== 'function') return loadReport(eventId);
+  var local = loadReport(eventId);
+  var cloud = await fetchReport(eventId);
+  if (cloud && (!local || cloud.publishedAt >= local.publishedAt)) {
+    saveReport(eventId, cloud);
+    return cloud;
+  }
+  return local;
 }
 
 function deleteReport(eventId) {

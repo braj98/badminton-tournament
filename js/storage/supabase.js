@@ -92,16 +92,24 @@ async function _fetchByKey(key) {
 
 async function fetchMetadataFromCloud() {
   if (!_supabase) return null;
-  // Atomic composite key (prevents partial-sync race)
   const meta = await _fetchByKey('btm_metadata');
   if (meta && meta.templates && meta.events) return { templates: meta.templates, events: meta.events };
-  // Fallback: legacy individual keys
   const templates = await _fetchByKey('btm_templates');
   const events = await _fetchByKey('btm_events');
   if (templates && events) return { templates, events };
   const cats = await _fetchByKey('btm_categories');
   if (cats) return { categories: cats };
   return null;
+}
+
+async function upsertReport(eventId, report) {
+  if (!_supabase) return;
+  await _upsertByKey('btm_report_' + eventId, report);
+}
+
+async function fetchReport(eventId) {
+  if (!_supabase) return null;
+  return _fetchByKey('btm_report_' + eventId);
 }
 
 // --- Realtime subscriptions ---
