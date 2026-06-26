@@ -87,23 +87,23 @@ function renderReport() {
 
   // Admin actions bar
   if (isAdminUser) {
-    html += '<div class="report-admin-bar">';
+    html += '<div class="report-admin-bar">'
+      + '<div class="report-admin-left">';
     if (isPublished) {
-      html += '<span class="report-status-badge published">Published</span>';
-      if (stale) {
-        html += '<span class="report-stale-warning">⚠ Published report is out of date. Please regenerate and republish.</span>';
-      }
-      html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
-      html += '<button class="btn btn-sm btn-secondary" onclick="unpublishReport()">📝 Unpublish</button>';
+      html += '<span class="report-status-badge published">Published</span>'
+        + '<button class="report-btn report-btn-primary" onclick="unpublishReport()">📝 Unpublish</button>';
     } else {
-      html += '<button class="btn btn-sm" onclick="saveReportDraft()">💾 Save Draft</button>';
-      html += '<button class="btn btn-sm" onclick="publishReport()">📢 Publish Report</button>';
-      html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
-      html += '<button class="btn btn-sm btn-outline" onclick="deleteReportDraft()" style="color:var(--danger);border-color:var(--danger);">🗑 Delete Draft</button>';
+      html += '<button class="report-btn report-btn-primary" onclick="publishReport()">📢 Publish Report</button>'
+        + '<button class="report-btn report-btn-save" onclick="saveReportDraft()">💾 Save Draft</button>';
     }
-    html += '<button class="btn btn-sm btn-secondary" onclick="window.print()">🖨 Print</button>';
-    html += '<button class="btn btn-sm btn-secondary" onclick="closeReport()">← Back</button>';
-    html += '</div>';
+    html += '</div><div class="report-admin-right">';
+    if (stale) {
+      html += '<span class="report-stale-warning">⚠ Out of date</span>';
+    }
+    html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()">🔄 Regenerate</button>'
+      + '<button class="report-btn report-btn-utility" onclick="window.print()">🖨️ Print</button>'
+      + '<button class="report-btn report-btn-utility" onclick="closeReport()">← Back</button>'
+      + '</div></div>';
   } else {
     if (!isPublished) {
       container.innerHTML = '<div class="report-page"><div class="report-empty"><p>Report not yet published. Check back later.</p>'
