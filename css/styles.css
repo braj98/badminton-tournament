@@ -2804,8 +2804,8 @@ body.dark-mode .btn-action-score:hover {
 
 /* ===== TICKER / SCROLLING BANNER ===== */
 .ticker-bar {
-  background: linear-gradient(90deg, #1e293b, #334155);
-  color: #e2e8f0;
+  background: var(--bg-page);
+  color: var(--text-muted);
   overflow: hidden;
   white-space: nowrap;
   padding: 0;
@@ -2816,7 +2816,7 @@ body.dark-mode .btn-action-score:hover {
   position: sticky;
   top: 48px;
   z-index: 998;
-  border-bottom: 1px solid #475569;
+  border-bottom: 1px solid var(--border);
   cursor: default;
   margin-bottom: 0.5rem;
 }
@@ -2835,20 +2835,20 @@ body.dark-mode .btn-action-score:hover {
   gap: 5px;
   padding: 0 20px;
   white-space: nowrap;
-  border-right: 1px solid #475569;
+  border-right: 1px solid var(--border);
   flex-shrink: 0;
 }
 .ticker-item .ticker-live {
-  color: #ef4444;
-  font-weight: 700;
+  color: #dc2626;
+  font-weight: 600;
 }
 .ticker-item .ticker-upcoming {
-  color: #fbbf24;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: 500;
 }
 .ticker-empty {
   padding: 0 16px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-style: italic;
 }
 @keyframes ticker-scroll {
@@ -2857,11 +2857,11 @@ body.dark-mode .btn-action-score:hover {
 }
 
 body.dark-mode .ticker-bar {
-  background: linear-gradient(90deg, #0f172a, #1e293b);
-  border-bottom-color: #334155;
+  background: var(--bg-card);
+  border-bottom-color: var(--border);
 }
 body.dark-mode .ticker-item {
-  border-right-color: #334155;
+  border-right-color: var(--border);
 }
 body.dark-mode .ticker-pin { color: #64748b; }
 body.dark-mode .ticker-pin.active { color: #38bdf8; }
