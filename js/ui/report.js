@@ -160,7 +160,9 @@ function renderReport() {
     + '<div class="report-highlight-card"><span class="num">' + (highlights.matches || 0) + '</span><span class="lbl">Matches Played</span></div>'
     + '</div>'
     + '<div class="report-completed-summary">'
-    + (_completedCount) + ' of ' + (highlights.competitions || 0) + ' competitions completed'
+    + '<div class="report-progress-header">🏁 Tournament Progress</div>'
+    + '<div class="report-progress-bar"><span class="report-progress-fill" style="width:' + Math.round((_completedCount / (highlights.competitions || 1)) * 100) + '%;"></span></div>'
+    + '<div class="report-progress-text">' + _completedCount + ' / ' + (highlights.competitions || 0) + ' Completed</div>'
     + '</div></div>';
 
   // === 4. Event Timeline ===
@@ -252,7 +254,7 @@ function renderReport() {
     html += '</div></div>';
   } else if (isAdminUser) {
     html += '<div class="report-section report-photo-placeholder"><div class="report-section-title">📸 Photo Gallery</div>'
-      + '<p class="text-muted">Add photos to celebrate the event. (Coming soon)</p></div>';
+      + '<p class="text-muted">No event photos have been added yet.</p></div>';
   }
 
   // === 9. Organized By ===
