@@ -96,7 +96,7 @@ function renderReport() {
       html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
       html += '<button class="btn btn-sm btn-secondary" onclick="unpublishReport()">📝 Unpublish</button>';
     } else {
-      html += '<span class="report-status-badge draft">Draft</span>';
+      html += '<button class="btn btn-sm" onclick="saveReportDraft()">💾 Save Draft</button>';
       html += '<button class="btn btn-sm" onclick="publishReport()">📢 Publish Report</button>';
       html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
       html += '<button class="btn btn-sm btn-outline" onclick="deleteReportDraft()" style="color:var(--danger);border-color:var(--danger);">🗑 Delete Draft</button>';
@@ -132,7 +132,7 @@ function renderReport() {
   html += '<div class="report-section report-appreciation-section">'
     + '<div class="report-section-title">🙏 Appreciation</div>';
   if (isAdminUser) {
-    html += '<textarea id="reportAppreciationInput" class="report-textarea" onchange="saveReportAppreciation()">' + escapeHtml(report.appreciation) + '</textarea>';
+    html += '<textarea id="reportAppreciationInput" class="report-textarea">' + escapeHtml(report.appreciation) + '</textarea>';
   } else {
     html += '<div class="report-quote">' + escapeHtml(report.appreciation) + '</div>';
   }
@@ -256,7 +256,7 @@ function renderReport() {
   html += '<div class="report-section report-organized-by-section">'
     + '<div class="report-section-title">👥 Organized By</div>';
   if (isAdminUser) {
-    html += '<textarea id="reportOrganizedByInput" class="report-textarea" onchange="saveReportOrganizedBy()" placeholder="e.g. Bren Avalon Sports Committee">' + escapeHtml(report.organizedBy || '') + '</textarea>';
+    html += '<textarea id="reportOrganizedByInput" class="report-textarea" placeholder="e.g. Bren Avalon Sports Committee">' + escapeHtml(report.organizedBy || '') + '</textarea>';
   } else {
     html += '<div class="report-quote">' + (report.organizedBy ? escapeHtml(report.organizedBy) : '—') + '</div>';
   }
@@ -266,7 +266,7 @@ function renderReport() {
   html += '<div class="report-section report-closing-section">'
     + '<div class="report-section-title">💐 Closing Message</div>';
   if (isAdminUser) {
-    html += '<textarea id="reportClosingInput" class="report-textarea" onchange="saveReportClosing()">' + escapeHtml(report.closing) + '</textarea>';
+    html += '<textarea id="reportClosingInput" class="report-textarea">' + escapeHtml(report.closing) + '</textarea>';
   } else {
     html += '<div class="report-quote">' + escapeHtml(report.closing) + '</div>';
   }
@@ -300,6 +300,19 @@ function _fmtDateInput(timestamp) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
+function saveReportDraft() {
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  var appreciation = document.getElementById('reportAppreciationInput');
+  var organizedBy = document.getElementById('reportOrganizedByInput');
+  var closing = document.getElementById('reportClosingInput');
+  if (appreciation) report.appreciation = appreciation.value;
+  if (organizedBy) report.organizedBy = organizedBy.value;
+  if (closing) report.closing = closing.value;
+  saveReport(AppState.eventId, report);
+  showToast('💾 Draft saved');
+}
+
 function saveTimelineDate(field, value) {
   var report = loadReport(AppState.eventId);
   if (!report) return;
@@ -307,33 +320,6 @@ function saveTimelineDate(field, value) {
   report.timeline[field] = value ? new Date(value).getTime() : null;
   saveReport(AppState.eventId, report);
   renderReport();
-}
-
-function saveReportAppreciation() {
-  var input = document.getElementById('reportAppreciationInput');
-  if (!input) return;
-  var report = loadReport(AppState.eventId);
-  if (!report) return;
-  report.appreciation = input.value;
-  saveReport(AppState.eventId, report);
-}
-
-function saveReportOrganizedBy() {
-  var input = document.getElementById('reportOrganizedByInput');
-  if (!input) return;
-  var report = loadReport(AppState.eventId);
-  if (!report) return;
-  report.organizedBy = input.value;
-  saveReport(AppState.eventId, report);
-}
-
-function saveReportClosing() {
-  var input = document.getElementById('reportClosingInput');
-  if (!input) return;
-  var report = loadReport(AppState.eventId);
-  if (!report) return;
-  report.closing = input.value;
-  saveReport(AppState.eventId, report);
 }
 
 function checkReportStale(report, event) {
