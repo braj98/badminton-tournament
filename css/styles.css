@@ -2803,3 +2803,80 @@ body.dark-mode .btn-action-score:hover {
   }
 }
 
+/* ===== TICKER / SCROLLING BANNER ===== */
+.ticker-bar {
+  background: linear-gradient(90deg, #1e293b, #334155);
+  color: #e2e8f0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+  height: 28px;
+  line-height: 28px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  position: sticky;
+  top: 48px;
+  z-index: 998;
+  border-bottom: 1px solid #475569;
+  cursor: default;
+}
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  animation: ticker-scroll 40s linear infinite;
+  will-change: transform;
+}
+.ticker-bar:hover .ticker-track {
+  animation-play-state: paused;
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 20px;
+  white-space: nowrap;
+  border-right: 1px solid #475569;
+  flex-shrink: 0;
+}
+.ticker-item .ticker-live {
+  color: #ef4444;
+  font-weight: 700;
+}
+.ticker-item .ticker-upcoming {
+  color: #fbbf24;
+  font-weight: 700;
+}
+.ticker-empty {
+  padding: 0 16px;
+  color: #94a3b8;
+  font-style: italic;
+}
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+body.dark-mode .ticker-bar {
+  background: linear-gradient(90deg, #0f172a, #1e293b);
+  border-bottom-color: #334155;
+}
+body.dark-mode .ticker-item {
+  border-right-color: #334155;
+}
+body.dark-mode .ticker-pin { color: #64748b; }
+body.dark-mode .ticker-pin.active { color: #38bdf8; }
+
+/* ===== TICKER PIN TOGGLE ===== */
+.ticker-pin {
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0.4;
+  transition: opacity .15s, transform .15s;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+}
+.ticker-pin:hover { opacity: 0.7; transform: scale(1.15); }
+.ticker-pin.active { opacity: 1; color: #2563eb; }
+

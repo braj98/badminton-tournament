@@ -43,6 +43,8 @@ function renderLiveView() {
         + '</div>'
         + '<div class="score-live-wrapper">';
       if (isAdmin()) {
+        const pinned = isTickerMatch(item.catId, m.id);
+        html += '<span class="ticker-pin' + (pinned ? ' active' : '') + '" onclick="toggleTickerMatch(\'' + item.catId + '\',\'' + m.id + '\')" title="Show on ticker">📌</span>';
         if (isFinal) {
           html += _liveFinalSetInputs(m, item.catId, cfg);
         } else if (item.isFixture) {
@@ -90,6 +92,7 @@ function renderLiveView() {
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.remove('active');
   document.getElementById('subNavChampions').classList.remove('active');
+  renderTicker();
 }
 
 function _liveFinalSetInputs(m, catId, cfg) {

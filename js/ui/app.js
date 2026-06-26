@@ -412,6 +412,7 @@ function renderAll() {
   if (AppState.view === 'fixtures') renderFixtures();
   if (AppState.view === 'knockout') renderKnockout();
   if (AppState.view === 'champion') renderChampion();
+  renderTicker();
   if (!isAdmin()) applyViewerMode();
 }
 
@@ -498,6 +499,7 @@ function showResultsPage() {
   document.getElementById('screen-results').classList.add('active');
   document.querySelectorAll('.screen:not(#screen-results)').forEach(s => { if (s.id !== 'screen-home') s.classList.remove('active'); });
   renderMatchView();
+  renderTicker();
   if (!isAdmin()) {
     applyViewerMode();
     document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
@@ -507,6 +509,7 @@ function showResultsPage() {
 function switchMatchView(view) {
   _currentMatchView = view;
   renderMatchView();
+  renderTicker();
   if (!isAdmin()) {
     applyViewerMode();
     document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));

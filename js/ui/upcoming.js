@@ -37,6 +37,7 @@ function renderUpcomingView() {
   document.getElementById('subNavResults').classList.remove('active');
   document.getElementById('subNavUpcoming').classList.add('active');
   document.getElementById('subNavChampions').classList.remove('active');
+  renderTicker();
 }
 
 function renderUpcomingCard(tmpl, s, roundLabel, m, matchId, isFixture, sportIcons) {
@@ -60,6 +61,8 @@ function renderUpcomingCard(tmpl, s, roundLabel, m, matchId, isFixture, sportIco
     + '</div>'
     + '<div class="actions-schedule-wrapper">';
   if (isAdmin()) {
+    const pinned = isTickerMatch(tmpl.id, matchId);
+    html += '<span class="ticker-pin' + (pinned ? ' active' : '') + '" onclick="toggleTickerMatch(\'' + tmpl.id + '\',\'' + matchId + '\')" title="Show on ticker">📌</span>';
     html += '<button class="btn-action-start" onclick="startUpcomingMatch(\'' + tmpl.id + '\',\'' + matchId + '\')">▶️ Start</button>';
   }
   html += '</div></div>';
