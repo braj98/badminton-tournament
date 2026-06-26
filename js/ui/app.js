@@ -129,7 +129,12 @@ function renderBreadcrumb() {
     return;
   }
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
-  if (AppState.view === 'event') {
+  if (AppState.view === 'report') {
+    parts.push('<span class="bc-sep">›</span>');
+    parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
+    parts.push('<span class="bc-sep">›</span>');
+    parts.push('<span class="bc-item bc-current">Report</span>');
+  } else if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
   } else if (AppState.view === 'sport') {
@@ -154,7 +159,7 @@ function updateNavigationVisibility() {
   var actionBar = document.getElementById('actionBar');
   var view = AppState.view;
   var showingResults = AppState.ui.showingResults;
-  var isOverview = view === 'home' || view === 'event' || view === 'sport' || view === 'results' || showingResults;
+  var isOverview = view === 'home' || view === 'event' || view === 'sport' || view === 'results' || view === 'report' || showingResults;
   var isTournamentView = !isOverview;
 
   if (catBar) catBar.style.display = isTournamentView ? '' : 'none';
@@ -184,7 +189,10 @@ function renderEventPage() {
   updateHeader();
   var container = document.getElementById('eventContent');
   var cats = getCategories().filter(function(c) { return c.eventId === AppState.eventId; });
-  var html = '<h2 class="page-title">' + escapeHtml(getCurrentEventName()) + '</h2>';
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<h2 class="page-title" style="margin:0;">' + escapeHtml(getCurrentEventName()) + '</h2>'
+    + '<button class="btn btn-sm btn-secondary" onclick="goToReport()">📄 Report</button>'
+    + '</div>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this event.</p>';
   } else {
@@ -325,9 +333,10 @@ function renderAll() {
     return;
   }
 
-  // Event / Sport pages
+  // Event / Sport / Report pages
   if (AppState.view === 'event') { renderEventPage(); return; }
   if (AppState.view === 'sport') { renderSportPage(); return; }
+  if (AppState.view === 'report') { renderReport(); return; }
 
   // Tournament view
   updateNavigationVisibility();
