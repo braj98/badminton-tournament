@@ -95,7 +95,6 @@ body {
   top: 0;
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  margin-bottom: 1.25rem;
 }
 
 .header-brand-cluster {
@@ -2819,6 +2818,7 @@ body.dark-mode .btn-action-score:hover {
   z-index: 998;
   border-bottom: 1px solid #475569;
   cursor: default;
+  margin-bottom: 0.5rem;
 }
 .ticker-track {
   display: inline-flex;
