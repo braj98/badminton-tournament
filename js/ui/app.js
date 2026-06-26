@@ -686,8 +686,53 @@ function renderChampionsView() {
   document.getElementById('subNavChampions').classList.add('active');
 }
 
-// ===================== INIT =====================
+// ===================== STANDALONE REPORT =====================
+async function renderStandaloneReport(eventId) {
+  var report = await loadCloudReport(eventId);
+  if (!report) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--text-muted);">Report not found.</div>';
+    return;
+  }
+  // Set AppState so renderReport() can find event
+  AppState.eventId = eventId;
+  AppState.view = 'report';
+  // Ensure report is in localStorage for renderReport to load
+  saveReport(eventId, report);
+  // Hide all app chrome
+  var appBar = document.querySelector('.unified-app-bar');
+  if (appBar) appBar.style.display = 'none';
+  var ticker = document.getElementById('tickerContainer');
+  if (ticker) ticker.style.display = 'none';
+  var bc = document.getElementById('breadcrumb');
+  if (bc) bc.style.display = 'none';
+  document.body.classList.remove('viewer-mode');
+  // Inject share bar above report container
+  var shareUrl = window.location.origin + window.location.pathname + '?report=' + eventId;
+  var shareBar = document.createElement('div');
+  shareBar.id = 'standaloneShareBar';
+  shareBar.innerHTML = '<div class="report-admin-bar" style="margin-bottom:0;border-radius:0;border-left:none;border-right:none;border-top:none;">'
+    + '<div class="report-admin-left">'
+    + '<span class="report-status-badge ' + (report.status === 'published' ? 'published' : 'draft') + '">' + (report.status === 'published' ? 'Published' : 'Draft') + '</span>'
+    + '</div>'
+    + '<div class="report-admin-right">'
+    + '<button class="report-btn report-btn-utility" onclick="navigator.clipboard.writeText(\'' + shareUrl + '\').then(function(){showToast(\'🔗 Link copied\')})">🔗 Share</button>'
+    + '<button class="report-btn report-btn-utility" onclick="window.print()">🖨️ Print</button>'
+    + '</div></div>';
+  var container = document.getElementById('reportContainer');
+  if (container.parentNode) container.parentNode.insertBefore(shareBar, container);
+  renderReport();
+}
 async function init() {
+  // Check for shareable report URL
+  var reportMatch = location.search.match(/[?&]report=([^&]+)/);
+  if (reportMatch) {
+    var reportEventId = reportMatch[1];
+    initSupabase();
+    if (_supabase) await checkSession();
+    renderStandaloneReport(reportEventId);
+    return;
+  }
+
   on('userLoggedIn', function() { updateBanners(); renderAll(); });
   on('userLoggedOut', function() { navigateTo(AppState.tournament.phase); });
 

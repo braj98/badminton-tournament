@@ -63,6 +63,15 @@ function deleteReportDraft() {
   closeReport();
 }
 
+function shareReport() {
+  var url = window.location.origin + window.location.pathname + '?report=' + AppState.eventId;
+  navigator.clipboard.writeText(url).then(function() {
+    showToast('🔗 Link copied to clipboard');
+  }).catch(function() {
+    showToast('🔗 ' + url);
+  });
+}
+
 function renderReport() {
   clearDisabled();
   updateHeader();
@@ -102,6 +111,7 @@ function renderReport() {
     }
     html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()" title="Regenerate">🔄</button>'
       + '<button class="report-btn report-btn-utility" onclick="window.print()" title="Print">🖨️</button>'
+      + (isPublished ? '<button class="report-btn report-btn-utility" onclick="shareReport()" title="Share">🔗</button>' : '')
       + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" title="Delete Draft" style="color:var(--danger);">🗑️</button>' : '')
       + '<button class="report-btn report-btn-utility" onclick="closeReport()" title="Back">←</button>'
       + '</div></div>';
