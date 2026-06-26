@@ -19,7 +19,22 @@ function generateDraftReport() {
     if (!tmpl) continue;
     stateMap[tmpl.id] = localLoad(tmpl.id);
   }
+  // Preserve manually edited fields from existing report
+  var existing = loadReport(AppState.eventId);
   var report = generateEventReport(ev, cats, stateMap);
+  if (existing) {
+    report.appreciation = existing.appreciation || report.appreciation;
+    report.organizedBy = existing.organizedBy || report.organizedBy;
+    report.closing = existing.closing || report.closing;
+    report.organization = existing.organization || report.organization;
+    report.eventDates = existing.eventDates || report.eventDates;
+    if (existing.timeline) {
+      if (existing.timeline.registration) report.timeline.registration = existing.timeline.registration;
+      if (existing.timeline.started) report.timeline.started = existing.timeline.started;
+      if (existing.timeline.completed) report.timeline.completed = existing.timeline.completed;
+      if (existing.timeline.published) report.timeline.published = existing.timeline.published;
+    }
+  }
   saveReport(AppState.eventId, report);
   goToReport();
 }
