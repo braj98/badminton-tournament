@@ -102,6 +102,7 @@ function renderReport() {
       html += '<button class="btn btn-sm btn-outline" onclick="deleteReportDraft()" style="color:var(--danger);border-color:var(--danger);">🗑 Delete Draft</button>';
     }
     html += '<button class="btn btn-sm btn-secondary" onclick="window.print()">🖨 Print</button>';
+    html += '<button class="btn btn-sm btn-secondary" onclick="closeReport()">← Back</button>';
     html += '</div>';
   } else {
     if (!isPublished) {
@@ -113,6 +114,7 @@ function renderReport() {
     if (stale) {
       html += '<div class="report-stale-warning">⚠ This report may be out of date. The latest results may differ.</div>';
     }
+    html += '<div style="margin-bottom:12px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div>';
   }
 
   // === 1. Event Banner ===
