@@ -24,6 +24,7 @@ const models = [
   'js/models/appState.js',
   'js/models/template.js',
   'js/models/event.js',
+  'js/models/report.js',
   'js/storage/local.js'
 ];
 
@@ -34,7 +35,8 @@ const scripts = [
   'js/engine/fixtures.js',
   'js/engine/standings.js',
   'js/engine/knockout.js',
-  'js/engine/tournamentEngine.js'
+  'js/engine/tournamentEngine.js',
+  'js/engine/reportGenerator.js'
 ];
 
 // Create a mock context
@@ -516,6 +518,103 @@ function testGetCategoriesShim(ctx) {
   return f === 0;
 }
 
+function testReportGenerator(ctx) {
+  console.log('\n=== Event Report Generator ===');
+  var p = 0, f = 0;
+  function a(cond, msg) { cond ? (p++, console.log('  PASS: ' + msg)) : (f++, console.error('  FAIL: ' + msg)); }
+
+  var ev = { id: 'ev1', name: 'Empty Event', templateIds: [] };
+  var r1 = ctx.generateEventReport(ev, [], {});
+  a(r1.eventId === 'ev1', 'Empty report has eventId');
+  a(r1.eventName === 'Empty Event', 'Empty report has eventName');
+  a(r1.sports.length === 0, 'Empty report has no sports');
+  a(r1.totals.competitions === 0, 'Empty report has 0 competitions');
+  a(r1.totals.matches === 0, 'Empty report has 0 matches');
+  a(r1.totals.participants === 0, 'Empty report has 0 participants');
+  a(typeof r1.generatedAt === 'number', 'Empty report has generatedAt timestamp');
+
+  var r2 = ctx.generateEventReport(null, [], {});
+  a(r2.eventId === null, 'Null event returns report with null eventId');
+
+  var ev3 = { id: 'ev3', name: 'Test Event', templateIds: ['t1'] };
+  var cats3 = [{ id: 't1', label: 'Junior', type: 'singles', sport: 'badminton', eventId: 'ev3' }];
+  var r3 = ctx.generateEventReport(ev3, cats3, { t1: null });
+  a(r3.sports.length === 0, 'Null tournament state skipped');
+
+  var ev4 = { id: 'ev4', name: 'Test Event', templateIds: ['t1'] };
+  var cats4 = [{ id: 't1', label: 'Junior', type: 'singles', sport: 'badminton', eventId: 'ev4' }];
+  var state4 = { phase: 'setup', participants: [{ id: 'p1', name: 'Alice' }, { id: 'p2', name: 'Bob' }], fixtures: [], knockout: [], champion: null, runnerUp: null };
+  var r4 = ctx.generateEventReport(ev4, cats4, { t1: state4 });
+  a(r4.sports.length === 1, 'Setup phase creates 1 sport');
+  a(r4.sports[0].name === 'badminton', 'Sport name is badminton');
+  a(r4.sports[0].competitions.length === 1, '1 competition in setup');
+  a(r4.sports[0].competitions[0].label === 'Junior', 'Competition label is Junior');
+  a(r4.sports[0].competitions[0].champion === null, 'No champion in setup phase');
+  a(r4.sports[0].competitions[0].matches === 0, '0 matches in setup phase');
+  a(r4.totals.participants === 2, '2 participants counted');
+
+  var ev5 = { id: 'ev5', name: 'Test Event', templateIds: ['t1'] };
+  var cats5 = [{ id: 't1', label: 'Sr Boys', type: 'singles', sport: 'badminton', eventId: 'ev5' }];
+  var state5 = {
+    phase: 'champion',
+    participants: [{ id: 'p1', name: 'Alice' }, { id: 'p2', name: 'Bob' }, { id: 'p3', name: 'Charlie' }],
+    fixtures: [
+      { id: 'f1', p1: 'p1', p2: 'p2', done: true, status: 'COMPLETED', s1: 13, s2: 5 },
+      { id: 'f2', p1: 'p1', p2: 'p3', done: true, status: 'COMPLETED', s1: 13, s2: 8 },
+      { id: 'f3', p1: 'p2', p2: 'p3', done: true, status: 'COMPLETED', s1: 11, s2: 13 }
+    ],
+    knockout: [
+      { id: 'sf1', p1: 'p1', p2: 'p2', round: 'SF', done: true, status: 'COMPLETED', winner: 'p1' },
+      { id: 'final', p1: 'p1', p2: 'p3', round: 'Final', done: true, status: 'COMPLETED', winner: 'p1' }
+    ],
+    champion: 'Alice',
+    runnerUp: 'Charlie'
+  };
+  var r5 = ctx.generateEventReport(ev5, cats5, { t1: state5 });
+  a(r5.sports.length === 1, 'Completed: 1 sport');
+  a(r5.sports[0].competitions.length === 1, 'Completed: 1 competition');
+  a(r5.sports[0].competitions[0].champion === 'Alice', 'Champion resolved to Alice');
+  a(r5.sports[0].competitions[0].runnerUp === 'Charlie', 'Runner-up resolved to Charlie');
+  a(r5.sports[0].competitions[0].matches === 5, '5 total matches (3 fixtures + 2 knockout)');
+  a(r5.sports[0].competitions[0].completed === 5, '5 completed matches');
+  a(r5.totals.matches === 5, 'Totals: 5 matches');
+  a(r5.totals.participants === 3, 'Totals: 3 participants');
+  a(r5.totals.competitions === 1, 'Totals: 1 competition');
+  a(r5.totals.sports === 1, 'Totals: 1 sport');
+
+  var ev6 = { id: 'ev6', name: 'Multi Sport', templateIds: ['t1', 't2'] };
+  var cats6 = [
+    { id: 't1', label: 'Sr Boys', type: 'singles', sport: 'badminton', eventId: 'ev6' },
+    { id: 't2', label: 'TT Singles', type: 'singles', sport: 'tableTennis', eventId: 'ev6' }
+  ];
+  var r6 = ctx.generateEventReport(ev6, cats6, { t1: { phase: 'champion', participants: [{ id: 'p1', name: 'Alice' }], fixtures: [], knockout: [{ id: 'final', p1: 'p1', p2: null, round: 'Final', done: true, status: 'COMPLETED', winner: 'p1' }], champion: 'Alice', runnerUp: null }, t2: { phase: 'champion', participants: [{ id: 'p2', name: 'Bob' }], fixtures: [{ id: 'f1', p1: 'p2', p2: null, done: true, status: 'COMPLETED' }], knockout: [], champion: 'Bob', runnerUp: null } });
+  a(r6.sports.length === 2, '2 sports in multi-sport event');
+  a(r6.totals.sports === 2, 'Totals: 2 sports');
+  a(r6.totals.competitions === 2, 'Totals: 2 competitions');
+  a(r6.totals.participants === 2, 'Totals: 2 participants');
+
+  var ev7 = { id: 'ev7', name: 'No KO', templateIds: ['t1'] };
+  var cats7 = [{ id: 't1', label: 'Round Robin', type: 'singles', sport: 'badminton', eventId: 'ev7' }];
+  var r7 = ctx.generateEventReport(ev7, cats7, { t1: { phase: 'champion', participants: [{ id: 'p1', name: 'Winner' }], fixtures: [{ id: 'f1', p1: 'p1', p2: null, done: true, status: 'COMPLETED' }], knockout: [], champion: 'Winner', runnerUp: null } });
+  a(r7.sports[0].competitions[0].champion === 'Winner', 'Champion from state.champion fallback');
+  a(r7.sports[0].competitions[0].matches === 1, '1 match counted');
+
+  var ev8 = { id: 'ev8', name: 'Orphan', templateIds: ['t1', 't2'] };
+  var cats8 = [{ id: 't1', label: 'Known', type: 'singles', sport: 'badminton', eventId: 'ev8' }];
+  var r8 = ctx.generateEventReport(ev8, cats8, { t1: { phase: 'champion', participants: [], fixtures: [], knockout: [], champion: null, runnerUp: null } });
+  a(r8.sports.length === 1, 'Orphan templateId excluded from report');
+  a(r8.sports[0].competitions[0].label === 'Known', 'Only known category included');
+
+  var parts = [{ id: 'p1', name: 'Alice' }, { id: 'p2', name: 'Bob' }];
+  a(ctx.resolveName('p1', parts) === 'Alice', 'resolveName resolves id to name');
+  a(ctx.resolveName('p1', []) === 'p1', 'resolveName returns id if no participants');
+  a(ctx.resolveName('unknown', parts) === 'unknown', 'resolveName returns id if not found');
+  a(ctx.resolveName(null, parts) === null, 'resolveName returns null for null');
+
+  console.log(`  >>> ${p} PASS, ${f} FAIL <<<`);
+  return f === 0;
+}
+
 // Run storage model tests
 console.log('\n========== STORAGE MODEL TESTS ==========\n');
 let tmplPass = testTemplateModel(context);
@@ -523,10 +622,15 @@ let evPass = testEventModel(context);
 let shimPass = testGetCategoriesShim(context);
 context.localStorage.clear();
 
+console.log('\n========== REPORT GENERATOR TESTS ==========\n');
+let reportPass = testReportGenerator(context);
+context.localStorage.clear();
+
 console.log('\n========== RESULTS ==========');
 console.log(`Passed: ${pass}`);
 console.log(`Failed: ${fail}`);
 console.log(`Model tests: ${tmplPass ? 'PASS' : 'FAIL'}, ${evPass ? 'PASS' : 'FAIL'}, ${shimPass ? 'PASS' : 'FAIL'}`);
+console.log(`Report tests: ${reportPass ? 'PASS' : 'FAIL'}`);
 console.log(`Total:  ${pass + fail}`);
 
 process.exit(fail > 0 ? 1 : 0);

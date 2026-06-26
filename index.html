@@ -130,6 +130,11 @@
     <div id="sportContent"></div>
   </div>
 
+  <!-- ============ EVENT REPORT ============ -->
+  <div id="screen-report" class="screen">
+    <div id="reportContainer"></div>
+  </div>
+
   <!-- ============ SETUP ============ -->
   <div id="screen-setup" class="screen">
     <div class="card">
@@ -256,8 +261,10 @@
 <script src="js/models/sport.js"></script>
 <script src="js/models/event.js"></script>
 <script src="js/models/template.js"></script>
+<script src="js/models/report.js"></script>
 <!-- Layer 1c: Tournament Engine (public API — UI calls only these) -->
 <script src="js/engine/tournamentEngine.js"></script>
+<script src="js/engine/reportGenerator.js"></script>
 <!-- Layer 2: Storage (persistence, no DOM, no business logic) -->
 <script src="js/storage/local.js"></script>
 <script src="js/storage/events.js"></script>
@@ -276,6 +283,7 @@
 <script src="js/ui/upcoming.js"></script>
     <script src="js/ui/champion.js"></script>
     <script src="js/ui/ticker.js"></script>
+    <script src="js/ui/report.js"></script>
 
     <!-- Footer -->
   <div style="margin-top:40px;padding:12px 0;border-top:1px solid var(--border);text-align:center;font-size:.75rem;color:var(--muted);">

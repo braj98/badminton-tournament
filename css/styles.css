@@ -2802,6 +2802,158 @@ body.dark-mode .btn-action-score:hover {
   }
 }
 
+/* ===== EVENT REPORT ===== */
+.report-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+.report-header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.report-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+.report-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+.report-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.report-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.report-summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  text-align: center;
+}
+.report-summary-card .num {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.report-summary-card .lbl {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.report-sport-section {
+  margin-bottom: 24px;
+}
+.report-sport-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+.report-sport-counts {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.report-table th {
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.report-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-light, var(--border));
+  vertical-align: middle;
+}
+.report-table .comp-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+.report-table .champion-cell {
+  color: var(--accent);
+  font-weight: 600;
+}
+.report-table .runnerup-cell {
+  color: var(--text-main);
+}
+.report-message {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.report-appreciation {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.report-closing {
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  color: #854d0e;
+}
+.report-footer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+body.dark-mode .report-appreciation {
+  background: #052e16;
+  border-color: #166534;
+  color: #bbf7d0;
+}
+body.dark-mode .report-closing {
+  background: #422006;
+  border-color: #854d0e;
+  color: #fde68a;
+}
+
+@media print {
+  .report-actions { display: none; }
+  .report-footer-actions { display: none; }
+  .report-page { max-width: 100%; padding: 0; }
+  .report-summary-card { border: 1px solid #ccc; }
+  .report-table td, .report-table th { border-color: #ccc; }
+}
+@media (max-width: 640px) {
+  .report-summary-cards { grid-template-columns: repeat(2, 1fr); }
+  .report-title { font-size: 1.1rem; }
+}
+
 /* ===== TICKER / SCROLLING BANNER ===== */
 .ticker-bar {
   background: #fffbeb;
