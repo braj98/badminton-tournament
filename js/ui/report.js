@@ -102,6 +102,7 @@ function renderReport() {
     }
     html += '<button class="report-btn report-btn-utility" onclick="generateDraftReport()">🔄 Regenerate</button>'
       + '<button class="report-btn report-btn-utility" onclick="window.print()">🖨️ Print</button>'
+      + (!isPublished ? '<button class="report-btn report-btn-utility" onclick="deleteReportDraft()" style="color:var(--danger);">🗑️ Delete Draft</button>' : '')
       + '<button class="report-btn report-btn-utility" onclick="closeReport()">← Back</button>'
       + '</div></div>';
   } else {
