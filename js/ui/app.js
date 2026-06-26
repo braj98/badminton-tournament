@@ -255,6 +255,7 @@ function renderEventPage() {
   }
   if (container) container.innerHTML = html;
   showScreen('screen-event', true);
+  showScreen('screen-report', false);
   showScreen('screen-sport', false);
   showScreen('screen-home', false);
   showScreen('screen-setup', false);
