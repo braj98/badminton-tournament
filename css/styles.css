@@ -2891,4 +2891,20 @@ body.dark-mode .ticker-pin.active { color: #f59e0b; }
 }
 .ticker-pin:hover { opacity: 0.7; transform: scale(1.15); }
 .ticker-pin.active { opacity: 1; color: #2563eb; }
+.ticker-unpin {
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0;
+  margin-left: 6px;
+  padding: 0 3px;
+  border-radius: 2px;
+  transition: opacity .15s, background .15s;
+  user-select: none;
+  line-height: 1;
+  color: #b45309;
+}
+.ticker-item:hover .ticker-unpin { opacity: 0.6; }
+.ticker-unpin:hover { opacity: 1 !important; background: rgba(180,83,9,0.1); }
+body.dark-mode .ticker-unpin { color: #fbbf24; }
+body.dark-mode .ticker-unpin:hover { background: rgba(251,191,36,0.15); }
 

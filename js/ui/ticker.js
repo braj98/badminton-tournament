@@ -50,6 +50,7 @@ function renderTicker() {
     items.push('<span class="ticker-item">'
       + '<span class="ticker-cat">' + icon + ' ' + escapeHtml(cat.label) + '</span>'
       + '<span class="ticker-name">' + statusLabel + ' ' + escapeHtml(n1) + ' vs ' + escapeHtml(n2) + score + '</span>'
+      + (isAdmin() ? '<span class="ticker-unpin" onclick="toggleTickerMatch(\'' + cat.id + '\',\'' + m.id + '\')" title="Remove from ticker">✕</span>' : '')
       + '</span>');
   }
   const content = items.join('');
