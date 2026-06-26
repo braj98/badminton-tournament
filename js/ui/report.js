@@ -129,6 +129,11 @@ function renderReport() {
 
   // === 3. Event at a Glance ===
   var highlights = report.highlights || {};
+  // Recalculate completed count from actual champion data (handles stale reports)
+  var _completedCount = 0;
+  for (var _cci = 0; _cci < (report.champions || []).length; _cci++) {
+    if (report.champions[_cci].champion) _completedCount++;
+  }
   html += '<div class="report-section"><div class="report-section-title">📊 Event at a Glance</div>'
     + '<div class="report-highlights-grid">'
     + '<div class="report-highlight-card"><span class="num">' + (highlights.participants || 0) + '</span><span class="lbl">Participants</span></div>'
@@ -137,7 +142,7 @@ function renderReport() {
     + '<div class="report-highlight-card"><span class="num">' + (highlights.matches || 0) + '</span><span class="lbl">Matches Played</span></div>'
     + '</div>'
     + '<div class="report-completed-summary">'
-    + (highlights.completed || 0) + ' of ' + (highlights.competitions || 0) + ' competitions completed'
+    + (_completedCount) + ' of ' + (highlights.competitions || 0) + ' competitions completed'
     + '</div></div>';
 
   // === 4. Event Timeline ===
@@ -146,10 +151,17 @@ function renderReport() {
   if (hasTimeline || isAdminUser) {
     html += '<div class="report-section"><div class="report-section-title">📅 Event Timeline</div>'
       + '<div class="report-timeline">';
-    html += _renderTimelineItem('📋 Registration Closed', timeline.registration);
-    html += _renderTimelineItem('🏸 Tournament Started', timeline.started);
-    html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed);
-    html += _renderTimelineItem('📖 Report Published', timeline.published);
+    if (isAdminUser) {
+      html += '<div class="report-timeline-row"><span class="tl-label">📋 Registration Closed</span><input type="date" class="tl-input" id="tlRegistration" value="' + _fmtDateInput(timeline.registration) + '" onchange="saveTimelineDate(\'registration\', this.value)"></div>';
+      html += '<div class="report-timeline-row"><span class="tl-label">🏸 Tournament Started</span><input type="date" class="tl-input" id="tlStarted" value="' + _fmtDateInput(timeline.started) + '" onchange="saveTimelineDate(\'started\', this.value)"></div>';
+      html += '<div class="report-timeline-row"><span class="tl-label">🏆 Tournament Completed</span><input type="date" class="tl-input" id="tlCompleted" value="' + _fmtDateInput(timeline.completed) + '" onchange="saveTimelineDate(\'completed\', this.value)"></div>';
+      html += '<div class="report-timeline-row"><span class="tl-label" style="opacity:.5;">📖 Report Published</span><span class="tl-date" style="opacity:.5;">' + _renderTimelineVal(timeline.published) + '</span></div>';
+    } else {
+      html += _renderTimelineItem('📋 Registration Closed', timeline.registration);
+      html += _renderTimelineItem('🏸 Tournament Started', timeline.started);
+      html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed);
+      html += _renderTimelineItem('📖 Report Published', timeline.published);
+    }
     html += '</div></div>';
   }
 
@@ -169,7 +181,7 @@ function renderReport() {
   var showChampions = [];
   for (var ci = 0; ci < (report.champions || []).length; ci++) {
     var ch = report.champions[ci];
-    if (isPublished && !ch.champion) continue;
+    if (!ch.champion) continue;
     showChampions.push(ch);
   }
   if (showChampions.length > 0) {
@@ -193,7 +205,11 @@ function renderReport() {
     html += '<div class="report-section"><div class="report-section-title">📋 Sport Summary</div>';
     for (var si = 0; si < report.sports.length; si++) {
       var sp = report.sports[si];
-      var completedCount = sp.completed || 0;
+      // Recalculate completed from champion data (handles stale reports)
+      var spCompleted = 0;
+      for (var _spci = 0; _spci < (report.champions || []).length; _spci++) {
+        if (report.champions[_spci].sport === sp.name && report.champions[_spci].champion) spCompleted++;
+      }
       var totalCount = sp.competitions ? sp.competitions.length : 0;
       html += '<div class="report-sport-card">'
         + '<div class="report-sport-card-header">' + getSportIcon(sp.name) + ' ' + getSportLabel(sp.name) + '</div>'
@@ -201,7 +217,7 @@ function renderReport() {
         + '<span>' + sp.participants + ' participants</span>'
         + '<span>' + totalCount + ' competitions</span>'
         + '<span>' + sp.matches + ' matches</span>'
-        + '<span>' + completedCount + ' of ' + totalCount + ' completed</span>'
+        + '<span>' + spCompleted + ' of ' + totalCount + ' completed</span>'
         + '</div>'
         + '</div>';
     }
@@ -256,6 +272,26 @@ function renderReport() {
 function _renderTimelineItem(label, timestamp) {
   if (!timestamp) return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">—</span></div>';
   return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">' + new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span></div>';
+}
+
+function _renderTimelineVal(timestamp) {
+  if (!timestamp) return '—';
+  return new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function _fmtDateInput(timestamp) {
+  if (!timestamp) return '';
+  var d = new Date(timestamp);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function saveTimelineDate(field, value) {
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  if (!report.timeline) report.timeline = {};
+  report.timeline[field] = value ? new Date(value).getTime() : null;
+  saveReport(AppState.eventId, report);
+  renderReport();
 }
 
 function saveReportAppreciation() {
