@@ -19,7 +19,6 @@ function renderActionBar() {
   var titles = { setup: 'Setup', groups: 'Group Allocation', fixtures: 'Group Stage Matches', knockout: 'Knockout Stage', champion: '🏆 Champion' };
   title.textContent = titles[AppState.view] || 'Tournament';
   right.innerHTML = '';
-  right.innerHTML += '<button class="btn btn-secondary btn-sm" onclick="goToTournamentReport()" style="margin-left:4px;">📄 Report</button>';
   if (AppState.view === 'knockout') {
     right.innerHTML += '<button id="actionBarShowResults" class="btn btn-secondary btn-sm hidden admin-only" onclick="showResults()" style="margin-left:4px;">📊 Results</button>'
       + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">🏆 Champion</button>';
@@ -131,19 +130,8 @@ function renderBreadcrumb() {
   }
   var parts = ['<span class="bc-item" onclick="goHome()">Home</span>'];
   if (AppState.view === 'report') {
-    if (AppState.ui.reportMode === 'tournament') {
-      parts.push('<span class="bc-sep">›</span>');
-      parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
-      parts.push('<span class="bc-sep">›</span>');
-      parts.push('<span class="bc-item bc-current">' + escapeHtml(getCategoryLabel()) + '</span>');
-      parts.push('<span class="bc-sep">›</span>');
-      parts.push('<span class="bc-item bc-current">Report</span>');
-    } else {
-      parts.push('<span class="bc-sep">›</span>');
-      parts.push('<span class="bc-item" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
-      parts.push('<span class="bc-sep">›</span>');
-      parts.push('<span class="bc-item bc-current">Report</span>');
-    }
+    parts.push('<span class="bc-sep">›</span>');
+    parts.push('<span class="bc-item bc-current">' + escapeHtml(getCurrentEventName()) + ' Report</span>');
   } else if (AppState.view === 'event') {
     parts.push('<span class="bc-sep">›</span>');
     parts.push('<span class="bc-item bc-current" onclick="goToEventPage()">' + escapeHtml(getCurrentEventName()) + '</span>');
@@ -201,8 +189,19 @@ function renderEventPage() {
   var cats = getCategories().filter(function(c) { return c.eventId === AppState.eventId; });
   var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
     + '<h2 class="page-title" style="margin:0;">' + escapeHtml(getCurrentEventName()) + '</h2>'
-    + '<button class="btn btn-sm btn-secondary" onclick="goToReport()">📄 Report</button>'
-    + '</div>';
+    + '<div style="display:flex;gap:6px;">';
+
+  var existingReport = loadReport(AppState.eventId);
+  if (existingReport) {
+    if (existingReport.status === 'published') {
+      html += '<button class="btn btn-sm" onclick="goToReport()">📄 View Report</button>';
+    } else {
+      if (isAdmin()) html += '<button class="btn btn-sm btn-secondary" onclick="goToReport()">📄 Preview Draft</button>';
+    }
+  } else {
+    if (isAdmin()) html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">📄 Generate Report</button>';
+  }
+  html += '</div></div>';
   if (cats.length === 0) {
     html += '<p class="text-muted text-center" style="padding:48px 0;">No competitions in this event.</p>';
   } else {

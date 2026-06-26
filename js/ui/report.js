@@ -1,58 +1,16 @@
-// ===================== EVENT / TOURNAMENT REPORT =====================
+// ===================== PUBLISHED EVENT REPORT =====================
 
 function goToReport() {
-  AppState.ui.reportMode = 'event';
-  navigateTo('report');
-}
-
-function goToTournamentReport() {
-  AppState.ui.reportMode = 'tournament';
-  AppState.ui.reportReturnView = AppState.view;
   navigateTo('report');
 }
 
 function closeReport() {
-  if (AppState.ui.reportMode === 'tournament' && AppState.ui.reportReturnView) {
-    navigateTo(AppState.ui.reportReturnView);
-  } else {
-    navigateTo('event');
-  }
+  navigateTo('event');
 }
 
-function renderReport() {
-  clearDisabled();
-  updateHeader();
-  var container = document.getElementById('reportContainer');
-
-  if (AppState.ui.reportMode === 'tournament') {
-    var tmpl = getTemplates().find(function(t) { return t.id === AppState.category; });
-    if (!tmpl) {
-      container.innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">Category not found.</p>';
-      setupReportScreens();
-      return;
-    }
-    var cat = getCategories().find(function(c) { return c.id === tmpl.id; });
-    if (!cat) { cat = { id: tmpl.id, label: tmpl.name, sport: tmpl.sport, eventId: AppState.eventId }; }
-    var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
-    var evName = ev ? ev.name : 'Tournament';
-    var state = localLoad(tmpl.id);
-    var cats = [cat];
-    var stateMap = {};
-    stateMap[tmpl.id] = state;
-    var report = generateEventReport({ id: AppState.eventId, name: evName, templateIds: [tmpl.id] }, cats, stateMap);
-    report.eventName = escapeHtml(cat.label) + ' — Tournament Report';
-    renderReportContent(container, report);
-    setupReportScreens();
-    return;
-  }
-
+function generateDraftReport() {
   var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
-  if (!ev) {
-    container.innerHTML = '<p class="text-muted text-center" style="padding:48px 0;">Event not found.</p>';
-    setupReportScreens();
-    return;
-  }
-
+  if (!ev) return;
   var cats = getCategories().filter(function(c) { return c.eventId === ev.id; });
   var stateMap = {};
   for (var i = 0; i < cats.length; i++) {
@@ -61,66 +19,228 @@ function renderReport() {
     if (!tmpl) continue;
     stateMap[tmpl.id] = localLoad(tmpl.id);
   }
-
   var report = generateEventReport(ev, cats, stateMap);
-  renderReportContent(container, report);
+  saveReport(AppState.eventId, report);
+  goToReport();
+}
+
+function publishReport() {
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  report.status = 'published';
+  report.publishedAt = Date.now();
+  saveReport(AppState.eventId, report);
+  goToReport();
+}
+
+function unpublishReport() {
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  report.status = 'draft';
+  report.publishedAt = null;
+  saveReport(AppState.eventId, report);
+  goToReport();
+}
+
+function deleteReportDraft() {
+  deleteReport(AppState.eventId);
+  closeReport();
+}
+
+function renderReport() {
+  clearDisabled();
+  updateHeader();
+  var container = document.getElementById('reportContainer');
+  var report = loadReport(AppState.eventId);
+  if (!report) {
+    container.innerHTML = '<div class="report-page"><div class="report-empty"><p style="font-size:1.1rem;margin-bottom:12px;">No report generated yet.</p>'
+      + (isAdmin() ? '<button class="btn" onclick="generateDraftReport()">📄 Generate Report</button>' : '')
+      + '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div></div></div>';
+    setupReportScreens();
+    return;
+  }
+
+  var ev = getEvents().find(function(e) { return e.id === AppState.eventId; });
+  var isAdminUser = isAdmin();
+  var isPublished = report.status === 'published';
+
+  // Check stale
+  var stale = checkReportStale(report, ev);
+
+  var html = '<div class="report-page">';
+
+  // Admin actions bar
+  if (isAdminUser) {
+    html += '<div class="report-admin-bar">';
+    if (isPublished) {
+      html += '<span class="report-status-badge published">Published</span>';
+      if (stale) {
+        html += '<span class="report-stale-warning">⚠ Published report is out of date. Please regenerate and republish.</span>';
+      }
+      html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
+      html += '<button class="btn btn-sm btn-secondary" onclick="unpublishReport()">📝 Unpublish</button>';
+    } else {
+      html += '<span class="report-status-badge draft">Draft</span>';
+      html += '<button class="btn btn-sm" onclick="publishReport()">📢 Publish Report</button>';
+      html += '<button class="btn btn-sm btn-secondary" onclick="generateDraftReport()">🔄 Regenerate</button>';
+      html += '<button class="btn btn-sm btn-outline" onclick="deleteReportDraft()" style="color:var(--danger);border-color:var(--danger);">🗑 Delete Draft</button>';
+    }
+    html += '<button class="btn btn-sm btn-secondary" onclick="window.print()">🖨 Print</button>';
+    html += '</div>';
+  } else {
+    if (!isPublished) {
+      container.innerHTML = '<div class="report-page"><div class="report-empty"><p>Report not yet published. Check back later.</p>'
+        + '<div style="margin-top:16px;"><button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button></div></div></div>';
+      setupReportScreens();
+      return;
+    }
+    if (stale) {
+      html += '<div class="report-stale-warning">⚠ This report may be out of date. The latest results may differ.</div>';
+    }
+  }
+
+  // === 1. Event Banner ===
+  html += '<div class="report-banner">'
+    + '<div class="report-banner-icon">🏆</div>'
+    + '<h1 class="report-event-name">' + escapeHtml(report.eventName) + '</h1>'
+    + '<p class="report-event-status">' + (isPublished ? 'Successfully Completed' : 'Draft Report') + '</p>'
+    + (report.organization ? '<p class="report-org">' + escapeHtml(report.organization) + '</p>' : '')
+    + (report.eventDates ? '<p class="report-dates">' + escapeHtml(report.eventDates) + '</p>' : '')
+    + '</div>';
+
+  // === 2. Appreciation (editable for admin) ===
+  html += '<div class="report-section report-appreciation-section">'
+    + '<div class="report-section-title">🙏 Appreciation</div>';
+  if (isAdminUser) {
+    html += '<textarea id="reportAppreciationInput" class="report-textarea" onchange="saveReportAppreciation()">' + escapeHtml(report.appreciation) + '</textarea>';
+  } else {
+    html += '<div class="report-quote">' + escapeHtml(report.appreciation) + '</div>';
+  }
+  html += '</div>';
+
+  // === 3. Tournament Highlights ===
+  html += '<div class="report-section"><div class="report-section-title">📊 Tournament Highlights</div>'
+    + '<div class="report-highlights-grid">'
+    + '<div class="report-highlight-card"><span class="num">' + report.highlights.participants + '</span><span class="lbl">Participants</span></div>'
+    + '<div class="report-highlight-card"><span class="num">' + report.highlights.sports + '</span><span class="lbl">Sports</span></div>'
+    + '<div class="report-highlight-card"><span class="num">' + report.highlights.competitions + '</span><span class="lbl">Competitions</span></div>'
+    + '<div class="report-highlight-card"><span class="num">' + report.highlights.matches + '</span><span class="lbl">Matches Played</span></div>'
+    + '</div></div>';
+
+  // === 4. Match Statistics ===
+  html += '<div class="report-section"><div class="report-section-title">🎯 Match Statistics</div>'
+    + '<div class="report-match-stats">'
+    + '<div class="report-stat-row"><span class="stat-label">Group Stage</span><span class="stat-value">' + report.matchStats.group + '</span></div>'
+    + '<div class="report-stat-row"><span class="stat-label">Quarter Finals</span><span class="stat-value">' + report.matchStats.quarterFinal + '</span></div>'
+    + '<div class="report-stat-row"><span class="stat-label">Semi Finals</span><span class="stat-value">' + report.matchStats.semiFinal + '</span></div>'
+    + '<div class="report-stat-row"><span class="stat-label">Finals</span><span class="stat-value">' + report.matchStats.final + '</span></div>'
+    + '<div class="report-stat-row"><span class="stat-label">BYE Matches</span><span class="stat-value">' + report.matchStats.bye + '</span></div>'
+    + '<div class="report-stat-row report-stat-total"><span class="stat-label">Completed Matches</span><span class="stat-value">' + report.matchStats.completed + '</span></div>'
+    + '</div></div>';
+
+  // === 5. Champions ===
+  if (report.champions.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">🏆 Champions</div>';
+    for (var ci = 0; ci < report.champions.length; ci++) {
+      var ch = report.champions[ci];
+      html += '<div class="report-champion-row">'
+        + '<span class="report-champ-sport">' + getSportIcon(ch.sport) + '</span>'
+        + '<span class="report-champ-comp">' + escapeHtml(ch.competition) + '</span>'
+        + '<span class="report-champ-winner">🥇 ' + (ch.champion ? escapeHtml(ch.champion) : '—') + '</span>'
+        + '<span class="report-champ-runnerup">🥈 ' + (ch.runnerUp ? escapeHtml(ch.runnerUp) : '—') + '</span>'
+        + '</div>';
+    }
+    html += '</div>';
+  }
+
+  // === 6. Sport Summary ===
+  if (report.sports.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">📋 Sport Summary</div>';
+    for (var si = 0; si < report.sports.length; si++) {
+      var sp = report.sports[si];
+      html += '<div class="report-sport-card">'
+        + '<div class="report-sport-card-header">' + getSportIcon(sp.name) + ' ' + getSportLabel(sp.name) + '</div>'
+        + '<div class="report-sport-card-stats">'
+        + '<span>' + sp.participants + ' participants</span>'
+        + '<span>' + sp.competitions.length + ' competitions</span>'
+        + '<span>' + sp.matches + ' matches</span>'
+        + '</div>';
+      if (sp.champions.length > 0) {
+        html += '<div class="report-sport-champions">';
+        for (var sci = 0; sci < sp.champions.length; sci++) {
+          var sc = sp.champions[sci];
+          html += '<div class="report-sport-champ"><span>' + escapeHtml(sc.competition) + '</span> 🥇 ' + (sc.champion ? escapeHtml(sc.champion) : '—') + (sc.runnerUp ? ' 🥈 ' + escapeHtml(sc.runnerUp) : '') + '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  // === 7. Photo Gallery ===
+  if (report.photos && report.photos.length > 0) {
+    html += '<div class="report-section"><div class="report-section-title">📸 Photo Gallery</div>'
+      + '<div class="report-photo-gallery">';
+    for (var pi = 0; pi < report.photos.length; pi++) {
+      html += '<div class="report-photo-item"><img src="' + escapeHtml(report.photos[pi]) + '" alt="Event photo" loading="lazy"></div>';
+    }
+    html += '</div></div>';
+  } else if (isAdminUser) {
+    html += '<div class="report-section report-photo-placeholder"><div class="report-section-title">📸 Photo Gallery</div>'
+      + '<p class="text-muted">Add photos to celebrate the event. (Coming soon)</p></div>';
+  }
+
+  // === 8. Closing Message ===
+  html += '<div class="report-section report-closing-section">'
+    + '<div class="report-section-title">💐 Closing Message</div>';
+  if (isAdminUser) {
+    html += '<textarea id="reportClosingInput" class="report-textarea" onchange="saveReportClosing()">' + escapeHtml(report.closing) + '</textarea>';
+  } else {
+    html += '<div class="report-quote">' + escapeHtml(report.closing) + '</div>';
+  }
+  html += '</div>';
+
+  // Footer
+  html += '<div class="report-footer">'
+    + '<p>Generated ' + new Date(report.generatedAt).toLocaleDateString()
+    + (report.publishedAt ? ' · Published ' + new Date(report.publishedAt).toLocaleDateString() : '')
+    + '</p>'
+    + '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>'
+    + '</div></div>';
+
+  container.innerHTML = html;
   setupReportScreens();
 }
 
-function renderReportContent(container, report) {
-  var html = '<div class="report-page">'
-    + '<div class="report-header">'
-    + '<h2 class="report-title">' + escapeHtml(report.eventName) + ' — Event Report</h2>'
-    + '<p class="report-date">Generated ' + new Date(report.generatedAt).toLocaleDateString() + '</p>'
-    + '</div>'
-    + '<div class="report-actions">'
-    + '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>'
-    + '<button class="btn btn-sm" onclick="window.print()">🖨 Print</button>'
-    + '</div>'
-    + '<div class="report-summary-cards">'
-    + '<div class="report-summary-card"><span class="num">' + report.totals.sports + '</span><span class="lbl">Sports</span></div>'
-    + '<div class="report-summary-card"><span class="num">' + report.totals.competitions + '</span><span class="lbl">Competitions</span></div>'
-    + '<div class="report-summary-card"><span class="num">' + report.totals.participants + '</span><span class="lbl">Participants</span></div>'
-    + '<div class="report-summary-card"><span class="num">' + report.totals.matches + '</span><span class="lbl">Matches</span></div>'
-    + '</div>';
+function saveReportAppreciation() {
+  var input = document.getElementById('reportAppreciationInput');
+  if (!input) return;
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  report.appreciation = input.value;
+  saveReport(AppState.eventId, report);
+}
 
-  if (report.appreciation) {
-    html += '<div class="report-message report-appreciation">' + escapeHtml(report.appreciation) + '</div>';
-  }
+function saveReportClosing() {
+  var input = document.getElementById('reportClosingInput');
+  if (!input) return;
+  var report = loadReport(AppState.eventId);
+  if (!report) return;
+  report.closing = input.value;
+  saveReport(AppState.eventId, report);
+}
 
-  for (var s = 0; s < report.sports.length; s++) {
-    var sport = report.sports[s];
-    html += '<div class="report-sport-section">'
-      + '<h3 class="report-sport-title">' + getSportIcon(sport.name) + ' ' + getSportLabel(sport.name)
-      + ' <span class="report-sport-counts">(' + sport.competitions.length + ' comps, ' + sport.participants + ' participants, ' + sport.totalMatches + ' matches)</span></h3>'
-      + '<table class="report-table">'
-      + '<thead><tr><th>Competition</th><th>Champion</th><th>Runner-Up</th><th>Matches</th><th>Completed</th></tr></thead>'
-      + '<tbody>';
-
-    for (var c = 0; c < sport.competitions.length; c++) {
-      var comp = sport.competitions[c];
-      var ch = comp.champion ? escapeHtml(comp.champion) : '—';
-      var ru = comp.runnerUp ? escapeHtml(comp.runnerUp) : '—';
-      html += '<tr><td class="comp-name">' + escapeHtml(comp.label) + '</td>'
-        + '<td class="champion-cell">' + ch + '</td>'
-        + '<td class="runnerup-cell">' + ru + '</td>'
-        + '<td>' + comp.matches + '</td>'
-        + '<td>' + comp.completed + '</td></tr>';
+function checkReportStale(report, event) {
+  if (!event || !report) return false;
+  var cats = getCategories().filter(function(c) { return c.eventId === event.id; });
+  for (var i = 0; i < cats.length; i++) {
+    var state = localLoad(cats[i].id);
+    if (state && state._lastSave && report.generatedAt < state._lastSave) {
+      return true;
     }
-    html += '</tbody></table></div>';
   }
-
-  if (report.closing) {
-    html += '<div class="report-message report-closing">' + escapeHtml(report.closing) + '</div>';
-  }
-
-  html += '<div class="report-footer-actions">'
-    + '<button class="btn btn-secondary btn-sm" onclick="closeReport()">← Back</button>'
-    + '<button class="btn btn-sm" onclick="window.print()">🖨 Print Report</button>'
-    + '</div>'
-    + '</div>';
-
-  container.innerHTML = html;
+  return false;
 }
 
 function setupReportScreens() {

@@ -1,0 +1,72 @@
+Now I have a complete picture. Here's the analysis and plan:                                                                862Z                                    
+                                                                                                                                                                         
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────    Context                                 
+                                                                                                                                 17,157 tokens                           
+     Analysis: Champion Logic Duplication                                                                                        9% used                                 
+                                                                                                                                 $0.00 spent                             
+     The champion/runnerUp state is computed in 5 places with duplicated logic:                                                                                          
+                                                                                                                                 LSP                                     
+     ┌─────────────────────────────┬──────────────────────────────────────────────┬─────────────────────────────────────────┐    LSPs are disabled                       
+     │Location                     │What it does                                  │Problem                                  │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │tournamentEngine.js:56       │Pure function returning {champion, runnerUp}  │✅ Core logic, but only resolves names — │                                            
+     │syncChampion()               │from final match                              │no side effects                          │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │champion.js:4 viewChampion() │Manually reads final, sets champion/runnerUp  │❌ Bypasses syncChampion()               │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │champion.js:13 showResults() │Same manual logic + sets phase/completedAt    │❌ Bypasses syncChampion()               │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │knockout.js:177              │Calls syncChampion() ✅ but also manually     │❌ Phase logic coupled to completion     │                                            
+     │completeKnockoutMatch()      │sets phase/completedAt                        │                                         │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │knockout.js:197              │Manually clears champion/runnerUp/phase       │❌ Reverse logic duplicated              │                                            
+     │reopenKnockoutMatch()        │                                              │                                         │                                            
+     ├─────────────────────────────┼──────────────────────────────────────────────┼─────────────────────────────────────────┤                                            
+     │app.js:21 migrateMatchStatus(│Calls syncChampion() ✅                       │Minor duplication, acceptable for        │                                            
+     │)                            │                                              │migration                                │                                            
+     └─────────────────────────────┴──────────────────────────────────────────────┴─────────────────────────────────────────┘                                            
+                                                                                                                             
+
+                                                                                                                                                                    
+     Create a single idempotent function in tournamentEngine.js that synchronizes all derived tournament state from the                                                  
+     knockout final:                                                                                                                                                     
+                                                                                                                                                                         
+     function syncTournamentState(state) {                                                                                                                               
+       var champ = syncChampion(state.participants, state.knockout);                                                                                                     
+       state.champion = champ.champion;                                                                                                                                  
+       state.runnerUp = champ.runnerUp;                                                                                                                                  
+                                                                                                                                                                         
+       var finalMatch = state.knockout ? state.knockout.find(m => m.id === 'final') : null;                                                                              
+       if (champ.champion) {                                                                                                                                             
+         state.phase = 'champion';                                                                                                                                       
+         state.completedAt = state.completedAt || Date.now();                                                                                                            
+       } else if (state.phase === 'champion') {                                                                                                                          
+         state.phase = 'knockout';                                                                                                                                       
+         state.completedAt = null;                                                                                                                                       
+       }                                                                                                                                                                 
+     }                      
+Then update the 5 call sites to use it:                                                                                   
+                                                                                                                          
+┌───────────────────┬───────────────────────────────────────────┬──────────────────────────────────────────────────────┐  
+│Call site          │Before                                     │After                                                 │  
+├───────────────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────┤  
+│completeKnockoutMat│manual syncChampion + phase='champion' +   │syncTournamentState(AppState.tournament)              │  
+│ch()               │completedAt                                │                                                      │  
+├───────────────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────┤  
+│reopenKnockoutMatch│manual champion=null, runnerUp=null,       │syncTournamentState(AppState.tournament)              │  
+│()                 │phase='knockout'                           │                                                      │  
+├───────────────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────┤  
+│viewChampion()     │manual final-match read + manual champion/ │syncTournamentState(AppState.tournament) + navigateTo(│  
+│                   │runnerUp set                               │'champion')                                           │  
+├───────────────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────┤  
+│showResults()      │manual champion/runnerUp/phase/completedAt │syncTournamentState(AppState.tournament) + saveState()│  
+│                   │set                                        │ + renderAll()                                        │  
+├───────────────────┼───────────────────────────────────────────┼──────────────────────────────────────────────────────┤  
+│migrateMatchStatus(│manual syncChampion + conditional set/clear│syncTournamentState(state)                            │  
+│)                  │                                           │                                                      │  
+└───────────────────┴───────────────────────────────────────────┴──────────────────────────────────────────────────────┘  
+                                                                                                                          
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  
+                                                                                                                          
+Want me to proceed with this plan?                                                                                        
+

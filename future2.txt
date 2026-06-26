@@ -1,0 +1,549 @@
+# Requirement - Published Event Report
+
+## Objective
+
+Create a professional, shareable Event Report that celebrates the successful completion of an event.
+
+Unlike tournament data, the Event Report is a **published document** generated from tournament state, reviewed by an administrator, and then made available to all viewers.
+
+The Event Report represents the official record of the event.
+
+---
+
+# Design Philosophy
+
+Separate live operational data from published event content.
+
+## Live Data
+
+Tournament State
+
+Purpose:
+
+* Tournament management
+* Score updates
+* Match lifecycle
+* Bracket generation
+* Champion determination
+
+This remains editable throughout the event.
+
+---
+
+## Published Data
+
+Event Report
+
+Purpose:
+
+* Celebrate the event
+* Share with participants
+* Preserve memories
+* Provide statistics
+* Appreciate organizers and volunteers
+
+Once published, viewers always see the published version.
+
+---
+
+# Navigation
+
+Hierarchy
+
+```text
+Organization
+    ↓
+Event
+    ↓
+Event Report
+        ↓
+Sport Summary
+```
+
+The Event Report becomes the final page of an event.
+
+---
+
+# Lifecycle
+
+```text
+Tournament Running
+
+↓
+
+Generate Report
+
+↓
+
+Preview Report
+
+↓
+
+Administrator Review
+
+↓
+
+Publish Report
+
+↓
+
+Read Only
+
+↓
+
+Viewers Access
+```
+
+---
+
+# Administrator Actions
+
+## Generate Report
+
+Generate the latest report using current tournament data.
+
+This operation does not publish the report.
+
+Purpose:
+
+Preview and verification.
+
+---
+
+## Preview Report
+
+Visible only to administrators.
+
+Allows review before publishing.
+
+Administrator can:
+
+* Verify champions
+* Verify statistics
+* Upload photos
+* Edit appreciation message
+
+---
+
+## Publish Report
+
+Publishes the report as the official event summary.
+
+Once published:
+
+* Viewer sees published version
+* Report becomes read-only
+* Report acts as historical record
+
+---
+
+## Regenerate Report
+
+If tournament data changes after publication:
+
+Example:
+
+* Match reopened
+* Score corrected
+* Champion changes
+
+System should display:
+
+```text
+Published report is out of date.
+
+Please regenerate and publish the updated report.
+```
+
+Viewer continues to see previously published version until administrator republishes.
+
+---
+
+# Viewer Experience
+
+Viewer only sees:
+
+Published Event Report.
+
+Viewer never sees:
+
+* Preview
+* Generate button
+* Publish button
+* Draft report
+
+---
+
+# Event Report Sections
+
+## 1. Event Banner
+
+Display:
+
+* Event Name
+* Organization
+* Event Dates
+* Sports Included
+* Event Status
+
+Example:
+
+```text
+🏆
+
+BREN AVALON SPORTS MEET 2026
+
+Successfully Completed
+```
+
+---
+
+## 2. Appreciation
+
+Display a customizable appreciation message.
+
+Example:
+
+> Thank you to every participant, volunteer, referee, organizer and supporter for making Bren Avalon Sports Meet 2026 a memorable success.
+
+This section is editable by administrators.
+
+---
+
+## 3. Tournament Highlights
+
+Automatically generated.
+
+Examples:
+
+* Total Participants
+* Total Teams
+* Total Sports
+* Total Competitions
+* Total Matches
+
+---
+
+## 4. Match Statistics
+
+Automatically calculated.
+
+Examples:
+
+Group Matches
+
+Quarter Finals
+
+Semi Finals
+
+Finals
+
+Completed Matches
+
+BYE Matches
+
+Walkovers (future)
+
+---
+
+## 5. Champions
+
+Display all completed competitions.
+
+Example
+
+```text
+🏸 Senior Boys
+
+🥇 Rahul
+
+🥈 Arjun
+
+-------------------
+
+🏸 Senior Doubles
+
+🥇 Amit / Rajesh
+
+🥈 Kiran / Deepak
+```
+
+---
+
+## 6. Sport Summary
+
+Each sport receives its own section.
+
+Example
+
+Badminton
+
+Participants
+
+Competitions
+
+Matches
+
+Champions
+
+View Details →
+
+Table Tennis
+
+Participants
+
+Competitions
+
+Matches
+
+Champions
+
+View Details →
+
+---
+
+## 7. Photo Gallery
+
+Display event photographs.
+
+Photos are referenced.
+
+Images are NOT stored inside report JSON.
+
+---
+
+## 8. Closing Message
+
+Example
+
+> Congratulations to all winners, runner-ups and participants.
+
+> We look forward to seeing you again at the next Sports Meet.
+
+---
+
+# Data Sources
+
+Automatically generated from:
+
+* Events
+* Competitions
+* Tournament State
+* Champions
+* Match Results
+
+No manual statistics entry.
+
+---
+
+# Manual Content
+
+Administrator can edit:
+
+* Appreciation message
+* Closing message
+* Featured photos
+* Event cover image
+
+Everything else should be automatically generated.
+
+---
+
+# Image Management
+
+Images should NOT be stored inside report JSON.
+
+Store images in object storage.
+
+Example:
+
+```text
+event-reports/
+
+    event2026/
+
+        opening.jpg
+
+        finals.jpg
+
+        champions.jpg
+```
+
+The report stores only image references.
+
+Example:
+
+```json
+{
+    "photos":[
+        "event2026/opening.jpg",
+        "event2026/finals.jpg"
+    ]
+}
+```
+
+Benefits
+
+* Smaller database
+* Browser caching
+* CDN support
+* Reusable images
+* Easy replacement
+
+---
+
+# Report Storage
+
+Unlike Tournament State, the Event Report should be stored after publication.
+
+Example key:
+
+```text
+btm_report_<eventId>
+```
+
+The report is a generated snapshot.
+
+It is NOT the source of truth.
+
+Tournament State remains the authoritative data.
+
+---
+
+# Regeneration Rules
+
+Generate report when administrator requests.
+
+Publish only after review.
+
+If tournament changes after publication:
+
+Report becomes stale.
+
+Administrator must regenerate and republish.
+
+Viewer always receives the latest published report.
+
+---
+
+# Performance Benefits
+
+Instead of every viewer calculating statistics independently:
+
+```text
+100 Viewers
+
+↓
+
+100 Calculations
+
+↓
+
+Repeated Data Downloads
+```
+
+Use:
+
+```text
+Tournament State
+
+↓
+
+Generate Report Once
+
+↓
+
+Store Published Report
+
+↓
+
+100 Viewers Read Same Report
+```
+
+Benefits:
+
+* Lower Supabase reads
+* Faster loading
+* Smaller network usage
+* Consistent experience
+* Better scalability
+
+---
+
+# Future Enhancements
+
+Not part of V1.
+
+Possible additions:
+
+* PDF Export
+* Share via QR Code
+* Download Event Report
+* Sponsor Section
+* Volunteer Recognition
+* Certificates
+* Player Achievements
+* Social Media Sharing
+* Event Timeline
+* Video Highlights
+* Community Comments
+
+---
+
+# Non-Goals
+
+The Event Report is NOT:
+
+* Tournament management
+* Analytics dashboard
+* Live scoreboard
+* Admin console
+
+It is the official published summary of a completed event.
+
+---
+
+# Architecture
+
+```text
+Tournament State (Source of Truth)
+                │
+                ▼
+      Generate Event Report
+                │
+                ▼
+         Preview Report
+                │
+        Administrator Review
+                │
+                ▼
+        Publish Event Report
+                │
+                ▼
+Stored Report (Snapshot)
+                │
+                ▼
+          Viewer Access
+```
+
+Tournament State continues to evolve during the event.
+
+The Published Event Report is a generated, versioned snapshot intended for viewing, sharing, and preserving the event's legacy.
+
+---
+
+# Recommendation
+
+Treat the Event Report as a publishable artifact rather than a dynamically generated page.
+
+This provides:
+
+* Better scalability
+* Lower database load
+* Faster viewer experience
+* Consistent published content
+* Support for rich media
+* Historical preservation
+
+The Tournament State remains the operational engine, while the Published Event Report becomes the official record and celebration of the event.
+

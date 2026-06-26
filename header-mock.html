@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Manager - Unified Header</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+        }
+
+        /* UNIFIED STICKY APP BAR HEADER */
+        .unified-app-bar {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0.65rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Left Side: Brand and Active Context Group */
+        .header-brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-meta h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-meta p {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Static Sport Label Badge */
+        .sport-context-label {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            padding: 0.4rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 700;
+            user-select: none;
+        }
+
+        /* Center Side: Macro View Navigation Controllers */
+        .header-view-pills {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-view-pill {
+            background-color: #f1f5f9;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Right Side: Admin Dropdown Container */
+        .header-admin-cluster {
+            position: relative;
+            display: inline-block;
+        }
+
+        .admin-profile-trigger {
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Dropdown Menu List Frame */
+        .admin-dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 140px;
+            z-index: 1010;
+            overflow: hidden;
+        }
+
+        /* Active visibility toggle handler class */
+        .admin-dropdown-menu.show-menu {
+            display: block;
+        }
+
+        .dropdown-menu-item {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 0.65rem 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: background-color 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dropdown-menu-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        .dropdown-menu-item.logout-action {
+            color: #dc2626;
+            border-top: 1px solid var(--border);
+        }
+
+        .dropdown-menu-item.logout-action:hover {
+            background-color: #fef2f2;
+        }
+
+        /* RESPONSIVE DESIGN ADJUSTMENTS FOR MOBILE PHONES */
+        @media (max-width: 640px) {
+            .unified-app-bar {
+                padding: 0.65rem 1rem;
+            }
+            .brand-meta p {
+                display: none; /* Hides secondary title string to compress mobile width */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MASTER UNIFIED APP HEADER CONTROLLER FRAMEWORK -->
+    <header class="unified-app-bar">
+        
+        <!-- Left Section: Grouped Branding Context -->
+        <div class="header-brand-cluster">
+            <div class="brand-meta">
+                <h1>🏆 Tournament</h1>
+                <p>Bren Avalon 2026</p>
+            </div>
+            
+            <!-- Sport Scope Identifier: Text Label Only -->
+            <div class="sport-context-label">Badminton</div>
+        </div>
+
+        <!-- Center Section: Results Feed Tracking View -->
+        <div class="header-view-pills">
+            <button class="btn-view-pill" onclick="alert('Displaying All Sports Live Feeds...')">📊 Results Feed</button>
+        </div>
+
+        <!-- Right Section: Consolidated Administrative Controls Dropdown Hub -->
+        <div class="header-admin-cluster">
+            <button class="admin-profile-trigger" id="adminMenuBtn">
+                <span>⚙️ Admin</span>
+                <div style="width: 6px; height: 6px; background-color: #38bdf8; border-radius: 50%;"></div>
+            </button>
+            
+            <!-- Hidden Action Menu Dropdown List Panel -->
+            <div class="admin-dropdown-menu" id="adminDropdownMenu">
+                <button class="dropdown-menu-item" onclick="alert('Opening Administrative Match Manager Grid...'); closeAdminMenu();">🛠️ Manage</button>
+                <button class="dropdown-menu-item logout-action" onclick="alert('Logging out of admin session variables...'); closeAdminMenu();">🚪 Logout</button>
+            </div>
+        </div>
+
+    </header>
+
+    <!-- Vanilla Javascript Dropdown Controls Engine -->
+    <script>
+        const adminBtn = document.getElementById('adminMenuBtn');
+        const adminMenu = document.getElementById('adminDropdownMenu');
+
+        // Toggle dropdown open/close on button click
+        adminBtn.addEventListener('click', function(event) {
+            event.stopPropagation(); // Prevents document click from firing instantly
+            adminMenu.classList.toggle('show-menu');
+        });
+
+        // Close menu if user clicks anywhere else on the document window
+        document.addEventListener('click', function() {
+            closeAdminMenu();
+        });
+
+        function closeAdminMenu() {
+            adminMenu.classList.remove('show-menu');
+        }
+    </script>
+
+</body>
+</html>
+

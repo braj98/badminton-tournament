@@ -9,8 +9,6 @@ var AppState = {
   tournament: null,
   ui: {
     showingResults: false,
-    managePanelOpen: false,
-    reportMode: 'event',
-    reportReturnView: null
+    managePanelOpen: false
   }
 };

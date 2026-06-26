@@ -1,0 +1,79 @@
+Phase 1 (Current Release) ✅
+
+Focus only on making the tournament run smoothly.
+
+Stable tournament engine
+No data loss
+Admin/Viewer separation
+Feed (Live, Recent Results, Upcoming, Champions)
+Event → Sport → Competition hierarchy
+Match lifecycle (Upcoming → Live → Completed → Reopen)
+Champion synchronization
+Phase 2 (Real Usage)
+
+After you've run 2–3 real tournaments, improve based on actual feedback.
+
+Better dashboards
+Notifications
+Search
+Filters
+Tournament statistics
+Match timings
+Court allocation
+Phase 3 (General Tournament Platform)
+
+Only then introduce a configurable rules engine.
+
+Examples:
+
+Different sets by sport
+Different sets by competition
+Different sets by round
+Different scoring systems
+Win-by-two rules
+Walkovers
+Tie-break rules
+Qualification rules
+
+This is where the rules hierarchy we discussed becomes valuable.
+
+Why I Recommend Waiting
+
+Right now, your code probably contains only a handful of places that assume:
+
+Best of 3
+21 points
+
+If you build a full rules engine today, you'll likely spend several days designing, coding, testing, and debugging something that isn't needed for your current badminton events.
+
+After running real tournaments, you'll have concrete requirements such as:
+
+"Junior finals should be Best of 3."
+
+or
+
+"Table Tennis uses Best of 5 except the final."
+
+Those real requirements make the rules engine much easier to design correctly.
+
+One Thing I Would Do Now
+
+Even if you postpone the implementation, I'd leave a placeholder in your data model.
+
+For example:
+
+{
+  "sport": "badminton",
+
+  "rules": null
+}
+
+or
+
+{
+  "competition": {
+    "rules": {}
+  }
+}
+
+You don't need to use it yet, but future developers (including future you) will immediately know where rule configuration belongs
