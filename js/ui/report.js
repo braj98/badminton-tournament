@@ -177,8 +177,8 @@ function renderReport() {
     } else {
       html += _renderTimelineItem('📋 Registration Closed', timeline.registration);
       html += _renderTimelineItem('🏸 Tournament Started', timeline.started);
-      html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed);
-      html += _renderTimelineItem('📖 Report Published', timeline.published);
+      html += _renderTimelineItem('🏆 Tournament Completed', timeline.completed, 'In Progress');
+      html += _renderTimelineItem('📖 Report Published', timeline.published, 'Not Published');
     }
     html += '</div></div>';
   }
@@ -287,8 +287,8 @@ function renderReport() {
   setupReportScreens();
 }
 
-function _renderTimelineItem(label, timestamp) {
-  if (!timestamp) return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">—</span></div>';
+function _renderTimelineItem(label, timestamp, fallback) {
+  if (!timestamp) return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">' + (fallback || '—') + '</span></div>';
   return '<div class="report-timeline-row"><span class="tl-label">' + label + '</span><span class="tl-date">' + new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span></div>';
 }
 
