@@ -290,6 +290,116 @@ body.dark-mode .viewer-eye-icon {
   color: var(--text-muted);
 }
 
+/* ===== STAGE STEPPER ===== */
+.stage-stepper {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.stage-stepper-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 8px 12px;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: default;
+  flex-shrink: 0;
+  transition: opacity .2s;
+}
+.step-indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 700;
+  border: 2px solid var(--border);
+  color: var(--text-muted);
+  background: var(--bg-card);
+  transition: all .2s;
+}
+.step-num, .step-symbol { line-height: 1; }
+.step-label {
+  font-size: .6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.step-connector {
+  width: 24px;
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: 0 4px 18px;
+  transition: background .2s;
+}
+
+/* States */
+.step.completed .step-indicator {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.step.completed .step-label { color: var(--success); }
+.step-connector.completed { background: var(--success); }
+
+.step.active .step-indicator {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+.step.active .step-label { color: var(--primary); font-weight: 700; }
+
+.step.active .step-num,
+.step.completed .step-num { display: none; }
+.step.active .step-indicator .step-num { display: inline; }
+.step.completed .step-indicator .step-num { display: inline; }
+.step.completed .step-indicator .step-num { display: none; }
+.step.completed .step-indicator::after {
+  content: '✓';
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+/* No completed/active styling needed for upcoming steps (defaults) */
+
+body.dark-mode .stage-stepper { background: var(--bg-card); border-color: var(--border); }
+body.dark-mode .step-indicator { border-color: var(--border); color: var(--text-muted); background: var(--bg-card); }
+body.dark-mode .step-connector { background: var(--border); }
+body.dark-mode .step.completed .step-indicator { background: #065f46; border-color: #059669; }
+body.dark-mode .step.completed .step-label { color: #34d399; }
+body.dark-mode .step-connector.completed { background: #059669; }
+body.dark-mode .step.active .step-indicator { border-color: #60a5fa; color: #60a5fa; background: #1e3a5f; }
+
+/* Hide stepper on home/event/sport/report views */
+body.hide-stepper .stage-stepper { display: none; }
+
+/* Mobile */
+@media (max-width: 640px) {
+  .stage-stepper-inner { padding: 6px 8px; justify-content: flex-start; }
+  .step-connector { width: 16px; margin: 0 2px 18px; }
+  .step-indicator { width: 24px; height: 24px; font-size: .65rem; }
+  .step-label { font-size: .55rem; }
+}
+
 @media (max-width: 640px) {
   .unified-app-bar {
     padding: 0.65rem 1rem;
@@ -1303,17 +1413,108 @@ body.dark-mode .image-uploader-dropzone:hover {
 .group-card {
   background: var(--bg-card);
   border-radius: var(--radius);
-  padding: 14px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   transition: box-shadow .15s;
+  position: relative;
+  overflow: hidden;
+}
+.group-card:hover { box-shadow: var(--shadow-md); }
+
+.group-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
 }
 
-.group-card:hover { box-shadow: var(--shadow-md); }
-.group-card h3 { font-size: 0.9rem; color: var(--primary); margin-bottom: 8px; }
-.group-card ul { list-style: none; }
-.group-card li { padding: 4px 0; font-size: 0.9rem; border-bottom: 1px solid var(--border); }
-.group-card li:last-child { border-bottom: none; }
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 8px 22px;
+}
+.group-card-header h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+.group-card-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--primary-light);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.group-card-body {
+  padding: 0 14px 10px 22px;
+  list-style: none;
+}
+.group-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.group-player-row:last-child { border-bottom: none; }
+
+.player-row-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.player-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.player-dot.qualified { background: var(--success); }
+.player-dot.mid { background: var(--warning); }
+.player-dot.bottom { background: var(--text-muted); }
+.player-dot.none { background: var(--border); }
+
+.player-name {
+  font-weight: 500;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-record {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.player-record.win { color: var(--success); }
+.player-record.loss { color: var(--text-muted); }
+
+.group-card-footer {
+  padding: 8px 14px 10px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 6px;
+}
+.group-card-footer .btn {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+body.dark-mode .group-card-count { background: var(--primary-light); }
+body.dark-mode .group-player-row { border-color: var(--border); }
 
 /* ===== HOME PAGE ===== */
 .home-event { margin-bottom: 24px; }

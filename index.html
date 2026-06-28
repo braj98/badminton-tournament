@@ -40,6 +40,36 @@
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 
+  <!-- ============ STAGE STEPPER ============ -->
+  <nav id="stageStepper" class="stage-stepper hidden" data-public="1">
+    <div class="stage-stepper-inner">
+      <div class="step" data-step="setup">
+        <div class="step-indicator"><span class="step-num">01</span></div>
+        <span class="step-label">Setup</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="groups">
+        <div class="step-indicator"><span class="step-num">02</span></div>
+        <span class="step-label">Groups</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="fixtures">
+        <div class="step-indicator"><span class="step-num">03</span></div>
+        <span class="step-label">Fixtures</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="knockout">
+        <div class="step-indicator"><span class="step-num">04</span></div>
+        <span class="step-label">Knockout</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step" data-step="champion">
+        <div class="step-indicator"><span class="step-symbol">🏆</span></div>
+        <span class="step-label">Champion</span>
+      </div>
+    </div>
+  </nav>
+
   <!-- ============ MANAGE PANEL (MODAL OVERLAY) ============ -->
   <div id="managePanel" class="hidden modal-overlay">
     <div class="card modal-card">
@@ -182,10 +212,7 @@
   <!-- ============ GROUPS ============ -->
   <div id="screen-groups" class="screen">
     <div class="card">
-      <div class="flex justify-between items-center">
-        <h2>Group Allocation</h2>
-        <button id="editToggleBtn" class="btn btn-secondary admin-only" style="padding:4px 12px;font-size:.78rem;" onclick="toggleEditMode()">✏️ Edit</button>
-      </div>
+      <h2 style="margin-bottom:12px;">Group Allocation</h2>
       <div id="groupDisplay" class="group-grid"></div>
     </div>
   </div>

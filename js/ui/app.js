@@ -24,6 +24,32 @@ function renderActionBar() {
       + '<button id="actionBarViewChampion" class="btn btn-secondary btn-sm hidden" data-public="1" onclick="viewChampion()" style="margin-left:4px;">🏆 Champion</button>';
   }
 }
+
+// ===================== STAGE STEPPER =====================
+function renderStageStepper() {
+  var stepper = document.getElementById('stageStepper');
+  if (!stepper) return;
+  var tournamentViews = ['setup', 'groups', 'fixtures', 'knockout', 'champion'];
+  var isTournamentView = tournamentViews.indexOf(AppState.view) !== -1 && AppState.tournament && AppState.tournament.phase;
+  if (!isTournamentView) { stepper.classList.add('hidden'); return; }
+  stepper.classList.remove('hidden');
+  var phaseOrder = ['setup', 'groups', 'fixtures', 'knockout', 'champion'];
+  var currentPhase = AppState.tournament.phase;
+  var currentIdx = phaseOrder.indexOf(currentPhase);
+  var steps = stepper.querySelectorAll('.step');
+  var connectors = stepper.querySelectorAll('.step-connector');
+  for (var i = 0; i < steps.length; i++) {
+    var step = steps[i];
+    step.classList.remove('completed', 'active');
+    var stepPhase = step.dataset.step;
+    if (stepPhase === currentPhase) step.classList.add('active');
+    else if (currentIdx > -1 && phaseOrder.indexOf(stepPhase) < currentIdx) step.classList.add('completed');
+  }
+  for (var j = 0; j < connectors.length; j++) {
+    connectors[j].classList.remove('completed');
+    if (j < currentIdx) connectors[j].classList.add('completed');
+  }
+}
 // ===================== ADMIN DROPDOWN =====================
 function toggleAdminMenu() {
   var m = document.getElementById('adminDropdownMenu');
@@ -334,6 +360,10 @@ function renderAll() {
   clearDisabled();
   updateBanners();
 
+  // Hide stepper by default; will be shown only in tournament views
+  var _st = document.getElementById('stageStepper');
+  if (_st) _st.classList.add('hidden');
+
   renderBreadcrumb();
   renderSportBar();
   renderEventBar();
@@ -407,6 +437,7 @@ function renderAll() {
   syncTournamentState(AppState.tournament);
   renderCategoryBar();
   updateHeader();
+  renderStageStepper();
   renderActionBar();
   // Sync knockout buttons in action bar
   if (AppState.view === 'knockout' && AppState.tournament.knockout) {
