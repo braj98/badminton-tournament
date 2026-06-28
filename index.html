@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tournament Manager</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js?v=15"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=15">
 </head>
 <body>
 <div id="app">
@@ -273,44 +273,44 @@
 </div>
 
 <!-- Layer 1: Engine (pure logic, no DOM, no storage) -->
-<script src="js/engine/state.js"></script>
-<script src="js/engine/groups.js"></script>
-<script src="js/engine/fixtures.js"></script>
-<script src="js/engine/standings.js"></script>
-<script src="js/engine/knockout.js"></script>
+<script src="js/engine/state.js?v=15"></script>
+<script src="js/engine/groups.js?v=15"></script>
+<script src="js/engine/fixtures.js?v=15"></script>
+<script src="js/engine/standings.js?v=15"></script>
+<script src="js/engine/knockout.js?v=15"></script>
 <!-- Layer 1b: Models (domain types) -->
-<script src="js/models/participant.js"></script>
-<script src="js/models/match.js"></script>
-<script src="js/models/tournament.js"></script>
-<script src="js/models/appConfig.js"></script>
-<script src="js/models/sportConfig.js"></script>
-<script src="js/models/appState.js"></script>
-<script src="js/models/sport.js"></script>
-<script src="js/models/event.js"></script>
-<script src="js/models/template.js"></script>
-<script src="js/models/report.js"></script>
+<script src="js/models/participant.js?v=15"></script>
+<script src="js/models/match.js?v=15"></script>
+<script src="js/models/tournament.js?v=15"></script>
+<script src="js/models/appConfig.js?v=15"></script>
+<script src="js/models/sportConfig.js?v=15"></script>
+<script src="js/models/appState.js?v=15"></script>
+<script src="js/models/sport.js?v=15"></script>
+<script src="js/models/event.js?v=15"></script>
+<script src="js/models/template.js?v=15"></script>
+<script src="js/models/report.js?v=15"></script>
 <!-- Layer 1c: Tournament Engine (public API — UI calls only these) -->
-<script src="js/engine/tournamentEngine.js"></script>
-<script src="js/engine/reportGenerator.js"></script>
+<script src="js/engine/tournamentEngine.js?v=15"></script>
+<script src="js/engine/reportGenerator.js?v=15"></script>
 <!-- Layer 2: Storage (persistence, no DOM, no business logic) -->
-<script src="js/storage/local.js"></script>
-<script src="js/storage/events.js"></script>
-<script src="js/storage/supabase.js"></script>
-<script src="js/storage/auth.js"></script>
+<script src="js/storage/local.js?v=15"></script>
+<script src="js/storage/events.js?v=15"></script>
+<script src="js/storage/supabase.js?v=15"></script>
+<script src="js/storage/auth.js?v=15"></script>
 <!-- Layer 3: UI (orchestrates engine + storage, DOM rendering) -->
-<script src="js/ui/utils.js"></script>
-<script src="js/ui/app.js"></script>
-<script src="js/ui/categories.js"></script>
-<script src="js/ui/setup.js"></script>
-<script src="js/ui/groups.js"></script>
-<script src="js/ui/fixtures.js"></script>
-<script src="js/ui/knockout.js"></script>
-<script src="js/ui/live.js"></script>
-<script src="js/ui/feed.js"></script>
-<script src="js/ui/upcoming.js"></script>
-    <script src="js/ui/champion.js"></script>
-    <script src="js/ui/ticker.js"></script>
-    <script src="js/ui/report.js"></script>
+<script src="js/ui/utils.js?v=15"></script>
+<script src="js/ui/app.js?v=15"></script>
+<script src="js/ui/categories.js?v=15"></script>
+<script src="js/ui/setup.js?v=15"></script>
+<script src="js/ui/groups.js?v=15"></script>
+<script src="js/ui/fixtures.js?v=15"></script>
+<script src="js/ui/knockout.js?v=15"></script>
+<script src="js/ui/live.js?v=15"></script>
+<script src="js/ui/feed.js?v=15"></script>
+<script src="js/ui/upcoming.js?v=15"></script>
+    <script src="js/ui/champion.js?v=15"></script>
+    <script src="js/ui/ticker.js?v=15"></script>
+    <script src="js/ui/report.js?v=15"></script>
 
     <!-- Footer -->
   <div style="margin-top:40px;padding:12px 0;border-top:1px solid var(--border);text-align:center;font-size:.75rem;color:var(--muted);">
@@ -318,6 +318,6 @@
   </div>
 
   <!-- Edge case test suite (optional, call runAllEdgeCaseTests() from console) -->
-    <script src="js/test/edge_cases.js"></script>
+    <script src="js/test/edge_cases.js?v=15"></script>
 </body>
 </html>
