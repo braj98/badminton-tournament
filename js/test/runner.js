@@ -605,7 +605,7 @@ function testReportGenerator(ctx) {
   var cats7 = [{ id: 't1', label: 'Round Robin', type: 'singles', sport: 'badminton', eventId: 'ev7' }];
   var r7 = ctx.generateEventReport(ev7, cats7, { t1: { phase: 'champion', participants: [{ id: 'p1', name: 'Winner' }], fixtures: [{ id: 'f1', p1: 'p1', p2: null, done: true, status: 'COMPLETED' }], knockout: [], champion: 'Winner', runnerUp: null } });
   a(r7.champions[0].champion === 'Winner', 'Champion from state.champion fallback');
-  a(r7.sports[0].matches === 1, '1 match counted');
+  a(r7.sports[0].matches === 0, 'BYE match not counted as real match');
 
   var ev8 = { id: 'ev8', name: 'Orphan', templateIds: ['t1', 't2'] };
   var cats8 = [{ id: 't1', label: 'Known', type: 'singles', sport: 'badminton', eventId: 'ev8' }];
