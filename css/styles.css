@@ -3323,7 +3323,7 @@ body.dark-mode .report-banner {
   font-size: 0.78rem;
   font-weight: 500;
   position: sticky;
-  top: 48px;
+  top: 64px;
   z-index: 998;
   border: none;
   cursor: default;
