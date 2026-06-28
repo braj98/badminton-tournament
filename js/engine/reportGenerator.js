@@ -33,10 +33,11 @@ function generateEventReport(event, categories, tournamentStateMap) {
     report.matchStats.completed += ms.completed;
     report.matchStats.bye += ms.bye;
 
-    var fixtureMatches = state.fixtures || [];
-    var knockoutMatches = state.knockout || [];
-    generateSportSummary(sportMap, sportName, cat, participants.length, fixtureMatches.length + knockoutMatches.length, champ.champion, champ.runnerUp);
-    generateTimeline(state, earliestStart, latestComplete);
+    var actualMatches = ms.group + ms.quarterFinal + ms.semiFinal + ms.final;
+    generateSportSummary(sportMap, sportName, cat, participants.length, actualMatches, champ.champion, champ.runnerUp);
+    var tl = generateTimeline(state);
+    if (tl.started < earliestStart) earliestStart = tl.started;
+    if (tl.completed > latestComplete) latestComplete = tl.completed;
   }
 
   report.sports = Object.keys(sportMap).map(function(key) { return sportMap[key]; });
@@ -67,16 +68,20 @@ function generateChampionSummary(state, participants) {
 }
 
 function generateMatchStatistics(fixtures, knockout) {
-  var allMatches = (fixtures || []).concat(knockout || []);
   var s = { group: 0, quarterFinal: 0, semiFinal: 0, final: 0, completed: 0, bye: 0 };
-  for (var mi = 0; mi < allMatches.length; mi++) {
-    var m = allMatches[mi];
-    if (m.round === 'group') s.group++;
-    else if (m.round === 'QF') s.quarterFinal++;
-    else if (m.round === 'SF') s.semiFinal++;
-    else if (m.round === 'Final') s.final++;
+  for (var fi = 0; fi < (fixtures || []).length; fi++) {
+    var m = fixtures[fi];
+    if (!m.p1 || !m.p2) { s.bye++; continue; }
+    s.group++;
     if (m.done || m.status === 'COMPLETED') s.completed++;
-    if ((!m.p1 || !m.p2) && !(m.done || m.status === 'COMPLETED')) s.bye++;
+  }
+  for (var ki = 0; ki < (knockout || []).length; ki++) {
+    var km = knockout[ki];
+    if (!km.p1 || !km.p2) { s.bye++; continue; }
+    if (km.round === 'QF') s.quarterFinal++;
+    else if (km.round === 'SF') s.semiFinal++;
+    else if (km.round === 'Final') s.final++;
+    if (km.done || km.status === 'COMPLETED') s.completed++;
   }
   return s;
 }
@@ -116,13 +121,15 @@ function generateHighlights(report, eventName) {
   report.narrative = totalParts + ' enthusiastic participants competed across ' + totalMatches + ' exciting matches, making ' + eventName + ' a memorable success.';
 }
 
-function generateTimeline(state, earliestStart, latestComplete) {
-  if (state.phase && state.phase !== 'setup' && state._lastSave && state._lastSave < earliestStart) {
-    earliestStart = state._lastSave;
+function generateTimeline(state) {
+  var result = { started: Infinity, completed: 0 };
+  if (state.phase && state.phase !== 'setup' && state._lastSave) {
+    result.started = state._lastSave;
   }
-  if (state.phase === 'champion' && state._lastSave && state._lastSave > latestComplete) {
-    latestComplete = state._lastSave;
+  if (state.phase === 'champion' && state._lastSave) {
+    result.completed = state._lastSave;
   }
+  return result;
 }
 
 function finalizeTimeline(report, earliestStart, latestComplete) {
