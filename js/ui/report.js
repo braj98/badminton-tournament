@@ -165,7 +165,7 @@ function renderReport() {
   if (isAdminUser) {
     html += '<textarea id="reportAppreciationInput" class="report-textarea" style="margin-bottom:10px;">' + escapeHtml(report.appreciation) + '</textarea>';
   } else {
-    html += '<p class="report-card-body">' + escapeHtml(report.appreciation) + '</p>';
+    html += '<div class="report-card-body">' + _textToHtml(report.appreciation) + '</div>';
   }
   if (report.narrative) {
     html += '<p class="report-card-body" style="margin-top:8px;font-style:italic;">' + escapeHtml(report.narrative) + '</p>';
@@ -294,7 +294,7 @@ function renderReport() {
   if (isAdminUser) {
     html += '<textarea id="reportClosingInput" class="report-textarea" style="margin-bottom:8px;">' + escapeHtml(report.closing) + '</textarea>';
   } else {
-    html += '<p class="report-closing-message-text">' + escapeHtml(report.closing) + '</p>';
+    html += '<div>' + _textToHtml(report.closing) + '</div>';
   }
   html += '</div>';
 
@@ -304,7 +304,7 @@ function renderReport() {
   if (isAdminUser) {
     html += '<textarea id="reportUntilNextTimeInput" class="report-textarea" style="margin-bottom:8px;">' + escapeHtml(report.untilNextTime || 'Carry forward the spirit of fair play, respect, perseverance, and community. See you at the next event!') + '</textarea>';
   } else {
-    html += '<p class="report-closing-text">' + escapeHtml(report.untilNextTime || 'Carry forward the spirit of fair play, respect, perseverance, and community. See you at the next event!') + '</p>';
+    html += '<div>' + _textToHtml(report.untilNextTime || 'Carry forward the spirit of fair play, respect, perseverance, and community. See you at the next event!') + '</div>';
   }
   html += '</div>';
 
@@ -349,10 +349,11 @@ function _fmtDateInput(timestamp) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
-function _fmtDateInput(timestamp) {
-  if (!timestamp) return '';
-  var d = new Date(timestamp);
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function _textToHtml(text) {
+  if (!text) return '';
+  return text.split(/\n\s*\n/).filter(Boolean).map(function(p) {
+    return '<p style="margin-bottom:12px;font-size:0.88rem;line-height:1.7;color:var(--text-muted);">' + escapeHtml(p.trim()) + '</p>';
+  }).join('');
 }
 
 function saveReportDraft() {
