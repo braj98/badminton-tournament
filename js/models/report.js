@@ -15,6 +15,7 @@ function createEventReport(eventId, eventName) {
     appreciation: 'Thank you to every participant, volunteer, referee, organizer and supporter for making this event a memorable success.',
     narrative: '',
     closing: 'Congratulations to all winners, runner-ups and participants. We look forward to seeing you again at the next event.',
+    untilNextTime: 'Carry forward the spirit of fair play, respect, perseverance, and community. See you at the next event!',
     photos: [],
     timeline: {
       registration: null,
