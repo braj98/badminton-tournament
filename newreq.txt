@@ -1,0 +1,362 @@
+Requirement - Match Promotion & Shareable Match Page
+Objective
+
+Create a Match Promotion feature that allows administrators to promote an important upcoming match and generate a beautiful, shareable page to increase excitement and community participation.
+
+The goal is not only to inform residents about an upcoming match but to encourage families, children, and community members to attend, support the players, and celebrate sportsmanship together.
+
+This feature complements:
+
+Live Matches
+Champions
+Event Report
+
+by creating excitement before the match.
+
+Design Philosophy
+
+The application should support the complete event lifecycle.
+
+Announcement
+
+↓
+
+Tournament
+
+↓
+
+⭐ Match Promotion
+
+↓
+
+🔴 Live Match
+
+↓
+
+🏆 Champion
+
+↓
+
+📖 Event Report
+
+Each stage has its own purpose.
+
+Scope
+
+Initially support promotion of:
+
+Finals
+Semi Finals
+
+Future versions may allow promotion of:
+
+Opening Match
+Rivalry Match
+Exhibition Match
+Bronze Medal Match
+Administrator Actions
+Promote Match
+
+Every eligible match should display:
+
+⭐ Promote Match
+
+When enabled:
+
+Only one match can be promoted at a time.
+Previous promoted match is automatically unselected.
+Generate Promotion Page
+
+Generate a shareable promotion page containing:
+
+Event details
+Match details
+Player names
+Match timing
+Court
+Countdown
+Community message
+
+This page is automatically generated.
+
+No manual editing required.
+
+Share
+
+Administrator can:
+
+Copy Link
+Share via WhatsApp
+Share QR Code
+Print Poster (future)
+Viewer Experience
+
+Visitors opening the promotion page should immediately see:
+
+🏆
+
+BREN AVALON SPORTS MEET 2026
+
+⭐ Championship Match
+
+Senior Boys Final
+
+Jonathan
+
+VS
+
+Aksaj
+
+Saturday
+
+7:00 PM
+
+Court 1
+
+Large typography.
+
+Minimal distractions.
+
+Mobile friendly.
+
+Countdown
+
+Display countdown.
+
+Example:
+
+Starts In
+
+1 Day
+
+05 Hours
+
+18 Minutes
+
+Automatically switches to:
+
+🔴 LIVE NOW
+
+when the match begins.
+
+Match Details
+
+Display:
+
+Competition
+Round
+Court
+Date
+Time
+
+Optional future:
+
+Estimated Duration
+
+Player Cards
+
+Each finalist should have a card.
+
+Example:
+
+Jonathan
+
+🏆 Finalist
+
+---------------------
+
+Aksaj
+
+🏆 Finalist
+
+Future enhancements:
+
+Seed
+Previous Champion
+Matches Won
+Sets Won
+Community Invitation
+
+Display a warm invitation.
+
+Example
+
+Join us as our finalists compete for the championship in what promises to be an exciting match. Bring your family, cheer for the players, and celebrate the spirit of sports with the Bren Avalon community. Your presence and encouragement make every match even more memorable.
+
+WhatsApp Share
+
+Administrator should be able to generate a ready-to-share WhatsApp message.
+
+Example
+
+🏆 BREN AVALON SPORTS MEET 2026
+
+🔥 Senior Boys Final
+
+🏸 Jonathan 🆚 Aksaj
+
+📅 Saturday
+
+🕖 7:00 PM
+
+Come cheer for our finalists and witness the crowning of this year's champion!
+
+Bring your family and be part of an exciting evening celebrating sportsmanship and community spirit.
+
+See you at the courts!
+
+Event Details:
+<Shareable Link>
+Shareable Link
+
+Every promoted match should have a permanent shareable URL.
+
+Example
+
+https://app.example.com/match/final-2026
+
+The link remains valid throughout the tournament.
+
+QR Code
+
+Generate a QR Code pointing to the promotion page.
+
+Suitable for:
+
+Notice boards
+Posters
+Event banners
+Match State Behaviour
+
+Before Match
+
+Display:
+
+Starts In
+
+Countdown
+
+Match Started
+
+Automatically display:
+
+🔴 LIVE NOW
+
+Watch Live Score →
+
+Match Completed
+
+Automatically redirect or transform into:
+
+🏆 Champion Declared
+
+View Results →
+
+The same URL remains valid.
+
+No broken links.
+
+Home Page Integration
+
+If a promoted match exists:
+
+Display a banner.
+
+Example
+
+🔥 FEATURED MATCH
+
+Senior Boys Final
+
+Today
+
+7:00 PM
+
+Court 1
+
+View Details →
+
+Only one promoted match should appear at a time.
+
+Data Model
+
+Store only minimal promotion metadata.
+
+Example
+
+{
+  "matchId": "...",
+  "promoted": true,
+  "published": true,
+  "publishedAt": "...",
+  "shareUrl": "..."
+}
+
+All other information is derived from the tournament state.
+
+Performance
+
+Promotion page should be generated once.
+
+Viewers only read the published page.
+
+Avoid regenerating content for every request.
+
+Future Enhancements
+
+Not required for V1.
+
+Possible additions:
+
+Player photos
+Head-to-head statistics
+Previous winners
+Live audience count
+Sponsor banner
+Match predictions
+Voting ("Who will win?")
+Push notifications
+Calendar invite
+Social media share cards
+Non-Goals
+
+The promotion page is not:
+
+Live scoring page
+Match administration page
+Statistics dashboard
+
+Its sole purpose is to build anticipation, increase attendance, and create excitement around important matches.
+
+Benefits
+Community Engagement
+
+Encourages residents to attend important matches.
+
+Better Atmosphere
+
+Players perform in front of an engaged audience.
+
+Increased Participation
+
+Parents and children become more involved in future events.
+
+Better Communication
+
+Organizers can share one professional link instead of manually typing WhatsApp messages.
+
+Professional Image
+
+Transforms the application from tournament management software into a complete sports event platform.
+
+Recommendation
+
+Treat Match Promotion as a permanent feature of the platform.
+
+Just as the Event Report celebrates what has already happened, the Match Promotion page should build excitement for what is about to happen.
+
+Together they complete the journey of a sporting event:
+
+Promotion → Competition → Celebration → Memory
+
+making the platform valuable not only for organizers but for the entire community.

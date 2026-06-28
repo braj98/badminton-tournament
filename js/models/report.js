@@ -8,6 +8,10 @@ function createEventReport(eventId, eventName) {
     status: 'draft',
     publishedAt: null,
     generatedAt: Date.now(),
+    lastModified: Date.now(),
+    version: 1,
+    generatedBy: '',
+    publishedBy: '',
     appreciation: 'Thank you to every participant, volunteer, referee, organizer and supporter for making this event a memorable success.',
     narrative: '',
     closing: 'Congratulations to all winners, runner-ups and participants. We look forward to seeing you again at the next event.',
@@ -33,9 +37,22 @@ function createEventReport(eventId, eventName) {
       completed: 0
     },
     champions: [],
-    sports: [],
-    stale: false
+    sports: []
   };
+}
+
+function changeReportStatus(report, status, actor) {
+  report.status = status;
+  report.lastModified = Date.now();
+  if (status === 'published') {
+    report.publishedAt = Date.now();
+    report.publishedBy = actor || '';
+  }
+  if (status === 'draft') {
+    report.publishedAt = null;
+    report.publishedBy = '';
+  }
+  return report;
 }
 
 function createChampionEntry(sport, competition, champion, runnerUp) {
