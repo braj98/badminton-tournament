@@ -35,6 +35,16 @@ function renderTicker() {
   const sportIcons = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
   const items = [];
   const _now = Date.now();
+  let liveCount = 0;
+  for (const { cat, m, participants } of matches) {
+    if (m.status === 'LIVE') liveCount++;
+  }
+  if (liveCount > 0) {
+    items.push('<span class="ticker-item ticker-live-badge">'
+      + '<span class="ticker-live-dot">🔴</span>'
+      + '<span class="ticker-live-count">' + liveCount + ' LIVE</span>'
+      + '</span>');
+  }
   for (const { cat, m, participants } of matches) {
     const n1 = pName(m.p1, participants);
     const n2 = pName(m.p2, participants);
@@ -53,6 +63,7 @@ function renderTicker() {
       : '<span class="ticker-upcoming">📅</span>';
     const score = scoreHtml ? ' (' + scoreHtml + ')' : '';
     var tickerCls = 'ticker-item';
+    if (m.status === 'LIVE') tickerCls += ' ticker-live-item';
     if (m.scheduledAt && m.scheduledAt > _now && m.scheduledAt - _now <= 3600000) tickerCls += ' schedule-soon';
     items.push('<span class="' + tickerCls + '">'
       + '<span class="ticker-cat">' + icon + ' ' + escapeHtml(cat.label) + '</span>'

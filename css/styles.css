@@ -3313,7 +3313,9 @@ body.dark-mode .report-banner {
 
 /* ===== TICKER / SCROLLING BANNER ===== */
 .ticker-bar {
-  background: #fffbeb;
+  background: linear-gradient(90deg, #fffbeb, #fef3c7, #fffbeb);
+  background-size: 200% 100%;
+  animation: ticker-shimmer 4s ease-in-out infinite;
   color: #78350f;
   overflow: hidden;
   white-space: nowrap;
@@ -3326,8 +3328,13 @@ body.dark-mode .report-banner {
   top: 64px;
   z-index: 998;
   border: none;
+  border-bottom: 1px solid #fde68a;
   cursor: default;
   margin-bottom: 0.5rem;
+}
+@keyframes ticker-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 .ticker-track {
   display: inline-flex;
@@ -3340,11 +3347,13 @@ body.dark-mode .report-banner {
   gap: 5px;
   padding: 0 20px;
   white-space: nowrap;
-  border-right: 1px solid #fcd34d;
   flex-shrink: 0;
 }
 .ticker-item.schedule-soon {
   animation: pulse-soon 2s ease-in-out infinite;
+}
+.ticker-item.ticker-live-item {
+  animation: pulse-live 1.5s ease-in-out infinite;
 }
 .ticker-item .ticker-cat {
   color: #b45309;
@@ -3355,12 +3364,23 @@ body.dark-mode .report-banner {
   font-weight: 500;
 }
 .ticker-item .ticker-live {
-  color: #d97706;
+  color: #dc2626;
   font-weight: 700;
 }
 .ticker-item .ticker-upcoming {
   color: #d97706;
   font-weight: 600;
+}
+.ticker-live-badge {
+  background: #dc2626;
+  color: #fff;
+  font-weight: 700;
+  padding: 0 14px;
+  gap: 6px;
+  height: 28px;
+}
+.ticker-live-badge .ticker-live-dot {
+  animation: pulse-live 1s ease-in-out infinite;
 }
 .ticker-empty {
   padding: 0 16px;
@@ -3369,15 +3389,18 @@ body.dark-mode .report-banner {
 }
 
 body.dark-mode .ticker-bar {
-  background: #1c1917;
+  background: linear-gradient(90deg, #1c1917, #292524, #1c1917);
+  background-size: 200% 100%;
+  border-bottom-color: #78350f;
 }
 body.dark-mode .ticker-item {
   border-right-color: #78350f;
 }
 body.dark-mode .ticker-item .ticker-cat { color: #fbbf24; }
 body.dark-mode .ticker-item .ticker-name { color: #fde68a; }
-body.dark-mode .ticker-item .ticker-live { color: #f59e0b; }
+body.dark-mode .ticker-item .ticker-live { color: #fca5a5; }
 body.dark-mode .ticker-item .ticker-upcoming { color: #d97706; }
+body.dark-mode .ticker-live-badge { background: #991b1b; color: #fecaca; }
 body.dark-mode .ticker-empty { color: #fbbf24; }
 body.dark-mode .ticker-pin { color: #78350f; }
 body.dark-mode .ticker-pin.active { color: #f59e0b; }
