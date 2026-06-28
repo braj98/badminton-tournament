@@ -34,6 +34,7 @@ function renderTicker() {
   bar.classList.remove('hidden');
   const sportIcons = { badminton: '🏸', tableTennis: '🏓', chess: '♟' };
   const items = [];
+  const _now = Date.now();
   for (const { cat, m, participants } of matches) {
     const n1 = pName(m.p1, participants);
     const n2 = pName(m.p2, participants);
@@ -51,7 +52,9 @@ function renderTicker() {
       ? '<span class="ticker-live">🔴 LIVE</span>'
       : '<span class="ticker-upcoming">📅</span>';
     const score = scoreHtml ? ' (' + scoreHtml + ')' : '';
-    items.push('<span class="ticker-item">'
+    var tickerCls = 'ticker-item';
+    if (m.scheduledAt && m.scheduledAt > _now && m.scheduledAt - _now <= 3600000) tickerCls += ' schedule-soon';
+    items.push('<span class="' + tickerCls + '">'
       + '<span class="ticker-cat">' + icon + ' ' + escapeHtml(cat.label) + '</span>'
       + '<span class="ticker-name">' + statusLabel + ' ' + escapeHtml(n1) + ' vs ' + escapeHtml(n2) + score + '</span>'
       + (isAdmin() ? '<span class="ticker-unpin" onclick="toggleTickerMatch(\'' + cat.id + '\',\'' + m.id + '\')" title="Remove from ticker">✕</span>' : '')

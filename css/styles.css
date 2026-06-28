@@ -3332,6 +3332,9 @@ body.dark-mode .report-banner {
   border-right: 1px solid #fcd34d;
   flex-shrink: 0;
 }
+.ticker-item.schedule-soon {
+  animation: pulse-soon 2s ease-in-out infinite;
+}
 .ticker-item .ticker-cat {
   color: #b45309;
   font-weight: 600;
