@@ -8,30 +8,66 @@ function renderGroups() {
   const tm = AppState.tournament.teamMembers || [];
   const groupKeys = Object.keys(AppState.tournament.groups);
   if (!isAdmin()) _editMode = false;
+  const standings = AppState.tournament.standings || {};
+  const qualifiers = AppState.tournament.qualifiers || [];
+  const qualifierIds = qualifiers.map(function(q) { return q.id; });
   for (const key of groupKeys) {
     const card = document.createElement('div');
     card.className = 'group-card';
-    let items = '';
-    const otherGroups = groupKeys.filter(g => g !== key);
-    for (const p of AppState.tournament.groups[key]) {
-      const idx = AppState.tournament.participants ? AppState.tournament.participants.findIndex(pt => pt.id === p) : AppState.tournament.players.indexOf(p);
+    const players = AppState.tournament.groups[key];
+    const groupStandings = standings[key] || [];
+    const playerCount = players.length;
+    let playerRows = '';
+    for (const p of players) {
+      const idx = AppState.tournament.participants ? AppState.tournament.participants.findIndex(function(pt) { return pt.id === p; }) : AppState.tournament.players.indexOf(p);
       const m = tm[idx];
       const pid = 'gm_' + String(p).replace(/[^a-zA-Z0-9]/g, '_');
+      var otherGroups = groupKeys.filter(function(g) { return g !== key; });
       let moveBtns = '';
       for (const g of otherGroups) {
-        moveBtns += '<button class="btn admin-only btn-secondary" style="padding:2px 10px;font-size:.75rem;" onclick="movePlayerToGroup(' + idx + ',\'' + g + '\')">' + g + '</button>';
+        moveBtns += '<button class="btn admin-only btn-secondary" style="padding:2px 8px;font-size:.7rem;" onclick="movePlayerToGroup(' + idx + ',\'' + g + '\')">' + g + '</button>';
       }
-      items += '<li>'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-        + '<div>' + escapeHtml(pName(p)) + (_editMode ? '<button class="btn admin-only btn-secondary" style="padding:1px 5px;font-size:.65rem;margin-left:4px;" onclick="promptRename(' + idx + ')">✏️</button>' : '')
-        + (m ? '<br><span class="text-muted" style="font-size:.75rem;">' + escapeHtml(m.a) + ' & ' + escapeHtml(m.b) + '</span>' : '') + '</div>'
+      // Find record from standings
+      var record = null;
+      var dotClass = 'none';
+      for (var si = 0; si < groupStandings.length; si++) {
+        var s = groupStandings[si];
+        if ((s.id && s.id === p) || s.name === p || (AppState.tournament.participants && AppState.tournament.participants[idx] && s.id === AppState.tournament.participants[idx].id)) {
+          record = s.wins + '-' + s.losses;
+          if (qualifierIds.indexOf(s.id) !== -1) { dotClass = 'qualified'; }
+          else if (s.wins > 0) { dotClass = 'mid'; }
+          else if (s.losses > 0 || groupStandings.some(function(x) { return x.wins > 0 || x.losses > 0; })) { dotClass = 'bottom'; }
+          break;
+        }
+      }
+      var nameHtml = escapeHtml(pName(p));
+      var memberHtml = m ? '<br><span class="text-muted" style="font-size:.7rem;">' + escapeHtml(m.a) + ' & ' + escapeHtml(m.b) + '</span>' : '';
+      var recClass = (record && record.indexOf('0-') === -1 && record.indexOf('-0') === -1) ? 'win' : (record ? 'loss' : '');
+      var editBtn = _editMode ? '<button class="btn admin-only btn-secondary" style="padding:1px 5px;font-size:.6rem;margin-left:4px;" onclick="promptRename(' + idx + ')">✏️</button>' : '';
+      var teamInfo = memberHtml ? '<span class="text-muted" style="display:block;font-size:.7rem;">' + memberHtml + '</span>' : '';
+      playerRows += '<div class="group-player-row">'
+        + '<div class="player-row-left">'
+        + '<span class="player-dot ' + dotClass + '"></span>'
+        + '<span class="player-name">' + nameHtml + editBtn + teamInfo + '</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:6px;">'
+        + '<span class="player-record ' + recClass + '">' + (record || '&ndash;') + '</span>'
         + '<span style="position:relative;">'
-        + '<button class="btn admin-only btn-secondary" style="padding:2px 6px;font-size:.7rem;" onclick="event.stopPropagation();document.getElementById(\'' + pid + '\').classList.toggle(\'hidden\')">↔</button>'
+        + '<button class="btn admin-only btn-secondary" style="padding:2px 6px;font-size:.65rem;" onclick="event.stopPropagation();document.getElementById(\'' + pid + '\').classList.toggle(\'hidden\')">↔</button>'
         + '<div id="' + pid + '" class="hidden" style="position:absolute;right:0;top:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:10;padding:4px;display:flex;flex-direction:column;gap:2px;">'
         + moveBtns
-        + '</div></span></div></li>';
+        + '</div></span>'
+        + '</div></div>';
     }
-    card.innerHTML = '<h3>Group ' + key + '</h3><ul>' + items + '</ul>';
+    card.innerHTML = '<div class="group-card-accent"></div>'
+      + '<div class="group-card-header">'
+      + '<h3>Group ' + key + '</h3>'
+      + '<span class="group-card-count">' + playerCount + ' Player' + (playerCount !== 1 ? 's' : '') + '</span>'
+      + '</div>'
+      + '<div class="group-card-body">' + playerRows + '</div>'
+      + '<div class="group-card-footer admin-only">'
+      + '<button class="btn btn-secondary" onclick="toggleEditMode()">' + (_editMode ? '✏️ Editing' : '✏️ Edit Names') + '</button>'
+      + '</div>';
     container.appendChild(card);
   }
 }
@@ -73,16 +109,6 @@ function movePlayerToGroup(playerIdx, targetGroup) {
 function toggleEditMode() {
   if (!isAdmin()) return;
   _editMode = !_editMode;
-  const btn = document.getElementById('editToggleBtn');
-  if (_editMode) {
-    btn.textContent = '✏️ Editing';
-    btn.style.background = '#2563eb';
-    btn.style.color = '#fff';
-  } else {
-    btn.textContent = '✏️ Edit';
-    btn.style.background = '';
-    btn.style.color = '';
-  }
   renderGroups();
 }
 
