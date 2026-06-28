@@ -36,10 +36,7 @@ function completeMatch(match, participants, finalSets) {
     var needed = Math.ceil(finalSets / 2);
     for (var i = 0; i < match.sets.length; i++) {
       var set = match.sets[i];
-      if (!set || set.s1 === null || set.s2 === null) {
-        alert('All sets must have scores entered before completing the Final.');
-        return false;
-      }
+      if (!set || set.s1 === null || set.s2 === null) continue;
       if (set.s1 < 0 || set.s2 < 0) {
         alert('Scores cannot be negative.');
         return false;
