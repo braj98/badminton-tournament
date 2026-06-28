@@ -2162,6 +2162,7 @@ body.dark-mode .vs-separator-label {
 
 .schedule-soon {
   color: #ea5800;
+  animation: pulse-soon 2s ease-in-out infinite;
 }
 
 .schedule-set {
@@ -2171,6 +2172,10 @@ body.dark-mode .vs-separator-label {
 @keyframes pulse-live {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+@keyframes pulse-soon {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .schedule-input-row {
