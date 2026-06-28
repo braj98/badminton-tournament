@@ -128,9 +128,10 @@ function renderUpcomingCard(tmpl, s, m, matchId, isFixture, sportIcons) {
   }
   if (isAdmin()) {
     scheduleHtml += '<div class="schedule-input-row">'
-      + '<input type="datetime-local" class="schedule-dt-input" value="' + tsToLocalDT(m.scheduledAt) + '" style="font-size:.7rem;padding:2px 6px;width:auto;min-width:150px;">'
-      + '<button class="btn btn-sm" onclick="scheduleMatch(\'' + tmpl.id + '\',\'' + matchId + '\', this.previousElementSibling.value)" style="font-size:.65rem;padding:2px 8px;">🕐 Set</button>'
-      + '</div>';
+    + '<input type="datetime-local" class="schedule-dt-input" value="' + tsToLocalDT(m.scheduledAt) + '" style="font-size:.7rem;padding:2px 6px;width:auto;min-width:150px;">'
+    + '<button class="btn btn-sm" onclick="scheduleMatch(\'' + tmpl.id + '\',\'' + matchId + '\', this.parentNode.firstElementChild.value)" style="font-size:.65rem;padding:2px 8px;">🕐 Set</button>'
+    + (m.scheduledAt ? '<button class="btn btn-sm" onclick="scheduleMatch(\'' + tmpl.id + '\',\'' + matchId + '\', \'\')" style="font-size:.65rem;padding:2px 6px;color:var(--danger);">✕</button>' : '')
+    + '</div>';
   }
   if (schedule) {
     scheduleHtml += '</div>';

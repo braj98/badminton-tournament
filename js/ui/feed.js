@@ -187,8 +187,11 @@ function renderFeedItem(item) {
       html += '<div class="score-display-pill" style="align-self:flex-start;font-size:.75rem;">' + escapeHtml(item.scoreDisplay) + '</div>';
     }
   } else if (item.type === 'result') {
+    const w1 = item.winner === item.p1;
     html += '<div class="match-vs-row">'
-      + escapeHtml(item.p1) + ' <span class="vs-text">vs</span> <span class="winner">' + escapeHtml(item.p2) + ' ✓</span>'
+      + (w1 ? '<span class="winner">' : '') + escapeHtml(item.p1) + (w1 ? '</span>' : '')
+      + ' <span class="vs-text">vs</span> '
+      + (!w1 ? '<span class="winner">' : '') + escapeHtml(item.p2) + (!w1 ? '</span>' : '')
       + '</div>';
   } else if (item.type === 'next') {
     html += '<div class="match-vs-row">'
