@@ -40,10 +40,11 @@ function renderStageStepper() {
   var connectors = stepper.querySelectorAll('.step-connector');
   for (var i = 0; i < steps.length; i++) {
     var step = steps[i];
-    step.classList.remove('completed', 'active');
+    step.classList.remove('completed', 'active', 'upcoming');
     var stepPhase = step.dataset.step;
     if (stepPhase === currentPhase) step.classList.add('active');
     else if (currentIdx > -1 && phaseOrder.indexOf(stepPhase) < currentIdx) step.classList.add('completed');
+    else step.classList.add('upcoming');
   }
   for (var j = 0; j < connectors.length; j++) {
     connectors[j].classList.remove('completed');
